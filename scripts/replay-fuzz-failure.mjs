@@ -19,7 +19,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, isAbsolute } from "node:path";
 import { enforceHttps, isSafeHost } from "../src/lib/http/https-guard.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -63,7 +63,19 @@ function listDir() {
 
 let targets;
 if (explicitPaths.length > 0) {
-  targets = explicitPaths.map((p) => resolve(p));
+  try {
+    targets = explicitPaths.map((p) => {
+      // Check for path traversal attempts in the original input
+      if (p.includes('..') || isAbsolute(p)) {
+        throw new Error('Invalid path');
+      }
+      const resolved = resolve(p);
+      return resolved;
+    });
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(2);
+  }
 } else if (latestOnly) {
   const all = listDir().map((p) => ({ p, mtime: statSync(p).mtimeMs }))
     .sort((a, b) => b.mtime - a.mtime);
