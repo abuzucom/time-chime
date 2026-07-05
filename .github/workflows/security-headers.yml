@@ -1,0 +1,98 @@
+name: Security Headers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/_headers"
+      - "scripts/check-headers.mjs"
+      - "tests/check-headers.test.mjs"
+      - "scripts/check-route-headers.mjs"
+      - "src/routes/__root.tsx"
+      - ".github/workflows/security-headers.yml"
+      - "vite.config.*"
+      - "package.json"
+      - "bun.lockb"
+      - "bun.lock"
+  pull_request:
+    paths:
+      - "public/_headers"
+      - "scripts/check-headers.mjs"
+      - "tests/check-headers.test.mjs"
+      - "scripts/check-route-headers.mjs"
+      - "src/routes/__root.tsx"
+      - ".github/workflows/security-headers.yml"
+      - "vite.config.*"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Optional URL to validate instead of a local preview build (e.g. https://example.com)"
+        required: false
+
+jobs:
+  headers:
+    name: Validate response headers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        if: ${{ github.event.inputs.base_url == '' }}
+        run: bun install --frozen-lockfile
+
+      # Unit-test the header parser/normaliser before the network probes so a
+      # comparator regression fails fast without waiting for a build + server.
+      - name: Unit tests (scripts/check-headers.mjs)
+        run: node --test tests/check-headers.test.mjs
+
+      - name: Build site
+        if: ${{ github.event.inputs.base_url == '' }}
+        run: bun run build
+
+      # Serve the built site with a static file server that honours the
+      # Cloudflare Pages / Netlify-style public/_headers file.
+      - name: Start static server honouring _headers
+        if: ${{ github.event.inputs.base_url == '' }}
+        run: |
+          bunx --bun @cloudflare/wrangler@3 pages dev .output/public \
+            --port 4173 --ip 127.0.0.1 --compatibility-date=2024-10-01 \
+            > wrangler.log 2>&1 &
+          echo $! > wrangler.pid
+          for i in $(seq 1 40); do
+            if curl -fsS -o /dev/null http://127.0.0.1:4173/; then
+              echo "server up"; exit 0
+            fi
+            sleep 0.5
+          done
+          echo "server did not start"; cat wrangler.log; exit 1
+
+      - name: Validate headers (local build)
+        if: ${{ github.event.inputs.base_url == '' }}
+        run: node scripts/check-headers.mjs http://127.0.0.1:4173
+
+      - name: Validate per-route headers + CSP (local build)
+        if: ${{ github.event.inputs.base_url == '' }}
+        run: node scripts/check-route-headers.mjs http://127.0.0.1:4173
+
+      - name: Validate headers (remote URL)
+        if: ${{ github.event.inputs.base_url != '' }}
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}
+        run: node scripts/check-headers.mjs "$BASE_URL"
+
+      - name: Validate per-route headers + CSP (remote URL)
+        if: ${{ github.event.inputs.base_url != '' }}
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}
+        run: node scripts/check-route-headers.mjs "$BASE_URL"
+
+
+      - name: Stop server
+        if: always() && github.event.inputs.base_url == ''
+        run: |
+          if [ -f wrangler.pid ]; then kill "$(cat wrangler.pid)" || true; fi

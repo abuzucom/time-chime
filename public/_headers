@@ -1,0 +1,51 @@
+# Cloudflare Pages / Netlify-compatible response headers.
+# Sets the transport-layer security headers that browsers do not accept via
+# <meta http-equiv>. The Content-Security-Policy and Referrer-Policy are also
+# emitted from src/routes/__root.tsx so the app is hardened even when hosted
+# on infrastructure that ignores this file.
+#
+# References:
+#   - OWASP Secure Headers Project
+#   - OWASP ASVS v4.0 §14.4 (HTTP Security Headers)
+#   - Mozilla Observatory recommended baseline
+
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), geolocation=(), microphone=(), notifications=(), push=(), autoplay=(), display-capture=(), encrypted-media=(), fullscreen=(), picture-in-picture=(), screen-wake-lock=(), speaker-selection=(), accelerometer=(), gyroscope=(), magnetometer=(), midi=(), usb=(), payment=(), publickey-credentials-get=(), sync-xhr=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  X-DNS-Prefetch-Control: off
+
+# SPA shell HTML — never cache in shared/CDN caches. Web-cache-poisoning
+# defense: an intermediary MUST NOT serve one visitor's rendered shell to
+# another, and MUST NOT key a cache entry on anything other than the
+# encoding negotiation (Accept-Encoding). No user-controlled request
+# header is reflected into the response, so no additional Vary is needed.
+/*.html
+  Cache-Control: no-store, must-revalidate
+  Vary: Accept-Encoding
+/
+  Cache-Control: no-store, must-revalidate
+  Vary: Accept-Encoding
+
+# Long-cache immutable build assets (Vite fingerprints filenames).
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Service worker must never be cached by the browser or CDN, otherwise
+# updates to the SW itself (and by extension, cache eviction) are delayed
+# by however long the stale copy lives. `updateViaCache: none` on the
+# registration handles the browser side; this handles intermediaries.
+/sw.js
+  Cache-Control: no-store, must-revalidate
+  Service-Worker-Allowed: /
+/workbox-*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+# Well-known files should not be indexed heavily and must remain reachable.
+/.well-known/*
+  Cache-Control: public, max-age=3600
+  X-Robots-Tag: noindex

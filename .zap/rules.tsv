@@ -1,0 +1,19 @@
+# Tune the OWASP ZAP baseline scan for this app.
+# Format reference: https://www.zaproxy.org/docs/automate/automation-framework/
+# Each line: <RULE_ID>\t<THRESHOLD>\t<optional comment>
+# Threshold: IGNORE | WARN | FAIL
+# Anything not listed uses the WARN default.
+
+# --- Ignored (not applicable to this static SPA) ------------------------------
+10015	IGNORE	# Incomplete or No Cache-control Header — SPA HTML is intentionally uncached
+10027	IGNORE	# Information Disclosure - Suspicious Comments (source-map artifacts)
+10096	IGNORE	# Timestamp Disclosure — build hashes / version strings are expected
+10109	IGNORE	# Modern Web Application — informational, always fires on SPAs
+
+# --- Promoted to FAIL (regressions must break the build) ---------------------
+10035	FAIL	# Strict-Transport-Security Header
+10038	FAIL	# Content Security Policy (CSP) Header Not Set
+10020	FAIL	# X-Frame-Options Header
+10021	FAIL	# X-Content-Type-Options Header Missing
+10063	FAIL	# Permissions Policy Header Not Set
+90004	FAIL	# Insufficient Site Isolation Against Spectre (COOP/CORP)

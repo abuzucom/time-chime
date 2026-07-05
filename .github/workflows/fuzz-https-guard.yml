@@ -1,0 +1,111 @@
+name: Fuzz — HTTPS Guard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/lib/http/https-guard.ts"
+      - "tests/https-guard-fuzz.test.mjs"
+      - "tests/https-guard-host-validation.test.mjs"
+      - "scripts/report-fuzz-failure.mjs"
+      - ".github/workflows/fuzz-https-guard.yml"
+      - "package.json"
+      - "bun.lock"
+      - "bun.lockb"
+  pull_request:
+    paths:
+      - "src/lib/http/https-guard.ts"
+      - "tests/https-guard-fuzz.test.mjs"
+      - "tests/https-guard-host-validation.test.mjs"
+      - "scripts/report-fuzz-failure.mjs"
+      - ".github/workflows/fuzz-https-guard.yml"
+  schedule:
+    # Nightly extended run — catches drift that short PR runs miss.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "HTTPS_GUARD_FUZZ_ITERS override"
+        required: false
+      seed:
+        description: "HTTPS_GUARD_FUZZ_SEED override (for replay)"
+        required: false
+
+jobs:
+  fuzz:
+    name: Fuzz https-guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # Nightly and manual runs get more iterations; PRs stay fast.
+      - name: Compute fuzz iteration count
+        id: iters
+        run: |
+          if [ -n "${{ github.event.inputs.iterations }}" ]; then
+            echo "iters=${{ github.event.inputs.iterations }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "iters=50000" >> "$GITHUB_OUTPUT"
+          else
+            echo "iters=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run fuzz suite
+        id: fuzz
+        env:
+          HTTPS_GUARD_FUZZ_ITERS: ${{ steps.iters.outputs.iters }}
+          HTTPS_GUARD_FUZZ_SEED: ${{ github.event.inputs.seed }}
+        # Delta-debug shrinker inside the test writes minimised counterexamples
+        # to tests/__fuzz-failures__/ on any invariant violation. We keep going
+        # after failure so the upload step below can attach those JSONs.
+        run: npm run test:https-guard-fuzz
+
+      # ---- On failure: render markdown reports for every saved JSON so
+      #      reviewers can read the reduced case straight from the artifact
+      #      without cloning the repo and running the reproducer.
+      - name: Render markdown reports for each failure
+        if: failure()
+        run: |
+          shopt -s nullglob
+          mkdir -p fuzz-artifacts/reports
+          cp -r tests/__fuzz-failures__/. fuzz-artifacts/ 2>/dev/null || true
+          count=0
+          for f in tests/__fuzz-failures__/*.json; do
+            base="$(basename "$f" .json)"
+            node scripts/report-fuzz-failure.mjs "$f" --out "fuzz-artifacts/reports/${base}.md"
+            count=$((count + 1))
+          done
+          echo "Rendered $count report(s)"
+          if [ "$count" = "0" ]; then
+            echo "No minimised counterexamples were saved — failure was likely infrastructural." \
+              > fuzz-artifacts/NO-COUNTEREXAMPLES.txt
+          fi
+
+      - name: Upload fuzz counterexamples
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: https-guard-fuzz-failures
+          path: fuzz-artifacts/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Post failure summary
+        if: failure()
+        run: |
+          {
+            echo "## HTTPS guard fuzz failed"
+            echo ""
+            echo "Download the **https-guard-fuzz-failures** artifact from this run for:"
+            echo ""
+            echo "- \`*.json\` — minimised counterexample specs (replayable via \`HTTPS_GUARD_FUZZ_SEED\`)"
+            echo "- \`reports/*.md\` — human-readable expected-vs-actual reports"
+          } >> "$GITHUB_STEP_SUMMARY"

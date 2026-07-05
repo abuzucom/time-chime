@@ -1,0 +1,103 @@
+name: Dependency Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "package.json"
+      - "bun.lockb"
+      - "bun.lock"
+      - "package-lock.json"
+      - ".github/workflows/dependency-audit.yml"
+  pull_request:
+    paths:
+      - "package.json"
+      - "bun.lockb"
+      - "bun.lock"
+      - "package-lock.json"
+  schedule:
+    - cron: "0 7 * * *" # daily 07:00 UTC — catches new advisories on unchanged code
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write # for uploading SARIF results
+  issues: write # to open tracking issues on scheduled runs
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: npm audit (high + critical)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # We use `npm audit` because it consumes GitHub Advisory Database
+      # data directly and returns a stable machine-readable JSON schema.
+      # Bun's lockfile is converted on the fly with `npm i --package-lock-only`.
+      - name: Generate npm lockfile from package.json
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Run npm audit (JSON)
+        id: audit
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high --json > audit.json
+          echo "exit=$?" >> "$GITHUB_OUTPUT"
+          jq '{
+            metadata: .metadata,
+            highs: [.vulnerabilities[] | select(.severity == "high" or .severity == "critical") | {name, severity, via: (.via | map(if type=="object" then .title else . end)), fixAvailable}]
+          }' audit.json > audit-summary.json || true
+          cat audit-summary.json
+
+      - name: Upload audit artefacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit
+          path: |
+            audit.json
+            audit-summary.json
+          retention-days: 90
+
+      - name: Fail on high/critical vulnerabilities
+        if: steps.audit.outputs.exit != '0'
+        run: |
+          echo "::error::npm audit found high or critical vulnerabilities. See audit-summary.json artefact."
+          jq -r '.highs[] | "- [\(.severity)] \(.name): \(.via | join(", "))"' audit-summary.json || true
+          exit 1
+
+  osv:
+    name: OSV scanner (transitive graph)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run OSV-Scanner
+        uses: google/osv-scanner-action/osv-scanner-action@v2.0.2
+        with:
+          scan-args: |-
+            --recursive
+            --skip-git
+            --format=sarif
+            --output=osv-results.sarif
+            ./
+        continue-on-error: true
+      - name: Upload SARIF to code scanning
+        if: always() && hashFiles('osv-results.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: osv-results.sarif
+          category: osv-scanner

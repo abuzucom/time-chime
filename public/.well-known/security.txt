@@ -1,0 +1,8 @@
+# RFC 9116 — https://www.rfc-editor.org/rfc/rfc9116
+# Update `Expires` at least annually and after every contact change.
+
+Contact: mailto:security@example.com
+Expires: 2027-07-02T00:00:00.000Z
+Preferred-Languages: en
+Policy: https://github.com/OWNER/REPO/blob/main/SECURITY.md
+Canonical: https://example.com/.well-known/security.txt
