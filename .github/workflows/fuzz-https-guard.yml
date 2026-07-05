@@ -49,9 +49,11 @@ jobs:
       # Nightly and manual runs get more iterations; PRs stay fast.
       - name: Compute fuzz iteration count
         id: iters
+        env:
+          INPUT_ITERATIONS: ${{ github.event.inputs.iterations }}
         run: |
-          if [ -n "${{ github.event.inputs.iterations }}" ]; then
-            echo "iters=${{ github.event.inputs.iterations }}" >> "$GITHUB_OUTPUT"
+          if [ -n "$INPUT_ITERATIONS" ]; then
+            echo "iters=$INPUT_ITERATIONS" >> "$GITHUB_OUTPUT"
           elif [ "${{ github.event_name }}" = "schedule" ]; then
             echo "iters=50000" >> "$GITHUB_OUTPUT"
           else
