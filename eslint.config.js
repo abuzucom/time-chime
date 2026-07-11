@@ -34,12 +34,28 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
-      // AGENTS.md code-quality rules: nesting depth and function size.
+      // AGENTS.md code-quality rules: nesting depth, function size, magic numbers.
       "max-depth": ["error", 3],
       "max-lines-per-function": [
         "warn",
         { max: 60, skipBlankLines: true, skipComments: true, IIFEs: true },
       ],
+      "@typescript-eslint/no-magic-numbers": [
+        "warn",
+        {
+          ignore: [0, 1, -1],
+          ignoreArrayIndexes: true,
+          ignoreEnums: true,
+          ignoreNumericLiteralTypes: true,
+          ignoreReadonlyClassProperties: true,
+          ignoreTypeIndexes: true,
+          ignoreDefaultValues: true,
+          ignoreClassFieldInitialValues: true,
+          detectObjects: false,
+        },
+      ],
+      // AGENTS.md code-quality rule: no TODO/FIXME left in code.
+      "no-warning-comments": ["warn", { terms: ["todo", "fixme"], location: "start" }],
       // AGENTS.md rule 1: no untrusted input in evaluated code.
       "no-eval": "error",
       "no-implied-eval": "error",
@@ -72,14 +88,12 @@ export default tseslint.config(
         // site. Fail the build and force the author to name an explicit
         // origin (or, better, use assertSameOrigin from src/lib/http/same-origin.ts).
         {
-          selector:
-            "Literal[value=/Access-Control-Allow-Origin[^\\n]*\\*/i]",
+          selector: "Literal[value=/Access-Control-Allow-Origin[^\\n]*\\*/i]",
           message:
             "Wildcard CORS (`Access-Control-Allow-Origin: *`) is banned. Restrict to the app origin or use assertSameOrigin() from '@/lib/http/same-origin'.",
         },
         {
-          selector:
-            "TemplateElement[value.raw=/Access-Control-Allow-Origin[^\\n]*\\*/i]",
+          selector: "TemplateElement[value.raw=/Access-Control-Allow-Origin[^\\n]*\\*/i]",
           message:
             "Wildcard CORS (`Access-Control-Allow-Origin: *`) is banned. Restrict to the app origin or use assertSameOrigin() from '@/lib/http/same-origin'.",
         },
@@ -88,8 +102,7 @@ export default tseslint.config(
         // the rare justified non-security use (cache keys, dedup) needs an
         // inline eslint-disable with the same justification the rule requires.
         {
-          selector:
-            "CallExpression[callee.name='createHash'][arguments.0.value=/^(md5|sha-?1)$/i]",
+          selector: "CallExpression[callee.name='createHash'][arguments.0.value=/^(md5|sha-?1)$/i]",
           message:
             "MD5/SHA-1 is banned in security-sensitive contexts (AGENTS.md rule 7). Use SHA-256/SHA-3, or bcrypt/scrypt/Argon2 for passwords. Non-security use requires a justifying comment and an eslint-disable on this line.",
         },
