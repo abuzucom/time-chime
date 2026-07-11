@@ -5,12 +5,21 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const SOURCE = "AGENTS.md";
-const COPIES = ["CLAUDE.md", "GEMINI.md", "CONVENTIONS.md", ".cursorrules", ".clinerules", ".windsurfrules"];
+const COPIES = [
+  "CLAUDE.md",
+  "GEMINI.md",
+  "CONVENTIONS.md",
+  ".cursorrules",
+  ".clinerules",
+  ".windsurfrules",
+];
 
 const root = path.resolve(fileURLToPath(import.meta.url), "../..");
 
 function isInSync(sourcePath, copyPath) {
-  return existsSync(copyPath) && readFileSync(sourcePath, "utf8") === readFileSync(copyPath, "utf8");
+  return (
+    existsSync(copyPath) && readFileSync(sourcePath, "utf8") === readFileSync(copyPath, "utf8")
+  );
 }
 
 function syncCopies(checkOnly) {
