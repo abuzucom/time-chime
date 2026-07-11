@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
@@ -5,6 +6,10 @@ import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { nitro } from "nitro/vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+const { version: appVersion } = JSON.parse(readFileSync("./package.json", "utf8")) as {
+  version: string;
+};
 
 /**
  * Redirect `node:async_hooks` imports in browser bundles to a tiny shim.
@@ -31,6 +36,9 @@ function browserOnlyAsyncHooksShim() {
 // entry ships as a portable Cloudflare Worker (change `preset` for other
 // deploy targets), plus the app-shell PWA and the async_hooks shim.
 export default defineConfig(({ command }) => ({
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
+  },
   css: {
     // Match dev to build: Vite defaults to PostCSS in serve mode and only
     // runs Lightning CSS at build, which lets subtle prefix / vendor rules
