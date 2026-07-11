@@ -246,6 +246,15 @@ strict literal search-and-replace.
 **Retry discipline.** Do not rerun a failing command more than twice.
 Stop, analyze the error output, pivot strategy.
 
+**Documentation and versioning.** Update `README.md` for substantial or
+user-facing changes (new clock faces, chime behavior, features). Update
+`CHANGELOG.md` for every change, in Keep a Changelog style. Bump the
+`version` field in `package.json` per SemVer: patch for backward-compatible
+fixes, minor for backward-compatible additions, major for breaking changes
+to the public API surface (rule 6) — major bumps need explicit user
+consent, same as any breaking change already requires. `version` starts at
+`0.1.0`: treat `0.y.z` as unstable initial development.
+
 ## Correctness & safety
 
 **Trace execution paths.** Check preconditions before use, not after.
