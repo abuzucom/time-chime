@@ -34,6 +34,15 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      // AGENTS.md code-quality rules: nesting depth and function size.
+      "max-depth": ["error", 3],
+      "max-lines-per-function": [
+        "warn",
+        { max: 60, skipBlankLines: true, skipComments: true, IIFEs: true },
+      ],
+      // AGENTS.md rule 1: no untrusted input in evaluated code.
+      "no-eval": "error",
+      "no-implied-eval": "error",
       // Favor composition over inheritance.
       //
       // Any `class Foo extends Bar` is flagged unless `Bar` is a framework /
@@ -74,7 +83,31 @@ export default tseslint.config(
           message:
             "Wildcard CORS (`Access-Control-Allow-Origin: *`) is banned. Restrict to the app origin or use assertSameOrigin() from '@/lib/http/same-origin'.",
         },
+        // AGENTS.md rule 7: no MD5/SHA-1 without a justifying comment. ESLint
+        // can't see comments here, so this simply bans the call outright —
+        // the rare justified non-security use (cache keys, dedup) needs an
+        // inline eslint-disable with the same justification the rule requires.
+        {
+          selector:
+            "CallExpression[callee.name='createHash'][arguments.0.value=/^(md5|sha-?1)$/i]",
+          message:
+            "MD5/SHA-1 is banned in security-sensitive contexts (AGENTS.md rule 7). Use SHA-256/SHA-3, or bcrypt/scrypt/Argon2 for passwords. Non-security use requires a justifying comment and an eslint-disable on this line.",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='createHash'][arguments.0.value=/^(md5|sha-?1)$/i]",
+          message:
+            "MD5/SHA-1 is banned in security-sensitive contexts (AGENTS.md rule 7). Use SHA-256/SHA-3, or bcrypt/scrypt/Argon2 for passwords. Non-security use requires a justifying comment and an eslint-disable on this line.",
+        },
       ],
+    },
+  },
+  {
+    // Config files are declarative option objects, not control-flow code —
+    // the function-size rule (AGENTS.md code quality) doesn't fit them.
+    files: ["*.config.ts", "*.config.js"],
+    rules: {
+      "max-lines-per-function": "off",
     },
   },
   eslintPluginPrettier,
