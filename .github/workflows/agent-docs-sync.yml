@@ -1,0 +1,44 @@
+name: Agent Docs Sync
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "GEMINI.md"
+      - "CONVENTIONS.md"
+      - ".cursorrules"
+      - ".clinerules"
+      - ".windsurfrules"
+      - "scripts/sync-agent-docs.mjs"
+      - ".github/workflows/agent-docs-sync.yml"
+  pull_request:
+    paths:
+      - "AGENTS.md"
+      - "CLAUDE.md"
+      - "GEMINI.md"
+      - "CONVENTIONS.md"
+      - ".cursorrules"
+      - ".clinerules"
+      - ".windsurfrules"
+      - "scripts/sync-agent-docs.mjs"
+      - ".github/workflows/agent-docs-sync.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-docs-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Verify AGENTS.md copies are in sync
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check agent doc copies
+        run: node scripts/sync-agent-docs.mjs --check

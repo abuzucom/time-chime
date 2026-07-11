@@ -6,8 +6,8 @@ import {
   Bug,
   Clock,
   Coffee,
-  Github,
   Heart,
+  HeartHandshake,
   LifeBuoy,
   Mail,
   ShieldAlert,
@@ -123,7 +123,7 @@ const DONATE = [
     id: "github",
     label: "GitHub Sponsors",
     href: "https://github.com/sponsors/YOUR_HANDLE",
-    icon: Github,
+    icon: HeartHandshake,
     note: "Recurring or one-time. Zero platform fees.",
   },
   {

@@ -11,6 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "check:headers": "node scripts/check-headers.mjs",
+    "sync:agent-docs": "node scripts/sync-agent-docs.mjs",
+    "check:agent-docs": "node scripts/sync-agent-docs.mjs --check",
     "test:headers": "node --test tests/check-headers.test.mjs",
     "test:clickjacking": "node --test tests/clickjacking-defences.test.mjs",
     "test:error-page-clickjacking": "node --test tests/error-page-clickjacking.test.mjs",
