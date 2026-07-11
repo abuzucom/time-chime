@@ -591,6 +591,10 @@ export function SettingsDrawer() {
               </a>
             </div>
           </Section>
+
+          <div className="text-center text-[11px] text-muted-foreground">
+            Time Chime v{__APP_VERSION__}
+          </div>
         </div>
       </SheetContent>
     </Sheet>
