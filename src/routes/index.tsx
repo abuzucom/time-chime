@@ -164,7 +164,16 @@ function Home() {
         <div className="rule-hair mb-3" />
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
           <span>© Time Chime</span>
-          <div className="flex flex-wrap items-center gap-x-5">
+          <div className="flex flex-wrap items-center gap-x-5">            <a
+              href="https://github.com/abuzucom/time-chime"
+              aria-label="View Time Chime on GitHub"
+              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-card-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Github className="size-3" aria-hidden="true" />
+              GitHub
+            </a>
             <a href="/privacy" className="hover:text-foreground">
               Privacy
             </a>
