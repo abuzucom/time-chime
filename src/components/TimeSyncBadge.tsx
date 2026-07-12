@@ -26,13 +26,15 @@ export function TimeSyncBadge() {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
-  const severity = sync.lastSyncAt === null ? "warn" : driftSeverity(sync.offsetMs);
+  const hasReference =
+    sync.lastSyncAt !== null && !sync.error && sync.sources.some((source) => source.ok);
+  const severity = hasReference ? driftSeverity(sync.offsetMs) : "warn";
   const label =
-    sync.lastSyncAt === null
-      ? sync.syncing
-        ? "Syncing…"
-        : "Not yet synced"
-      : `Device clock ${formatOffset(sync.offsetMs)}`;
+    sync.syncing
+      ? "Syncing…"
+      : hasReference
+        ? `Device clock ${formatOffset(sync.offsetMs)}`
+        : "Time sync unavailable";
 
   return (
     <Dialog>
@@ -59,7 +61,7 @@ export function TimeSyncBadge() {
             )}
           />
           <span>{label}</span>
-          {sync.rttMs > 0 && (
+          {hasReference && sync.rttMs > 0 && (
             <span className="text-muted-foreground">± {Math.round(sync.rttMs / 2)} ms</span>
           )}
         </button>
@@ -77,7 +79,9 @@ export function TimeSyncBadge() {
 /** Dialog body: current drift magnitude/severity, provider list, and sparkline history. */
 function DriftPanelBody({ now }: { now: number }) {
   const sync = useTimeSync();
-  const severity = sync.lastSyncAt === null ? "warn" : driftSeverity(sync.offsetMs);
+  const hasReference =
+    sync.lastSyncAt !== null && !sync.error && sync.sources.some((source) => source.ok);
+  const severity = hasReference ? driftSeverity(sync.offsetMs) : "warn";
 
   return (
     <div className="space-y-4">
@@ -91,14 +95,17 @@ function DriftPanelBody({ now }: { now: number }) {
             severity === "bad" && "text-[color:var(--drift-bad-text)]",
           )}
         >
-          {formatOffset(sync.offsetMs)}
+          {hasReference ? formatOffset(sync.offsetMs) : "No reference"}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
-          {sync.offsetMs >= 0
-            ? "device clock is behind reference"
-            : "device clock is ahead of reference"}
-          {" · uncertainty ± "}
-          {Math.round(sync.rttMs / 2)} ms
+          {hasReference
+            ? sync.offsetMs >= 0
+              ? "device clock is behind reference"
+              : "device clock is ahead of reference"
+            : "No current network reference is available"}
+          {hasReference && (
+            <>{" · uncertainty ± "}{Math.round(sync.rttMs / 2)} ms</>
+          )}
         </div>
       </div>
 
@@ -129,7 +136,9 @@ function DriftPanelBody({ now }: { now: number }) {
 
       <div className="flex items-center justify-between border-t pt-3">
         <div className="text-xs text-muted-foreground">
-          {sync.lastSyncAt ? `Last sync ${formatRelative(sync.lastSyncAt, now)}` : "Never synced"}
+          {sync.lastSyncAt && hasReference
+            ? `Last successful sync ${formatRelative(sync.lastSyncAt, now)}`
+            : "No successful sync"}
           {sync.inferredCountry && ` · region ${sync.inferredCountry}`}
         </div>
         {(() => {

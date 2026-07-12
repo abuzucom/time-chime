@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import { syncTime, type ProviderId } from "@/lib/time.functions";
+import { syncTime, type ProviderId, type ProviderSample } from "@/lib/time.functions";
 import { HISTORY_MAX, initialSyncState, type SyncSample, type TimeSyncState } from "./state";
 import { setAuthoritativeOffset } from "./now";
 import { normalizeProviderIds } from "./provider";
@@ -90,6 +90,12 @@ function persistTimeSyncState(state: TimeSyncState): boolean {
 
 type ProbeResponse = Awaited<ReturnType<typeof syncTime>>;
 
+class NoNetworkSampleError extends Error {
+  constructor(readonly response: ProbeResponse) {
+    super("No network time reference responded");
+  }
+}
+
 /**
  * Perform one NTP-style probe against the current provider list and compute
  * a symmetric-delay offset sample from the round-trip.
@@ -107,6 +113,9 @@ async function takeSingleSample(providers: ProviderId[]): Promise<{
 }> {
   const t1 = Date.now();
   const response = await syncTime({ data: { providers } });
+  if (!response.sources.some((source) => source.ok)) {
+    throw new NoNetworkSampleError(response);
+  }
   const t4 = Date.now();
   const rttMs = Math.max(0, t4 - t1 - response.serverProcessingMs);
   const midpoint = t1 + rttMs / 2 + response.serverProcessingMs / 2;
@@ -132,7 +141,10 @@ async function takeSingleSample(providers: ProviderId[]): Promise<{
 async function collectBestProbe(
   providers: ProviderId[],
   maxSamples = 4,
-): Promise<{ best: SyncSample; lastResponse: ProbeResponse } | null> {
+): Promise<
+  | { best: SyncSample; lastResponse: ProbeResponse }
+  | { failure: ProbeResponse }
+  | null> {
   let best: SyncSample | null = null;
   let lastResponse: ProbeResponse | null = null;
   let lastError: unknown = null;
@@ -142,6 +154,7 @@ async function collectBestProbe(
       lastResponse = response;
       if (!best || sample.rttMs < best.rttMs) best = sample;
     } catch (err) {
+      if (err instanceof NoNetworkSampleError) lastResponse = err.response;
       lastError = err;
       // If we already have a good sample keep it; otherwise fall through and
       // let the caller see the failure once every attempt is exhausted.
@@ -149,6 +162,7 @@ async function collectBestProbe(
     }
   }
   if (best && lastResponse) return { best, lastResponse };
+  if (lastResponse) return { failure: lastResponse };
   if (lastError) throw lastError;
   return null;
 }
@@ -229,9 +243,21 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
    * error condition and show a deduped toast so we don't spam the user
    * every RESYNC_INTERVAL_MS while offline.
    */
-  const handleSyncFailure = useCallback((err: unknown) => {
+  const handleSyncFailure = useCallback(
+    (err: unknown, sources: ProviderSample[] = []) => {
     const message = err instanceof Error ? err.message : "unknown_error";
-    setState((s) => ({ ...s, syncing: false, error: message }));
+    lastAttemptAt.current = 0;
+    setAuthoritativeOffset(0);
+    setState((s) => ({
+      ...s,
+      offsetMs: 0,
+      rttMs: 0,
+      lastSyncAt: null,
+      syncing: false,
+      error: message,
+      sources,
+      inferredCountry: null,
+    }));
     if (!syncFailed.current) {
       syncFailed.current = true;
       toast.error("Time sync unavailable", {
@@ -260,6 +286,13 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
       const result = await collectBestProbe(providers);
       if (!result) {
         setState((s) => ({ ...s, syncing: false }));
+        return;
+      }
+      if ("failure" in result) {
+        handleSyncFailure(
+          new Error("No network time reference responded"),
+          result.failure.sources,
+        );
         return;
       }
       setAuthoritativeOffset(result.best.offsetMs);
