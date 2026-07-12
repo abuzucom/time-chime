@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.5] - 2026-07-12
+
+### Changed
+
+- Pinned all 76 `^`-range `package.json` dependencies/devDependencies to
+  their currently-resolved exact versions from `bun.lock` (AGENTS.md rule
+  9: "pin versions"). Verified `bun install` produces no lockfile changes
+  beyond the version-string echo in the workspace declaration - no
+  package's resolved version shifted.
+
 ## [0.2.4] - 2026-07-12
 
 ### Fixed
