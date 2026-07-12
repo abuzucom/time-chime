@@ -11,7 +11,8 @@
 import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
-import { enforceHttps, isSafeHost } from "../src/lib/http/https-guard.ts";
+import { isSafeHost } from "../src/lib/http/https-guard.ts";
+import { verifyHttpsGuardRedirect, expectedPathForSpec } from "./lib/verify-https-redirect.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FAILURES_DIR = resolve(HERE, "..", "tests", "__fuzz-failures__");
@@ -26,8 +27,9 @@ let outPath = null;
 for (let i = 0; i < args.length; i++) {
   const a = args[i];
   if (a === "--out" || a === "-o") outPath = args[++i];
-  else if (a === "--help" || a === "-h") { printHelpAndExit(); }
-  else if (!inputPath) inputPath = a;
+  else if (a === "--help" || a === "-h") {
+    printHelpAndExit();
+  } else if (!inputPath) inputPath = a;
 }
 if (!inputPath) inputPath = findNewestFailure();
 if (!inputPath) {
@@ -36,7 +38,9 @@ if (!inputPath) {
 }
 
 function printHelpAndExit() {
-  console.log("Usage: node scripts/report-fuzz-failure.mjs [path-to-failure.json] [--out report.md]");
+  console.log(
+    "Usage: node scripts/report-fuzz-failure.mjs [path-to-failure.json] [--out report.md]",
+  );
   process.exit(0);
 }
 
@@ -69,52 +73,46 @@ const reproduction = reproduce(kind, spec);
 
 function reproduce(kind, spec) {
   if (kind === "proxy-headers") return reproduceProxyHeaders(spec);
-  if (kind === "safe-host")     return reproduceSafeHost(spec);
+  if (kind === "safe-host") return reproduceSafeHost(spec);
   return { note: `Unknown failure kind "${kind}" — cannot reproduce.` };
 }
 
 function reproduceProxyHeaders(spec) {
-  let request;
-  try {
-    request = new Request(spec.url, { method: spec.method, headers: spec.headers });
-  } catch (err) {
-    return { note: `Could not rebuild Request: ${err.message}` };
-  }
-  let response;
-  try {
-    response = enforceHttps(request);
-  } catch (err) {
-    return { threw: err.message };
-  }
-  if (response === null) return { passthrough: true };
-  const location = response.headers.get("Location");
-  let parsed = null, parseError = null;
-  if (location) {
-    try { parsed = new URL(location); } catch (err) { parseError = err.message; }
-  }
-  const expected = (() => {
-    const u = new URL(spec.url);
-    return u.pathname + u.search + u.hash;
-  })();
-  const actualPath = parsed ? parsed.pathname + parsed.search + parsed.hash : null;
+  const result = verifyHttpsGuardRedirect(spec);
+  if (result.outcome === "unbuildable") return { note: result.detail };
+  if (result.outcome === "threw") return { threw: result.detail };
+  if (result.outcome === "passthrough") return { passthrough: true };
+
+  // "forbidden" (403), "unexpected-status", and every "redirect" variant
+  // (missing Location, control byte, unparseable, or a fully-evaluated
+  // Location) all render through the same property table; fields the
+  // shared checker didn't reach for this particular outcome stay null.
+  const expectedPathAndBeyond = expectedPathForSpec(spec);
+  const parseFailed =
+    result.outcome === "redirect" && result.location !== undefined && result.scheme === undefined;
+
   return {
-    status: response.status,
-    location,
-    parseError,
-    scheme: parsed?.protocol ?? null,
-    host: parsed?.host ?? null,
-    hostSafe: parsed ? isSafeHost(parsed.host) : null,
-    userinfoLeaked: parsed ? (parsed.username !== "" || parsed.password !== "") : null,
-    expectedPathAndBeyond: expected,
-    actualPathAndBeyond: actualPath,
-    pathPreserved: actualPath === expected,
+    status: result.status ?? null,
+    location: result.location ?? null,
+    parseError: parseFailed ? result.detail : null,
+    scheme: result.scheme ?? null,
+    host: result.host ?? null,
+    hostSafe: result.hostSafe ?? null,
+    userinfoLeaked: result.userinfoLeaked ?? null,
+    expectedPathAndBeyond,
+    actualPathAndBeyond: result.actualPathAndBeyond ?? null,
+    pathPreserved: result.pathPreserved ?? false,
   };
 }
 
 function reproduceSafeHost(spec) {
   const candidate = spec.candidate;
   let accepted;
-  try { accepted = isSafeHost(candidate); } catch (err) { return { threw: err.message }; }
+  try {
+    accepted = isSafeHost(candidate);
+  } catch (err) {
+    return { threw: err.message };
+  }
   return { candidate, accepted };
 }
 
@@ -200,7 +198,9 @@ function renderProxySection() {
   if (r.threw) {
     out.push(`| | Expected | Actual |`);
     out.push(`| --- | --- | --- |`);
-    out.push(`| Behaviour | Return a 301 or 403 without throwing | \`enforceHttps\` threw: \`${escapeCell(r.threw)}\` |`);
+    out.push(
+      `| Behaviour | Return a 301 or 403 without throwing | \`enforceHttps\` threw: \`${escapeCell(r.threw)}\` |`,
+    );
     return out;
   }
   if (r.passthrough) {
@@ -211,13 +211,17 @@ function renderProxySection() {
   out.push(`| --- | --- | --- |`);
   out.push(`| Status | \`301\` | \`${r.status}\` |`);
   out.push(`| Location present | yes | ${r.location === null ? "**no**" : "yes"} |`);
-  out.push(`| Location (raw) | _(safe https URL)_ | \`${escapeCell(JSON.stringify(r.location))}\` |`);
+  out.push(
+    `| Location (raw) | _(safe https URL)_ | \`${escapeCell(JSON.stringify(r.location))}\` |`,
+  );
   out.push(`| URL parses | yes | ${r.parseError ? `**no** — ${r.parseError}` : "yes"} |`);
   out.push(`| Scheme | \`https:\` | \`${r.scheme ?? "n/a"}\` |`);
   out.push(`| Host | _(passes \`isSafeHost\`)_ | \`${escapeCell(String(r.host))}\` |`);
   out.push(`| Host safe | \`true\` | \`${r.hostSafe}\` |`);
   out.push(`| Userinfo leaked | \`false\` | \`${r.userinfoLeaked}\` |`);
-  out.push(`| Path/query/hash | \`${escapeCell(r.expectedPathAndBeyond)}\` | \`${escapeCell(String(r.actualPathAndBeyond))}\` |`);
+  out.push(
+    `| Path/query/hash | \`${escapeCell(r.expectedPathAndBeyond)}\` | \`${escapeCell(String(r.actualPathAndBeyond))}\` |`,
+  );
   out.push(`| Path preserved | \`true\` | \`${r.pathPreserved}\` |`);
   return out;
 }
