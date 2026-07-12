@@ -43,6 +43,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { enforceHttps, isSafeHost } from "../src/lib/http/https-guard.ts";
+import { specToRequest, verifyHttpsGuardRedirect } from "../scripts/lib/verify-https-redirect.mjs";
 
 const FAILURES_DIR = join(dirname(fileURLToPath(import.meta.url)), "__fuzz-failures__");
 
@@ -51,7 +52,7 @@ const FAILURES_DIR = join(dirname(fileURLToPath(import.meta.url)), "__fuzz-failu
 // keeps the suite hermetic (no reliance on Math.random ordering).
 // ---------------------------------------------------------------------------
 
-const SEED = Number(process.env.HTTPS_GUARD_FUZZ_SEED ?? 0xC10CC0DE);
+const SEED = Number(process.env.HTTPS_GUARD_FUZZ_SEED ?? 0xc10cc0de);
 let rngState = SEED >>> 0 || 1;
 function rand() {
   // xorshift32
@@ -60,9 +61,15 @@ function rand() {
   rngState ^= rngState << 5;
   return (rngState >>> 0) / 0x100000000;
 }
-function randInt(max) { return Math.floor(rand() * max); }
-function pick(xs) { return xs[randInt(xs.length)]; }
-function chance(p) { return rand() < p; }
+function randInt(max) {
+  return Math.floor(rand() * max);
+}
+function pick(xs) {
+  return xs[randInt(xs.length)];
+}
+function chance(p) {
+  return rand() < p;
+}
 
 // ---------------------------------------------------------------------------
 // Fuzz alphabets. Each entry is a candidate byte/token the header assembler
@@ -71,8 +78,14 @@ function chance(p) { return rand() < p; }
 
 const HOST_TOKENS = [
   // Benign shapes we should still round-trip.
-  "example.com", "sub.example.com", "localhost", "127.0.0.1",
-  "[::1]", "[2001:db8::1]", "example.com:443", "example.com:8080",
+  "example.com",
+  "sub.example.com",
+  "localhost",
+  "127.0.0.1",
+  "[::1]",
+  "[2001:db8::1]",
+  "example.com:443",
+  "example.com:8080",
   // Adversarial payloads. If any of these ever end up in Location, we fail.
   "evil.com\r\nSet-Cookie: pwn=1",
   "evil.com\nLocation: https://attacker",
@@ -94,16 +107,31 @@ const HOST_TOKENS = [
   " ",
   "evil.com:99999",
   "evil.com:-1",
-  "[::1",  // unbalanced bracket
+  "[::1", // unbalanced bracket
   "exämple.com",
   "evil.com\u200bhomograph",
-  "a".repeat(300),  // over length ceiling
+  "a".repeat(300), // over length ceiling
 ];
 
 const SCHEME_TOKENS = [
-  "http", "https", "HTTP", "HTTPS", "https ", " http", "https\r\n",
-  "https,http", "http,https", "wss", "ftp", "javascript", "",
-  "https;boundary", "https\"quoted", "http\u0000", "on", "off",
+  "http",
+  "https",
+  "HTTP",
+  "HTTPS",
+  "https ",
+  " http",
+  "https\r\n",
+  "https,http",
+  "http,https",
+  "wss",
+  "ftp",
+  "javascript",
+  "",
+  "https;boundary",
+  'https"quoted',
+  "http\u0000",
+  "on",
+  "off",
 ];
 
 const CF_VISITOR_TOKENS = [
@@ -121,14 +149,20 @@ const CF_VISITOR_TOKENS = [
 ];
 
 const URL_PATHS = [
-  "/", "/a", "/a/b", "/index.html", "/search?q=hello",
-  "/x?a=1&b=2#frag", "/%20space", "/unicode/ö", "/deep/nested/path/segment",
-  "/?empty", "/#justhash",
+  "/",
+  "/a",
+  "/a/b",
+  "/index.html",
+  "/search?q=hello",
+  "/x?a=1&b=2#frag",
+  "/%20space",
+  "/unicode/ö",
+  "/deep/nested/path/segment",
+  "/?empty",
+  "/#justhash",
 ];
 
-const HOSTS_FOR_URL = [
-  "example.com", "worker.dev", "app.local", "127.0.0.1:8080",
-];
+const HOSTS_FOR_URL = ["example.com", "worker.dev", "app.local", "127.0.0.1:8080"];
 
 const METHODS = ["GET", "HEAD", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"];
 
@@ -179,74 +213,9 @@ function buildFuzzSpec() {
   return { url, method: pick(METHODS), headers };
 }
 
-/**
- * Materialise a spec into a Request. Header values that the fetch stack
- * refuses (CR/LF/NUL) are silently dropped — that mirrors production, and
- * lets the shrinker keep trying without every reduction being fatal.
- * Returns `null` if the base URL itself is unusable.
- */
-function specToRequest(spec) {
-  const headers = new Headers();
-  for (const [name, value] of spec.headers) {
-    try { headers.append(name, value); } catch { /* platform-rejected */ }
-  }
-  try {
-    return new Request(spec.url, { method: spec.method, headers });
-  } catch {
-    try { return new Request(spec.url, { method: spec.method }); }
-    catch { return null; }
-  }
-}
-
-function expectedPathForSpec(spec) {
-  const parsed = new URL(spec.url);
-  return parsed.pathname + parsed.search + parsed.hash;
-}
-
-// ---------------------------------------------------------------------------
-// The core invariants, applied to every 301 the guard produces.
-// ---------------------------------------------------------------------------
-
-function assertLocationInvariants(location, expectedPathAndBeyond, label) {
-  // Invariant 2 — no header-splitting bytes in the raw string. Check BEFORE
-  // parsing, because URL parsing can normalise/strip some of these.
-  const badByte = location.match(/[\u0000-\u001f\u007f]/);
-  assert.equal(
-    badByte,
-    null,
-    `[${label}] Location contains control byte 0x${badByte?.[0].charCodeAt(0).toString(16)}: ${JSON.stringify(location)}`,
-  );
-
-  // Invariant 1 — parses as https:// only.
-  let parsed;
-  try {
-    parsed = new URL(location);
-  } catch (err) {
-    assert.fail(`[${label}] Location is not a valid URL: ${JSON.stringify(location)} — ${err.message}`);
-  }
-  assert.equal(parsed.protocol, "https:", `[${label}] Location scheme is not https: ${location}`);
-
-  // Invariant 3 — chosen host is one we would independently deem safe.
-  // (The guard is allowed to fall back to the request URL's own host, which
-  // for our fixtures always passes the validator anyway.)
-  assert.equal(
-    isSafeHost(parsed.host),
-    true,
-    `[${label}] Location host failed isSafeHost: ${JSON.stringify(parsed.host)} (full: ${location})`,
-  );
-
-  // No userinfo ever survives into Location.
-  assert.equal(parsed.username, "", `[${label}] Location leaked userinfo: ${location}`);
-  assert.equal(parsed.password, "", `[${label}] Location leaked userinfo: ${location}`);
-
-  // Invariant 4 — path/query/hash preserved from the incoming request.
-  const actual = parsed.pathname + parsed.search + parsed.hash;
-  assert.equal(
-    actual,
-    expectedPathAndBeyond,
-    `[${label}] Location path/query/hash changed: expected ${JSON.stringify(expectedPathAndBeyond)}, got ${JSON.stringify(actual)}`,
-  );
-}
+// The core invariants, applied to every 301 the guard produces, live in
+// scripts/lib/verify-https-redirect.mjs (verifyHttpsGuardRedirect) - shared
+// with the failure replayer and reporter so the three do not drift.
 
 // ---------------------------------------------------------------------------
 // Checker: returns the failure message string, or null when the input passes.
@@ -258,25 +227,8 @@ function assertLocationInvariants(location, expectedPathAndBeyond, label) {
 // ---------------------------------------------------------------------------
 
 function checkSpec(spec) {
-  const request = specToRequest(spec);
-  if (request === null) return null; // unbuildable — treat as pass
-  let response;
-  try {
-    response = enforceHttps(request);
-  } catch (err) {
-    return `enforceHttps threw: ${err.message}`;
-  }
-  if (response === null) return null;
-  if (response.status === 403) return null;
-  if (response.status !== 301) return `unexpected status ${response.status}`;
-  const location = response.headers.get("Location");
-  if (!location) return "301 without Location header";
-  try {
-    assertLocationInvariants(location, expectedPathForSpec(spec), "check");
-  } catch (err) {
-    return err.message;
-  }
-  return null;
+  const result = verifyHttpsGuardRedirect(spec);
+  return result.ok ? null : result.detail;
 }
 
 // ---------------------------------------------------------------------------
@@ -323,7 +275,10 @@ function shrinkSpec(spec, originalFailure) {
     // 1. Try deleting each header.
     for (let i = 0; i < current.headers.length; i++) {
       const reduced = { ...current, headers: current.headers.filter((_, j) => j !== i) };
-      if (tryCandidate(reduced)) { progress = true; break; }
+      if (tryCandidate(reduced)) {
+        progress = true;
+        break;
+      }
     }
     if (progress) continue;
 
@@ -331,34 +286,30 @@ function shrinkSpec(spec, originalFailure) {
     const parsed = new URL(current.url);
     if (parsed.pathname !== "/" || parsed.search !== "" || parsed.hash !== "") {
       const simpler = `${parsed.protocol}//${parsed.host}/`;
-      if (tryCandidate({ ...current, url: simpler })) { progress = true; continue; }
+      if (tryCandidate({ ...current, url: simpler })) {
+        progress = true;
+        continue;
+      }
     }
 
     // 3. Try neutralising method.
     if (current.method !== "GET") {
-      if (tryCandidate({ ...current, method: "GET" })) { progress = true; continue; }
+      if (tryCandidate({ ...current, method: "GET" })) {
+        progress = true;
+        continue;
+      }
     }
 
     // 4. Per-header value reductions.
     for (let i = 0; i < current.headers.length; i++) {
       const [name, value] = current.headers[i];
-
-      // 4a. Replace with a benign canonical form.
-      const benign = benignFor(name);
-      if (benign !== null && benign !== value) {
-        const reduced = { ...current, headers: current.headers.map((h, j) => j === i ? [name, benign] : h) };
-        if (tryCandidate(reduced)) { progress = true; break; }
+      if (tryBenignReduction(tryCandidate, current, i, name, value)) {
+        progress = true;
+        break;
       }
-
-      // 4b. Bisect value length — keep halving from either end.
-      if (value.length > 1) {
-        const half = Math.floor(value.length / 2);
-        for (const shorter of [value.slice(0, half), value.slice(half), value.slice(1), value.slice(0, -1)]) {
-          if (shorter === value) continue;
-          const reduced = { ...current, headers: current.headers.map((h, j) => j === i ? [name, shorter] : h) };
-          if (tryCandidate(reduced)) { progress = true; break; }
-        }
-        if (progress) break;
+      if (tryBisectReduction(tryCandidate, current, i, name, value)) {
+        progress = true;
+        break;
       }
     }
   }
@@ -366,22 +317,64 @@ function shrinkSpec(spec, originalFailure) {
   return { spec: current, failure: currentFailure, steps };
 }
 
+/** Shrink step 4a: replace a header value with its benign canonical form. */
+function tryBenignReduction(tryCandidate, current, i, name, value) {
+  const benign = benignFor(name);
+  if (benign === null || benign === value) return false;
+  const reduced = {
+    ...current,
+    headers: current.headers.map((h, j) => (j === i ? [name, benign] : h)),
+  };
+  return tryCandidate(reduced);
+}
+
+/** Shrink step 4b: bisect a header value's length, halving from either end. */
+function tryBisectReduction(tryCandidate, current, i, name, value) {
+  if (value.length <= 1) return false;
+  const half = Math.floor(value.length / 2);
+  for (const shorter of [
+    value.slice(0, half),
+    value.slice(half),
+    value.slice(1),
+    value.slice(0, -1),
+  ]) {
+    if (shorter === value) continue;
+    const reduced = {
+      ...current,
+      headers: current.headers.map((h, j) => (j === i ? [name, shorter] : h)),
+    };
+    if (tryCandidate(reduced)) return true;
+  }
+  return false;
+}
+
 /** Canonical benign values for common headers — endpoints of the shrink. */
 function benignFor(name) {
   switch (name.toLowerCase()) {
-    case "cf-ray": return "benign";
-    case "x-forwarded-proto": return "http";
-    case "cf-visitor": return `{"scheme":"http"}`;
-    case "forwarded": return "proto=http";
-    case "x-forwarded-host": return "example.com";
-    case "host": return "example.com";
-    default: return null;
+    case "cf-ray":
+      return "benign";
+    case "x-forwarded-proto":
+      return "http";
+    case "cf-visitor":
+      return `{"scheme":"http"}`;
+    case "forwarded":
+      return "proto=http";
+    case "x-forwarded-host":
+      return "example.com";
+    case "host":
+      return "example.com";
+    default:
+      return null;
   }
 }
 
 /** Persist a minimised failure spec for offline replay. */
 function saveFailure(kind, spec, failure, steps, iteration) {
-  try { mkdirSync(FAILURES_DIR, { recursive: true }); } catch { /* already exists */ }
+  try {
+    mkdirSync(FAILURES_DIR, { recursive: true });
+  } catch {
+    /* already exists */
+  }
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const path = join(FAILURES_DIR, `${kind}-${stamp}-seed${SEED}.json`);
   const payload = { kind, seed: SEED, iteration, shrinkSteps: steps, failure, spec };
@@ -415,11 +408,11 @@ test(`fuzz: ${ITERATIONS} random proxy-header combinations → safe Location`, (
       const savedAt = saveFailure("proxy-headers", minSpec, minFailure, steps, i);
       assert.fail(
         `Fuzz failure at iteration ${i} (seed ${SEED}).\n` +
-        `  Original failure: ${failure}\n` +
-        `  Minimised after ${steps} shrink steps: ${minFailure}\n` +
-        `  Minimised spec: ${JSON.stringify(minSpec)}\n` +
-        `  Saved to: ${savedAt}\n` +
-        `  Reproduce with: HTTPS_GUARD_FUZZ_SEED=${SEED} node --test tests/https-guard-fuzz.test.mjs`,
+          `  Original failure: ${failure}\n` +
+          `  Minimised after ${steps} shrink steps: ${minFailure}\n` +
+          `  Minimised spec: ${JSON.stringify(minSpec)}\n` +
+          `  Saved to: ${savedAt}\n` +
+          `  Reproduce with: HTTPS_GUARD_FUZZ_SEED=${SEED} node --test tests/https-guard-fuzz.test.mjs`,
       );
     }
 
@@ -439,7 +432,9 @@ test(`fuzz: ${ITERATIONS} random proxy-header combinations → safe Location`, (
   );
 
   // Emit a compact summary to stdout so CI logs show fuzz coverage.
-  console.log(`  fuzz summary: ${redirects} redirects, ${forbiddens} forbiddens, ${nulls} pass-throughs (seed=${SEED})`);
+  console.log(
+    `  fuzz summary: ${redirects} redirects, ${forbiddens} forbiddens, ${nulls} pass-throughs (seed=${SEED})`,
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -451,14 +446,22 @@ test(`fuzz: ${ITERATIONS} random proxy-header combinations → safe Location`, (
 /** Check a single host candidate; returns failure message or null. */
 function checkHost(candidate) {
   if (!isSafeHost(candidate)) return null;
-  if (/[\u0000-\u001f\u007f\s]/.test(candidate)) return `accepted host has control/whitespace: ${JSON.stringify(candidate)}`;
-  if (/[\\/?#@%]/.test(candidate)) return `accepted host has delimiter: ${JSON.stringify(candidate)}`;
+  if (/[\u0000-\u001f\u007f\s]/.test(candidate))
+    return `accepted host has control/whitespace: ${JSON.stringify(candidate)}`;
+  if (/[\\/?#@%]/.test(candidate))
+    return `accepted host has delimiter: ${JSON.stringify(candidate)}`;
   let probe;
-  try { probe = new URL(`https://${candidate}/`); }
-  catch (err) { return `URL construction failed for accepted host ${JSON.stringify(candidate)}: ${err.message}`; }
-  if (probe.pathname !== "/") return `pathname leaked: ${probe.pathname} from ${JSON.stringify(candidate)}`;
-  if (probe.username !== "" || probe.password !== "") return `userinfo leaked from ${JSON.stringify(candidate)}`;
-  if (probe.search !== "" || probe.hash !== "") return `search/hash leaked from ${JSON.stringify(candidate)}`;
+  try {
+    probe = new URL(`https://${candidate}/`);
+  } catch (err) {
+    return `URL construction failed for accepted host ${JSON.stringify(candidate)}: ${err.message}`;
+  }
+  if (probe.pathname !== "/")
+    return `pathname leaked: ${probe.pathname} from ${JSON.stringify(candidate)}`;
+  if (probe.username !== "" || probe.password !== "")
+    return `userinfo leaked from ${JSON.stringify(candidate)}`;
+  if (probe.search !== "" || probe.hash !== "")
+    return `search/hash leaked from ${JSON.stringify(candidate)}`;
   return null;
 }
 
@@ -502,22 +505,29 @@ test(`fuzz: ${ITERATIONS} random hosts — isSafeHost never accepts an escape pr
 
     const failure = checkHost(candidate);
     if (failure !== null) {
-      const { candidate: minCandidate, failure: minFailure, steps } = shrinkHost(candidate, failure);
+      const {
+        candidate: minCandidate,
+        failure: minFailure,
+        steps,
+      } = shrinkHost(candidate, failure);
       const savedAt = saveFailure("safe-host", { candidate: minCandidate }, minFailure, steps, i);
       assert.fail(
         `Fuzz failure at iteration ${i} (seed ${SEED}).\n` +
-        `  Original candidate: ${JSON.stringify(candidate)}\n` +
-        `  Original failure: ${failure}\n` +
-        `  Minimised after ${steps} shrink steps: ${JSON.stringify(minCandidate)}\n` +
-        `  Minimised failure: ${minFailure}\n` +
-        `  Saved to: ${savedAt}`,
+          `  Original candidate: ${JSON.stringify(candidate)}\n` +
+          `  Original failure: ${failure}\n` +
+          `  Minimised after ${steps} shrink steps: ${JSON.stringify(minCandidate)}\n` +
+          `  Minimised failure: ${minFailure}\n` +
+          `  Saved to: ${savedAt}`,
       );
     }
     if (isSafeHost(candidate)) accepted++;
   }
   // We expect at least some accepts — otherwise the fuzzer isn't exercising
   // the positive branch and the round-trip assertions above are dead weight.
-  assert.ok(accepted > 0, `no host was ever accepted across ${ITERATIONS} candidates (seed ${SEED})`);
+  assert.ok(
+    accepted > 0,
+    `no host was ever accepted across ${ITERATIONS} candidates (seed ${SEED})`,
+  );
 });
 
 /** Small structural mutator: splice adversarial bytes into a seed token. */

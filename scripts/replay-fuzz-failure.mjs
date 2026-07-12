@@ -20,7 +20,8 @@
 import { readFileSync, readdirSync, statSync, existsSync, unlinkSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve, isAbsolute } from "node:path";
-import { enforceHttps, isSafeHost } from "../src/lib/http/https-guard.ts";
+import { isSafeHost } from "../src/lib/http/https-guard.ts";
+import { verifyHttpsGuardRedirect } from "./lib/verify-https-redirect.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const FAILURES_DIR = resolve(HERE, "..", "tests", "__fuzz-failures__");
@@ -36,17 +37,21 @@ let explicitPaths = [];
 for (const a of argv) {
   if (a === "--latest") latestOnly = true;
   else if (a === "--delete-passing") deletePassing = true;
-  else if (a === "-h" || a === "--help") { printHelp(); process.exit(0); }
-  else if (a.startsWith("--")) { console.error(`Unknown flag: ${a}`); process.exit(2); }
-  else explicitPaths.push(a);
+  else if (a === "-h" || a === "--help") {
+    printHelp();
+    process.exit(0);
+  } else if (a.startsWith("--")) {
+    console.error(`Unknown flag: ${a}`);
+    process.exit(2);
+  } else explicitPaths.push(a);
 }
 
 function printHelp() {
   console.log(
     "Usage: node scripts/replay-fuzz-failure.mjs [<file.json>...] [--latest] [--delete-passing]\n" +
-    "\n" +
-    "Reproduces saved https-guard fuzz counterexamples deterministically.\n" +
-    "With no arguments, replays every JSON in tests/__fuzz-failures__/."
+      "\n" +
+      "Reproduces saved https-guard fuzz counterexamples deterministically.\n" +
+      "With no arguments, replays every JSON in tests/__fuzz-failures__/.",
   );
 }
 
@@ -66,8 +71,8 @@ if (explicitPaths.length > 0) {
   try {
     targets = explicitPaths.map((p) => {
       // Check for path traversal attempts in the original input
-      if (p.includes('..') || isAbsolute(p)) {
-        throw new Error('Invalid path');
+      if (p.includes("..") || isAbsolute(p)) {
+        throw new Error("Invalid path");
       }
       const resolved = resolve(p);
       return resolved;
@@ -77,7 +82,8 @@ if (explicitPaths.length > 0) {
     process.exit(2);
   }
 } else if (latestOnly) {
-  const all = listDir().map((p) => ({ p, mtime: statSync(p).mtimeMs }))
+  const all = listDir()
+    .map((p) => ({ p, mtime: statSync(p).mtimeMs }))
     .sort((a, b) => b.mtime - a.mtime);
   targets = all.length ? [all[0].p] : [];
 } else {
@@ -90,48 +96,30 @@ if (targets.length === 0) {
 }
 
 // ---------------------------------------------------------------------------
-// Replay logic — mirrors checkSpec / checkHost in tests/https-guard-fuzz.test.mjs
-// but returns a structured verdict instead of throwing.
+// Replay logic - proxy-headers delegates to the shared invariant checker in
+// scripts/lib/verify-https-redirect.mjs (also used by the fuzz suite and the
+// failure reporter); safe-host stays local since it's a single boolean check.
+// Both return a structured verdict instead of throwing.
 // ---------------------------------------------------------------------------
 
 function replayProxyHeaders(spec) {
-  let request;
-  try {
-    request = new Request(spec.url, { method: spec.method, headers: spec.headers });
-  } catch (err) {
-    return { status: "unbuildable", detail: err.message };
-  }
-  let response;
-  try {
-    response = enforceHttps(request);
-  } catch (err) {
-    return { status: "threw", detail: err.message };
-  }
-  if (response === null || response.status === 403) {
-    return { status: "pass", detail: `guard returned ${response === null ? "null (passthrough)" : "403"}` };
-  }
-  if (response.status !== 301) {
-    return { status: "fail", detail: `unexpected status ${response.status}` };
-  }
-  const location = response.headers.get("Location");
-  if (!location) return { status: "fail", detail: "301 without Location" };
-  const badByte = location.match(/[\u0000-\u001f\u007f]/);
-  if (badByte) return { status: "fail", detail: `Location has control byte 0x${badByte[0].charCodeAt(0).toString(16)}: ${JSON.stringify(location)}` };
-  let parsed;
-  try { parsed = new URL(location); } catch (err) { return { status: "fail", detail: `Location does not parse: ${err.message}` }; }
-  if (parsed.protocol !== "https:") return { status: "fail", detail: `Location scheme ${parsed.protocol} in ${location}` };
-  if (!isSafeHost(parsed.host)) return { status: "fail", detail: `Location host failed isSafeHost: ${JSON.stringify(parsed.host)}` };
-  if (parsed.username || parsed.password) return { status: "fail", detail: `Location leaked userinfo: ${location}` };
-  const expected = (() => { const u = new URL(spec.url); return u.pathname + u.search + u.hash; })();
-  const actual = parsed.pathname + parsed.search + parsed.hash;
-  if (actual !== expected) return { status: "fail", detail: `path/query/hash changed: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}` };
-  return { status: "pass", detail: `301 → ${location}` };
+  const result = verifyHttpsGuardRedirect(spec);
+  // "unbuildable" and "threw" stay distinct from "fail": a saved failure spec
+  // that was buildable at capture time but isn't now (or that crashes the
+  // guard) is itself worth investigating, not silently counted as a pass.
+  if (result.outcome === "unbuildable") return { status: "unbuildable", detail: result.detail };
+  if (result.outcome === "threw") return { status: "threw", detail: result.detail };
+  return { status: result.ok ? "pass" : "fail", detail: result.detail };
 }
 
 function replaySafeHost(spec) {
   const candidate = spec.candidate;
   let accepted;
-  try { accepted = isSafeHost(candidate); } catch (err) { return { status: "threw", detail: err.message }; }
+  try {
+    accepted = isSafeHost(candidate);
+  } catch (err) {
+    return { status: "threw", detail: err.message };
+  }
   // A saved safe-host failure means isSafeHost accepted something it shouldn't.
   // If it now rejects the candidate, the bug is fixed → "pass".
   return accepted
@@ -141,7 +129,7 @@ function replaySafeHost(spec) {
 
 function replay(payload) {
   if (payload.kind === "proxy-headers") return replayProxyHeaders(payload.spec);
-  if (payload.kind === "safe-host")     return replaySafeHost(payload.spec);
+  if (payload.kind === "safe-host") return replaySafeHost(payload.spec);
   return { status: "unknown", detail: `unknown kind "${payload.kind}"` };
 }
 
@@ -150,13 +138,14 @@ function replay(payload) {
 // ---------------------------------------------------------------------------
 
 let stillFailing = 0;
-let nowPassing   = 0;
-let errored      = 0;
+let nowPassing = 0;
+let errored = 0;
 
 for (const path of targets) {
   let payload;
-  try { payload = JSON.parse(readFileSync(path, "utf8")); }
-  catch (err) {
+  try {
+    payload = JSON.parse(readFileSync(path, "utf8"));
+  } catch (err) {
     console.error(`✖ ${path} — cannot parse: ${err.message}`);
     errored++;
     continue;
@@ -170,8 +159,12 @@ for (const path of targets) {
     nowPassing++;
     console.log(`✓ now passes    ${path}\n    ${label} ${verdict.detail}`);
     if (deletePassing) {
-      try { unlinkSync(path); console.log(`    (deleted)`); }
-      catch (err) { console.error(`    (delete failed: ${err.message})`); }
+      try {
+        unlinkSync(path);
+        console.log(`    (deleted)`);
+      } catch (err) {
+        console.error(`    (delete failed: ${err.message})`);
+      }
     }
   } else {
     errored++;
@@ -181,7 +174,7 @@ for (const path of targets) {
 
 console.log(
   `\nReplayed ${targets.length} spec(s): ` +
-  `${stillFailing} still failing, ${nowPassing} now passing, ${errored} error(s).`
+    `${stillFailing} still failing, ${nowPassing} now passing, ${errored} error(s).`,
 );
 
 // Exit non-zero only when a saved failure has silently gone green without a
