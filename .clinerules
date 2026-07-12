@@ -49,8 +49,6 @@ Maintainers: extend as needed; enforce in CI (see README).
 
 ## Do not touch
 
-- `.lovable/` — legacy scaffold metadata; the app has no runtime dependency
-  on it (see below).
 - Build output (`dist/`, `.output/`, `.vinxi/`) — generated, never hand-edited.
 - `bun.lock` — regenerate via `bun install`, never edit by hand.
 - `public/` generated assets.
@@ -58,9 +56,8 @@ Maintainers: extend as needed; enforce in CI (see README).
 ## Architecture
 
 Standalone TanStack Start app (React 19 + Vite 8, Nitro bundle, default
-`cloudflare-pages` preset — swap the `preset` in `vite.config.ts` for
-`node-server`, `vercel`, `netlify`, etc. to deploy elsewhere). No runtime
-dependency on Lovable, despite the `.lovable/` scaffold metadata. Styling:
+`cloudflare-module` preset — swap the `preset` in `vite.config.ts` for
+`node-server`, `vercel`, `netlify`, etc. to deploy elsewhere). Styling:
 Tailwind CSS 4 + Radix UI + shadcn-style components (`components.json`).
 
 - `src/routes` — file-based routes, including `src/routes/api/public/*`
