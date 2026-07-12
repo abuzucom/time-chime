@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Play } from "lucide-react";
+import { Github, Play } from "lucide-react";
 import { useSettings } from "@/lib/settings";
 import { SettingsDrawer } from "@/components/SettingsDrawer";
 import { BackgroundConsentSheet } from "@/components/BackgroundConsentSheet";
@@ -146,11 +146,11 @@ function Home() {
                 to="/support"
                 className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
               >
-                Settings · v2.4
+                FAQ · v{__APP_VERSION__}
               </Link>
               <Link
                 to="/support"
-                className="font-sans text-[13px] text-muted-foreground underline decoration-border underline-offset-4 transition-colors hover:text-foreground hover:decoration-foreground"
+                className="font-mono text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground transition-colors hover:text-foreground"
               >
                 Support the developers
               </Link>
@@ -163,13 +163,13 @@ function Home() {
       <footer className="mx-auto w-full max-w-6xl px-6 pb-6 sm:px-10 sm:pb-10">
         <div className="rule-hair mb-3" />
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-          <span>© Time Chime · Free &amp; Open Source</span>
+          <span>© Time Chime</span>
           <div className="flex flex-wrap items-center gap-x-5">
             <a href="/privacy" className="hover:text-foreground">
               Privacy
             </a>
             <a
-              href="https://github.com/"
+              href="https://github.com/abuzucom/time-chime"
               className="hover:text-foreground"
               target="_blank"
               rel="noopener noreferrer"
