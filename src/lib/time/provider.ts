@@ -5,16 +5,6 @@ export const PROVIDER_CATALOG = {
     name: "Time.now",
     endpoint: "https://time.now/developer/api/timezone/UTC",
   },
-  worldtime: {
-    id: "worldtime",
-    name: "WorldTimeAPI",
-    endpoint: "https://worldtimeapi.org/api/timezone/Etc/UTC",
-  },
-  timeapiWorld: {
-    id: "timeapiWorld",
-    name: "timeapi.world",
-    endpoint: "https://gateway.timeapi.world/timezone/Etc/UTC",
-  },
   clockNow: {
     id: "clockNow",
     name: "Clock.now",
@@ -24,6 +14,7 @@ export const PROVIDER_CATALOG = {
 
 export type ProviderId = keyof typeof PROVIDER_CATALOG;
 export const PROVIDER_IDS = Object.keys(PROVIDER_CATALOG) as ProviderId[];
+export const DEFAULT_PROVIDER_IDS = [...PROVIDER_IDS] as ProviderId[];
 
 /** Keep persisted and caller-supplied provider IDs within the current catalog. */
 export function normalizeProviderIds(ids: readonly unknown[]): ProviderId[] {

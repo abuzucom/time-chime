@@ -111,7 +111,7 @@ function Privacy() {
               Loading the App bundle and static assets from the origin that served the page.
             </li>
             <li>
-              Querying the public stratum-1 or NTS time provider you have selected in settings,
+            Querying the public HTTPS JSON time reference you selected in settings,
               so the App can display authoritative time and drift. See{" "}
               <Link
                 to="/sync-guide"
@@ -149,8 +149,8 @@ function Privacy() {
 
         <Section id="section-6" title="6. Third-party time providers">
           <p>
-            When you use the time-sync feature, the App makes an HTTPS/NTS request directly from
-            your device to the provider you select (Time.now, WorldTimeAPI, timeapi.world, or Clock.now). Those providers may log connection metadata &mdash; typically IP address,
+            When you use the time-sync feature, the App makes an HTTPS request directly from
+            your device to the provider you select (Time.now or Clock.now). Those providers may log connection metadata &mdash; typically IP address,
             timestamp, and user agent &mdash; under their own privacy policies. The maintainers
             do not receive, aggregate, or have visibility into those logs.
           </p>
@@ -159,7 +159,6 @@ function Privacy() {
             time sync entirely from the settings drawer.
           </p>
         </Section>
-
         <Section id="section-7" title="7. Your rights (GDPR, CCPA, TDPSA and similar)">
           <p>
             Because the maintainers do not collect or store personal data server-side, most

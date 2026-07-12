@@ -2,9 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { syncTime, type ProviderId, type ProviderSample } from "@/lib/time.functions";
-import { HISTORY_MAX, initialSyncState, type SyncSample, type TimeSyncState } from "./state";
-import { setAuthoritativeOffset } from "./now";
-import { normalizeProviderIds } from "./provider";
+import { HISTORY_MAX, initialSyncState, type SyncSample, type TimeSyncState } from "./state.ts";
+import { setAuthoritativeOffset } from "./now.ts";
+import { DEFAULT_PROVIDER_IDS, normalizeProviderIds } from "./provider.ts";
 
 type TimeSyncContextValue = TimeSyncState & {
   resync: (providers?: ProviderId[]) => Promise<void>;
@@ -310,15 +310,14 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
 
   const setProviders = useCallback((ids: ProviderId[]) => {
     const nextProviders = normalizeProviderIds(ids);
-    if (nextProviders.length === 0) return;
-    providersRef.current = nextProviders;
+    const resolvedProviders = nextProviders.length ? nextProviders : [...DEFAULT_PROVIDER_IDS];
+    providersRef.current = resolvedProviders;
     setState((s) => {
-      const next = { ...s, providers: nextProviders };
+      const next = { ...s, providers: resolvedProviders };
       persistTimeSyncState(next);
       return next;
     });
   }, []);
-
   useEffect(() => {
     void resync();
     // Self-scheduling timeout instead of a fixed setInterval: each tick picks

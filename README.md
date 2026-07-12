@@ -57,20 +57,11 @@ browser's local storage.
 
 ### Time synchronisation
 
-- **Network time references** via a server-side HTTPS JSON proxy to Time.now,
-  WorldTimeAPI, timeapi.world, and Clock.now. Time.now is preferred by policy;
-  these services are references, not claimed Stratum-1 authorities.
-- **Provider picker** — pick 1–5 sources; defaults are inferred from the
-  request region (`CF-IPCountry`) so European users see PTB/NPL first,
-  North Americans see NIST/NRC, etc.
-- **NTP-style 4-sample sync** with min-RTT selection, client-side minimum
-  interval (60 s), and a circuit breaker on repeated failure.
-- **Drift indicator** — colour-coded chip beneath the face; the detail
-  panel shows offset, RTT, uncertainty, a 30-sample sparkline, current
-  sources, and a manual **Resync** button.
-- **Latency calibration** — Settings → *Calibrate* measures your device's
-  audio output latency and shifts scheduled chimes so the strike lands
-  on the wall-clock second.
+- **Network time references** via a server-side HTTPS JSON proxy to Time.now and Clock.now. Time.now is preferred by policy; these services are references, not claimed Stratum-1 authorities.
+- **Provider picker** - pick 1-2 sources; defaults are Time.now then Clock.now.
+- **NTP-style 4-sample sync** with min-RTT selection, client-side minimum interval (60 s), and a circuit breaker on repeated failure.
+- **Drift indicator** - colour-coded chip beneath the face; the detail panel shows offset, RTT, uncertainty, a 30-sample sparkline, current sources, and a manual **Resync** button.
+- **Latency calibration** - Settings -> *Calibrate* measures your device's audio output latency and shifts scheduled chimes so the strike lands on the wall-clock second.
 
 ### Themes & appearance
 
@@ -161,8 +152,6 @@ npx cap open android   # Android Studio
 Time Chime uses these selectable HTTPS JSON services:
 
 - [Time.now](https://time.now/developer/api)
-- [WorldTimeAPI](https://worldtimeapi.org/)
-- [timeapi.world](https://timeapi.world/)
 - [Clock.now](https://clock.now/)
 
 These responses help estimate device drift but do not prove Stratum-1 status or
