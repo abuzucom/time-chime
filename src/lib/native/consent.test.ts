@@ -44,7 +44,7 @@ function scriptedAdapter(script: {
   const check = [...(script.check ?? [])];
   const req = [...(script.request ?? [])];
   const pop = (arr: PermissionOutcome[], fallback: PermissionOutcome) =>
-    arr.length > 1 ? (arr.shift() as PermissionOutcome) : arr[0] ?? fallback;
+    arr.length > 1 ? (arr.shift() as PermissionOutcome) : (arr[0] ?? fallback);
   return {
     checkPermission: async () => pop(check, "prompt"),
     requestPermission: async () => pop(req, "prompt"),
@@ -55,14 +55,14 @@ function scriptedAdapter(script: {
 }
 
 test("initial state is not_asked with no persisted snapshot", () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage: memoryStorage(),
     now: () => 1_000,
   });
-  assert.equal(c.snapshot.state, "not_asked");
-  assert.equal(c.snapshot.updatedAt, 0);
-  assert.equal(c.snapshot.lastOsPermission, null);
+  assert.equal(controller.snapshot.state, "not_asked");
+  assert.equal(controller.snapshot.updatedAt, 0);
+  assert.equal(controller.snapshot.lastOsPermission, null);
 });
 
 test("hydrates from persisted snapshot", () => {
@@ -71,28 +71,28 @@ test("hydrates from persisted snapshot", () => {
     updatedAt: 500,
     lastOsPermission: "granted",
   };
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage: memoryStorage(seed),
   });
-  assert.deepEqual(c.snapshot, seed);
+  assert.deepEqual(controller.snapshot, seed);
 });
 
 test("openSheet moves not_asked → asking and persists", () => {
   const storage = memoryStorage();
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage,
     now: () => 42,
   });
-  c.openSheet();
-  assert.equal(c.snapshot.state, "asking");
-  assert.equal(c.snapshot.updatedAt, 42);
+  controller.openSheet();
+  assert.equal(controller.snapshot.state, "asking");
+  assert.equal(controller.snapshot.updatedAt, 42);
   assert.equal(storage.read()?.state, "asking");
 });
 
 test("openSheet is a no-op when already granted", () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage: memoryStorage({
       state: "granted",
@@ -100,56 +100,56 @@ test("openSheet is a no-op when already granted", () => {
       lastOsPermission: "granted",
     }),
   });
-  c.openSheet();
-  assert.equal(c.snapshot.state, "granted");
+  controller.openSheet();
+  assert.equal(controller.snapshot.state, "granted");
 });
 
 test("grantFromSheet with OS granted → granted", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ request: ["granted"] }),
     storage: memoryStorage(),
   });
-  c.openSheet();
-  const snap = await c.grantFromSheet();
+  controller.openSheet();
+  const snap = await controller.grantFromSheet();
   assert.equal(snap.state, "granted");
   assert.equal(snap.lastOsPermission, "granted");
 });
 
 test("grantFromSheet with OS denied → denied_by_os", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ request: ["denied"] }),
     storage: memoryStorage(),
   });
-  c.openSheet();
-  const snap = await c.grantFromSheet();
+  controller.openSheet();
+  const snap = await controller.grantFromSheet();
   assert.equal(snap.state, "denied_by_os");
   assert.equal(snap.lastOsPermission, "denied");
 });
 
 test("grantFromSheet with OS prompt (dismissed) treated as denied_by_os", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ request: ["prompt"] }),
     storage: memoryStorage(),
   });
-  c.openSheet();
-  const snap = await c.grantFromSheet();
+  controller.openSheet();
+  const snap = await controller.grantFromSheet();
   assert.equal(snap.state, "denied_by_os");
 });
 
 test("declineFromSheet → declined_by_user, and openSheet re-opens it", () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage: memoryStorage(),
   });
-  c.openSheet();
-  c.declineFromSheet();
-  assert.equal(c.snapshot.state, "declined_by_user");
-  c.openSheet();
-  assert.equal(c.snapshot.state, "asking");
+  controller.openSheet();
+  controller.declineFromSheet();
+  assert.equal(controller.snapshot.state, "declined_by_user");
+  controller.openSheet();
+  assert.equal(controller.snapshot.state, "asking");
 });
 
 test("reconcileWithOs: granted → revoked when OS answer drifts to denied", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ check: ["denied"] }),
     storage: memoryStorage({
       state: "granted",
@@ -157,13 +157,13 @@ test("reconcileWithOs: granted → revoked when OS answer drifts to denied", asy
       lastOsPermission: "granted",
     }),
   });
-  const snap = await c.reconcileWithOs();
+  const snap = await controller.reconcileWithOs();
   assert.equal(snap.state, "revoked");
   assert.equal(snap.lastOsPermission, "denied");
 });
 
 test("reconcileWithOs: denied_by_os → granted when the user re-enables in Settings", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ check: ["granted"] }),
     storage: memoryStorage({
       state: "denied_by_os",
@@ -171,12 +171,12 @@ test("reconcileWithOs: denied_by_os → granted when the user re-enables in Sett
       lastOsPermission: "denied",
     }),
   });
-  const snap = await c.reconcileWithOs();
+  const snap = await controller.reconcileWithOs();
   assert.equal(snap.state, "granted");
 });
 
 test("reconcileWithOs: revoked → granted when the user re-enables", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ check: ["granted"] }),
     storage: memoryStorage({
       state: "revoked",
@@ -184,12 +184,12 @@ test("reconcileWithOs: revoked → granted when the user re-enables", async () =
       lastOsPermission: "denied",
     }),
   });
-  const snap = await c.reconcileWithOs();
+  const snap = await controller.reconcileWithOs();
   assert.equal(snap.state, "granted");
 });
 
 test("reconcileWithOs: no transition keeps state but refreshes lastOsPermission", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ check: ["prompt"] }),
     storage: memoryStorage({
       state: "not_asked",
@@ -197,13 +197,13 @@ test("reconcileWithOs: no transition keeps state but refreshes lastOsPermission"
       lastOsPermission: null,
     }),
   });
-  const snap = await c.reconcileWithOs();
+  const snap = await controller.reconcileWithOs();
   assert.equal(snap.state, "not_asked");
   assert.equal(snap.lastOsPermission, "prompt");
 });
 
 test("reconcileWithOs: OS unavailable transitions to unavailable from any state", async () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({ check: ["unavailable"] }),
     storage: memoryStorage({
       state: "granted",
@@ -211,21 +211,21 @@ test("reconcileWithOs: OS unavailable transitions to unavailable from any state"
       lastOsPermission: "granted",
     }),
   });
-  const snap = await c.reconcileWithOs();
+  const snap = await controller.reconcileWithOs();
   assert.equal(snap.state, "unavailable");
 });
 
 test("subscribe fires on every commit and unsubscribe stops it", () => {
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage: memoryStorage(),
   });
   const events: string[] = [];
-  const unsub = c.subscribe((s) => events.push(s.state));
-  c.openSheet();
-  c.declineFromSheet();
+  const unsub = controller.subscribe((s) => events.push(s.state));
+  controller.openSheet();
+  controller.declineFromSheet();
   unsub();
-  c.openSheet(); // should not append
+  controller.openSheet(); // should not append
   assert.deepEqual(events, ["asking", "declined_by_user"]);
 });
 
@@ -235,14 +235,14 @@ test("reset clears storage and returns to not_asked", () => {
     updatedAt: 1,
     lastOsPermission: "granted",
   });
-  const c = createConsentController({
+  const controller = createConsentController({
     adapter: scriptedAdapter({}),
     storage,
     now: () => 99,
   });
-  c.reset();
-  assert.equal(c.snapshot.state, "not_asked");
-  assert.equal(c.snapshot.updatedAt, 99);
+  controller.reset();
+  assert.equal(controller.snapshot.state, "not_asked");
+  assert.equal(controller.snapshot.updatedAt, 99);
   assert.equal(storage.read()?.state, "not_asked");
 });
 

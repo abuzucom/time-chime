@@ -41,9 +41,12 @@ export function TimeSyncBadge() {
           className={cn(
             "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer",
             "hover:bg-accent",
-            severity === "ok" && "border-[color:var(--drift-ok)]/40 text-[color:var(--drift-ok-text)]",
-            severity === "warn" && "border-[color:var(--drift-warn)]/40 text-[color:var(--drift-warn-text)]",
-            severity === "bad" && "border-[color:var(--drift-bad)]/40 text-[color:var(--drift-bad-text)]",
+            severity === "ok" &&
+              "border-[color:var(--drift-ok)]/40 text-[color:var(--drift-ok-text)]",
+            severity === "warn" &&
+              "border-[color:var(--drift-warn)]/40 text-[color:var(--drift-warn-text)]",
+            severity === "bad" &&
+              "border-[color:var(--drift-bad)]/40 text-[color:var(--drift-bad-text)]",
           )}
         >
           <span
@@ -71,6 +74,7 @@ export function TimeSyncBadge() {
   );
 }
 
+/** Dialog body: current drift magnitude/severity, provider list, and sparkline history. */
 function DriftPanelBody({ now }: { now: number }) {
   const sync = useTimeSync();
   const severity = sync.lastSyncAt === null ? "warn" : driftSeverity(sync.offsetMs);
@@ -90,7 +94,9 @@ function DriftPanelBody({ now }: { now: number }) {
           {formatOffset(sync.offsetMs)}
         </div>
         <div className="mt-1 text-xs text-muted-foreground">
-          {sync.offsetMs >= 0 ? "device clock is behind reference" : "device clock is ahead of reference"}
+          {sync.offsetMs >= 0
+            ? "device clock is behind reference"
+            : "device clock is ahead of reference"}
           {" · uncertainty ± "}
           {Math.round(sync.rttMs / 2)} ms
         </div>
@@ -117,7 +123,7 @@ function DriftPanelBody({ now }: { now: number }) {
                 </span>
               </div>
               <span className="font-mono text-xs text-muted-foreground">
-                {s.ok ? `${s.rttMs} ms` : s.error ?? "error"}
+                {s.ok ? `${s.rttMs} ms` : (s.error ?? "error")}
               </span>
             </li>
           ))}
@@ -156,9 +162,8 @@ function DriftPanelBody({ now }: { now: number }) {
       </div>
 
       <div className="rounded-md border border-dashed border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground">
-        Your device clock is set by your operating system, not by this app. To
-        make the OS itself sync against Stratum-1 sources instead of default
-        pool servers,{" "}
+        Your device clock is set by your operating system, not by this app. To make the OS itself
+        sync against Stratum-1 sources instead of default pool servers,{" "}
         <Link
           to="/sync-guide"
           className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
@@ -171,6 +176,7 @@ function DriftPanelBody({ now }: { now: number }) {
   );
 }
 
+/** Minimal SVG line chart of recent offset samples, centered on a zero midline. */
 function Sparkline({ samples }: { samples: number[] }) {
   const svgWidth = 240;
   const svgHeight = 40;
@@ -188,7 +194,6 @@ function Sparkline({ samples }: { samples: number[] }) {
   };
   const points = samples.map(sampleToSvgPoint).join(" ");
   return (
-
     <svg width={svgWidth} height={svgHeight} className="text-muted-foreground">
       <line
         x1="0"

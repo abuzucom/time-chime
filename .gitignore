@@ -20,6 +20,10 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Secrets (defense in depth alongside .claudeignore's matching pattern)
+.env*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
