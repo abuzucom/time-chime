@@ -43,9 +43,7 @@ test("parseHeadersFile: ignores comments, blank lines, and CRLF endings", () => 
 test("parseHeadersFile: preserves duplicate directive names within a group", () => {
   // Cloudflare accepts repeated header names (e.g. multiple Link: preload).
   // The parser must not silently deduplicate them.
-  const text = ["/*", "  Link: </a.css>; rel=preload", "  Link: </b.css>; rel=preload"].join(
-    "\n",
-  );
+  const text = ["/*", "  Link: </a.css>; rel=preload", "  Link: </b.css>; rel=preload"].join("\n");
   const groups = parseHeadersFile(text);
   assert.equal(groups[0].headers.length, 2);
   assert.deepEqual(
@@ -90,10 +88,7 @@ test("normalise: non-list headers require exact value semantics (whitespace-coll
   // HSTS/CSP/etc must match byte-for-byte after whitespace collapse — a stray
   // change like "DENY " vs "DENY" is fine, but "SAMEORIGIN" is not "DENY".
   assert.equal(normalise("X-Frame-Options", "  DENY  "), normalise("X-Frame-Options", "DENY"));
-  assert.notEqual(
-    normalise("X-Frame-Options", "DENY"),
-    normalise("X-Frame-Options", "SAMEORIGIN"),
-  );
+  assert.notEqual(normalise("X-Frame-Options", "DENY"), normalise("X-Frame-Options", "SAMEORIGIN"));
 });
 
 test("normalise: HSTS reordered params are NOT considered equal", () => {
@@ -102,7 +97,10 @@ test("normalise: HSTS reordered params are NOT considered equal", () => {
   // as a mismatch so a downgrade would fail CI.
   const a = "max-age=63072000; includeSubDomains; preload";
   const b = "preload; includeSubDomains; max-age=63072000";
-  assert.notEqual(normalise("Strict-Transport-Security", a), normalise("Strict-Transport-Security", b));
+  assert.notEqual(
+    normalise("Strict-Transport-Security", a),
+    normalise("Strict-Transport-Security", b),
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -115,6 +113,11 @@ test("pathForPattern: known globs map to concrete probe URLs", () => {
   assert.equal(pathForPattern("/assets/*"), null, "hashed asset filenames are unprobable");
   assert.equal(pathForPattern("/docs/*"), "/docs/");
   assert.equal(pathForPattern("/exact/path"), "/exact/path");
+});
+
+test("pathForPattern: mid-pattern wildcards are unprobable, not literal 404s", () => {
+  assert.equal(pathForPattern("/*.html"), null, "no static .html file backs this rule");
+  assert.equal(pathForPattern("/workbox-*.js"), null, "workbox filename is content-hashed");
 });
 
 // ---------------------------------------------------------------------------

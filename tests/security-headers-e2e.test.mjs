@@ -1,8 +1,10 @@
 /**
- * End-to-end verification that HSTS, Referrer-Policy, and Permissions-Policy
- * are stamped on every response shape the Worker emits — SSR HTML routes,
- * static asset routes, and the server-function RPC boundary — not just on
- * the routes we happen to have hard-coded checks for.
+ * End-to-end verification that HSTS, Referrer-Policy, Permissions-Policy,
+ * Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy,
+ * X-DNS-Prefetch-Control, Cache-Control, and Vary are stamped on every
+ * response shape the Worker emits — SSR HTML routes, static asset routes,
+ * and the server-function RPC boundary — not just on the routes we happen
+ * to have hard-coded checks for.
  *
  * These headers are the OWASP ASVS §14.4 baseline; a regression here is a
  * silent posture downgrade because nothing in the app breaks visibly.
@@ -88,6 +90,38 @@ function assertBaselineSecurityHeaders(response, context) {
       `[${context}] Permissions-Policy missing directive "${required}"; full header: "${permissions}"`,
     );
   }
+
+  // These five are declared for every static asset in public/_headers'
+  // `/*` and `/` groups too, but Cloudflare's _headers file never applies
+  // to a Worker-generated response — withSecurityHeaders() is the only
+  // thing that stamps them here, so a regression there is otherwise silent.
+  assert.equal(
+    response.headers.get("cross-origin-opener-policy")?.trim().toLowerCase(),
+    "same-origin",
+    `[${context}] Cross-Origin-Opener-Policy must be same-origin`,
+  );
+  assert.equal(
+    response.headers.get("cross-origin-resource-policy")?.trim().toLowerCase(),
+    "same-origin",
+    `[${context}] Cross-Origin-Resource-Policy must be same-origin`,
+  );
+  assert.equal(
+    response.headers.get("x-dns-prefetch-control")?.trim().toLowerCase(),
+    "off",
+    `[${context}] X-DNS-Prefetch-Control must be off`,
+  );
+  const cacheControl = response.headers.get("cache-control");
+  assert.ok(cacheControl, `[${context}] Cache-Control missing`);
+  assert.match(
+    cacheControl,
+    /no-store/i,
+    `[${context}] Cache-Control must include no-store (cache-poisoning defense); got "${cacheControl}"`,
+  );
+  assert.match(
+    response.headers.get("vary") ?? "",
+    /Accept-Encoding/i,
+    `[${context}] Vary must include Accept-Encoding`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -110,10 +144,9 @@ test("Unmatched route (404 fallthrough) still stamps the baseline headers", asyn
   if (skipUnlessReachable(t)) return;
   // A regression where the 404 path bypasses middleware would leave the
   // most-scanned surface (broken links, crawler probes) unhardened.
-  const res = await fetch(
-    BASE_URL + "/__e2e_nonexistent_" + Math.random().toString(36).slice(2),
-    { redirect: "manual" },
-  );
+  const res = await fetch(BASE_URL + "/__e2e_nonexistent_" + Math.random().toString(36).slice(2), {
+    redirect: "manual",
+  });
   assertBaselineSecurityHeaders(res, "GET /__e2e_nonexistent_*");
 });
 
