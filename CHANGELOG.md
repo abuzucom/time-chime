@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.6] - 2026-07-12
+
+### Changed
+
+- Added a theme-aware GitHub repository badge to the footer.
+- Used a build-safe inline GitHub mark compatible with the pinned icon dependency.
+- Renamed the home-page Settings link to FAQ and aligned its version with `package.json`.
+- Styled the Support the developers link consistently with the FAQ link.
+- Added explicit agent guidance for SemVer and theme-aware UI changes.
+
 ## [0.2.5] - 2026-07-12
 
 ### Changed

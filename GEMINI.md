@@ -421,3 +421,15 @@ function calculateSalesTax(subtotal: number, quantity: number): number {
 
 These rules govern new code and code you modify. No mass-refactoring of
 untouched code; report violations in security-critical paths.
+
+
+## Version and theme change checklist
+
+For every code or user-facing change:
+
+- Bump the `version` field in `package.json` according to SemVer.
+- Use a patch release for compatible fixes and UI changes, a minor release for compatible features, and a major release only with explicit user approval for breaking changes.
+- Add a Keep-a-Changelog entry for every version bump.
+- Use `__APP_VERSION__` for UI version displays; never hard-code a second version value.
+- Verify the displayed version resolves to the same value as `package.json`.
+- Test theme-sensitive UI in light, dark, and grey modes.
