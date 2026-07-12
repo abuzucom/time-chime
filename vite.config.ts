@@ -103,6 +103,11 @@ export default defineConfig(({ command }) => ({
     // navigations (with /offline as the fallback) and CacheFirst for
     // same-origin hashed build assets.
     VitePWA({
+      // Nitro's `cloudflare-module` preset serves static assets from
+      // dist/client (see the `nitro()` publicDir below), not Vite's default
+      // dist/ — without this, the Worker's ASSETS binding 404s on /sw.js
+      // and /workbox-*.js because they'd land one directory up.
+      outDir: "dist/client",
       strategies: "generateSW",
       registerType: "autoUpdate",
       injectRegister: null,

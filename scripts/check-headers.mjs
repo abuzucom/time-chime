@@ -22,8 +22,7 @@ const HEADERS_FILE = resolve(__dirname, "../public/_headers");
 // True when this file was invoked as `node scripts/check-headers.mjs`, false
 // when imported by the unit-test suite. Guards the main() side-effects so the
 // module is safe to `import`.
-const isMain =
-  process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+const isMain = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
 
 const baseUrl = (process.argv[2] ?? process.env.BASE_URL ?? "http://localhost:4173").replace(
   /\/$/,
@@ -99,6 +98,11 @@ function pathForPattern(pattern) {
     if (base === "/.well-known") return "/.well-known/security.txt";
     return base + "/";
   }
+  // Any other wildcard pattern (e.g. /*.html, /workbox-*.js) has no single
+  // concrete URL to request — content-hashed or purely pattern-based rules
+  // can't be probed generically against an arbitrary baseUrl (local build
+  // or a live remote deployment both lack a fixed filename to try).
+  if (pattern.includes("*")) return null;
   return pattern;
 }
 
@@ -141,7 +145,7 @@ async function main() {
   for (const group of spec) {
     const path = pathForPattern(group.pattern);
     if (!path) {
-      console.log(`↷ ${group.pattern} — skipped (dynamic asset filenames)\n`);
+      console.log(`↷ ${group.pattern} — skipped (no concrete filename to probe)\n`);
       continue;
     }
     const url = baseUrl + path;

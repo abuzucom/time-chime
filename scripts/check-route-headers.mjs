@@ -72,7 +72,6 @@ const GLOBAL_HEADERS = {
       "fullscreen=()",
     ],
   },
-
 };
 
 // CSP is served via <meta http-equiv> from the app shell rather than as a
@@ -157,6 +156,7 @@ function assertCspString(label, csp, { requireNonce }) {
     fail(`${label}: style-src / style-src-elem contains 'unsafe-inline'`);
   } else {
     pass(`${label}: style-src / style-src-elem has no 'unsafe-inline'`);
+  }
   // The pre-hydration script must be allow-listed by its SHA-256 hash.
   if (/script-src[^;]*'sha256-[A-Za-z0-9+/=]+'/i.test(csp)) {
     pass(`${label}: script-src includes sha256 hash for inline script`);
@@ -164,7 +164,10 @@ function assertCspString(label, csp, { requireNonce }) {
     fail(`${label}: script-src missing 'sha256-...' allow-list entry`);
   }
   if (requireNonce) {
-    if (/script-src[^;]*'nonce-[A-Za-z0-9+/=]+'/i.test(csp)) {
+    // generateCspNonce() (src/lib/http/nonce-store.ts) emits base64url, not
+    // standard base64 — the charset must include `-`/`_` or a nonce
+    // containing either (~half of them, by chance) false-negatives here.
+    if (/script-src[^;]*'nonce-[A-Za-z0-9+/=_-]+'/i.test(csp)) {
       pass(`${label}: script-src includes a per-request nonce`);
     } else {
       fail(`${label}: script-src missing 'nonce-...' — strict CSP requires nonce on the header`);
@@ -184,13 +187,27 @@ function assertCspString(label, csp, { requireNonce }) {
   }
 }
 
+// React HTML-escapes attribute values, so a rendered `content="...'self'..."`
+// attribute serialises single quotes as `&#x27;` (and could carry the other
+// four XML-predefined entities too). Decode before matching literal `'...'`
+// CSP source tokens, or every directive check below false-negatives on a
+// perfectly valid, browser-correct policy.
+function decodeHtmlAttributeEntities(value) {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
 
 function assertCspMeta(html) {
   const match = html.match(
     /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]+content=["']([^"']+)["']/i,
   );
   if (!match) return fail("CSP <meta> tag: missing from HTML");
-  assertCspString("CSP <meta>", match[1], { requireNonce: false });
+  assertCspString("CSP <meta>", decodeHtmlAttributeEntities(match[1]), { requireNonce: false });
 }
 
 /**
@@ -199,11 +216,16 @@ function assertCspMeta(html) {
  * Sends the requested method (default `GET`, without following redirects), then:
  *  - checks the response status against `expectStatus` (an exact code, an
  *    array of acceptable codes, or `< 400` when unspecified);
- *  - verifies every header in {@link GLOBAL_HEADERS} plus the caller-supplied
- *    `extra` map via {@link assertHeader};
+ *  - verifies every header in {@link GLOBAL_HEADERS} (minus `excludeGlobal`)
+ *    plus the caller-supplied `extra` map via {@link assertHeader};
  *  - when `html === true`, confirms the `Content-Type` is `text/html` and runs
  *    {@link assertCspMeta} against the response body to catch a stale
  *    meta-tag CSP.
+ *
+ * `excludeGlobal` drops entries from {@link GLOBAL_HEADERS} for routes where
+ * a global expectation doesn't apply — namely Content-Security-Policy on
+ * routes the Assets binding serves directly (static files, `.well-known/*`)
+ * rather than the Worker's own `securityHeadersMiddleware`.
  *
  * Every mismatch calls `fail()` (which flips the process exit code); every
  * successful check calls `pass()`. Returns nothing.
@@ -211,7 +233,15 @@ function assertCspMeta(html) {
 async function probeRouteHeaders(
   label,
   path,
-  { html = false, expectStatus, extra = {}, method = "GET", body, headers: reqHeaders } = {},
+  {
+    html = false,
+    expectStatus,
+    extra = {},
+    excludeGlobal = [],
+    method = "GET",
+    body,
+    headers: reqHeaders,
+  } = {},
 ) {
   const url = baseUrl + path;
   console.log(`\n→ ${label}  (${method} ${url})`);
@@ -227,7 +257,10 @@ async function probeRouteHeaders(
   if (statusOk) pass(`HTTP ${res.status}`);
   else fail(`HTTP ${res.status} (expected ${expectStatus ?? "<400"})`);
 
-  for (const [name, expected] of Object.entries({ ...GLOBAL_HEADERS, ...extra })) {
+  const globalHeaders = Object.fromEntries(
+    Object.entries(GLOBAL_HEADERS).filter(([name]) => !excludeGlobal.includes(name)),
+  );
+  for (const [name, expected] of Object.entries({ ...globalHeaders, ...extra })) {
     assertHeader(res.headers, name, expected);
   }
 
@@ -261,15 +294,11 @@ async function probeWorkerResponse(label, path, options = {}) {
   return probeRouteHeaders(label, path, options);
 }
 
-
 // Discover a real hashed asset filename from the built output so we can prove
 // /assets/* headers apply to a live file (filenames are content-hashed and
 // cannot be hard-coded).
 function pickAssetPath() {
-  const candidates = [
-    resolve(__dirname, "../.output/public/assets"),
-    resolve(__dirname, "../dist/assets"),
-  ];
+  const candidates = [resolve(__dirname, "../dist/client/assets")];
   for (const dir of candidates) {
     if (!existsSync(dir)) continue;
     const file = readdirSync(dir).find((f) => /\.(js|css)$/.test(f));
@@ -287,7 +316,10 @@ console.log(`Validating per-route security headers against ${baseUrl}`);
 // SPA HTML routes — CSP meta must render and global headers must be attached.
 await probeRouteHeaders("home", "/", { html: true });
 await probeRouteHeaders("support", "/support", { html: true });
-await probeRouteHeaders("obs streaming shell", "/obs", { html: true });
+// /obs always 307s to a canonicalized query string (see src/routes/obs.tsx)
+// regardless of what's requested, so there's no HTML body/meta to check here
+// — the redirect response itself still carries the baseline headers.
+await probeRouteHeaders("obs streaming shell", "/obs");
 
 // Unmatched URL must still fall through to a hardened 404 (SPA index),
 // not a bare origin error page without headers.
@@ -296,8 +328,11 @@ await probeRouteHeaders("not-found route", "/__nonexistent_route_for_header_chec
   expectStatus: [200, 404],
 });
 
-// Well-known metadata (RFC 9116) — must be reachable AND hardened.
+// Well-known metadata (RFC 9116) — must be reachable AND hardened. Served
+// directly by the Assets binding, not the Worker, so it never carries CSP
+// (public/_headers doesn't declare one for /.well-known/*).
 await probeRouteHeaders("security.txt", "/.well-known/security.txt", {
+  excludeGlobal: ["content-security-policy"],
   extra: {
     "cache-control": /max-age=\d+/i,
     "x-robots-tag": /noindex/i,
@@ -305,18 +340,18 @@ await probeRouteHeaders("security.txt", "/.well-known/security.txt", {
 });
 
 // A concrete hashed asset — proves /assets/* Cache-Control is served with
-// the global security headers still applied.
+// the global security headers still applied. Also Assets-binding-served,
+// so no CSP here either (see the security.txt probe above).
 const assetPath = pickAssetPath();
 if (assetPath) {
   await probeRouteHeaders(`asset ${assetPath}`, assetPath, {
+    excludeGlobal: ["content-security-policy"],
     extra: {
       "cache-control": /max-age=31536000/i,
     },
   });
 } else {
-  console.log(
-    "\n↷ /assets/*  — skipped (no built assets found; run `bun run build` first)",
-  );
+  console.log("\n↷ /assets/*  — skipped (no built assets found; run `bun run build` first)");
 }
 
 // ---------------------------------------------------------------------------

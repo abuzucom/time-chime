@@ -96,7 +96,6 @@ export const PERMISSIONS_POLICY_VALUE = [
   "interest-cohort=()", // Google FLoC / Topics opt-out per EFF guidance
 ].join(", ");
 
-
 /**
  * Build the enforced Content-Security-Policy for a single response, using a
  * freshly generated nonce for that response's inline scripts.
@@ -120,11 +119,7 @@ export const PERMISSIONS_POLICY_VALUE = [
  * having to list every hashed asset path, while still refusing arbitrary
  * inline `<script>` blocks.
  */
-function buildEnforcedCsp(
-  nonce: string,
-  hashSource: string,
-  reportUri: string,
-): string {
+function buildEnforcedCsp(nonce: string, hashSource: string, reportUri: string): string {
   return [
     "default-src 'self'",
     // Nonce + hash + strict-dynamic. NO `'unsafe-inline'`, NO wildcards.
@@ -178,7 +173,6 @@ const REPORTING_ENDPOINT_NAME = "csp-endpoint";
  */
 const DEFAULT_CSP_REPORT_URI = "/api/public/csp-report";
 
-
 // Nonce generation lives in `./nonce-store.ts` so the SSR head and the
 // response headers can share the SAME nonce for one request via
 // AsyncLocalStorage. Do not re-inline it here — see that module for why.
@@ -208,6 +202,19 @@ export function withSecurityHeaders(response: Response, cspNonce?: string): Resp
   setIfAbsent(target.headers, "Permissions-Policy", PERMISSIONS_POLICY_VALUE);
   setIfAbsent(target.headers, "X-Content-Type-Options", "nosniff");
   setIfAbsent(target.headers, "X-Frame-Options", "DENY");
+  setIfAbsent(target.headers, "Cross-Origin-Opener-Policy", "same-origin");
+  setIfAbsent(target.headers, "Cross-Origin-Resource-Policy", "same-origin");
+  setIfAbsent(target.headers, "X-DNS-Prefetch-Control", "off");
+
+  // Cloudflare's `_headers` file only applies to requests the Assets
+  // binding serves directly; a Worker-generated response (SSR HTML,
+  // server-function JSON, this file's own error page) never passes through
+  // it, so the cache-poisoning defense documented in `public/_headers` for
+  // `/` and `/*.html` has to be repeated here or it silently never applies.
+  // A downstream handler can still opt into caching by setting its own
+  // Cache-Control before this runs (setIfAbsent defers to it).
+  setIfAbsent(target.headers, "Cache-Control", "no-store, must-revalidate");
+  setIfAbsent(target.headers, "Vary", "Accept-Encoding");
 
   // Resolve the CSP report sink: env override wins so operators can point
   // reports at an external aggregator (Sentry, report-uri.com) without a
@@ -218,11 +225,7 @@ export function withSecurityHeaders(response: Response, cspNonce?: string): Resp
   // `report-to` directive. Emitting this alongside `report-uri` gives
   // coverage across every current browser (Chrome/Edge use `report-to`,
   // Firefox/Safari still use `report-uri`).
-  setIfAbsent(
-    target.headers,
-    "Reporting-Endpoints",
-    `${REPORTING_ENDPOINT_NAME}="${reportUri}"`,
-  );
+  setIfAbsent(target.headers, "Reporting-Endpoints", `${REPORTING_ENDPOINT_NAME}="${reportUri}"`);
 
   // Enforced strict CSP with a fresh nonce for this response. Emitted on
   // every response shape (HTML, server-fn JSON, error pages, 404s) so a
@@ -240,7 +243,6 @@ export function withSecurityHeaders(response: Response, cspNonce?: string): Resp
     // request-scoped context, not from response headers.
   }
 
-
   // Optional CSP report-only mirror on top of the enforced policy — useful
   // for previewing a tightened style-src before flipping it into the
   // enforced policy. Only emitted when CSP_REPORT_ONLY_URI is set so
@@ -253,7 +255,6 @@ export function withSecurityHeaders(response: Response, cspNonce?: string): Resp
       buildEnforcedCsp(nonce, PRE_HYDRATION_SCRIPT_CSP_SOURCE, reportOnlyUri),
     );
   }
-
 
   return target;
 }

@@ -54,13 +54,18 @@ jobs:
         if: ${{ github.event.inputs.base_url == '' }}
         run: bun run build
 
-      # Serve the built site with a static file server that honours the
-      # Cloudflare Pages / Netlify-style public/_headers file.
-      - name: Start static server honouring _headers
+      # Serve the actual built Worker (Nitro's `cloudflare-module` preset —
+      # see vite.config.ts). This app deploys as a Worker with an `assets`
+      # binding, not Cloudflare Pages, so `wrangler dev` against the
+      # generated dist/server/wrangler.json is what makes _headers-driven
+      # static-asset headers AND the Worker's own SSR middleware headers
+      # both observable, matching production. `--bun` is deliberately
+      # omitted: wrangler does not support running under the Bun runtime.
+      - name: Start local Worker server
         if: ${{ github.event.inputs.base_url == '' }}
         run: |
-          bunx --bun @cloudflare/wrangler@3 pages dev .output/public \
-            --port 4173 --ip 127.0.0.1 --compatibility-date=2024-10-01 \
+          bunx wrangler@4.110.0 dev -c dist/server/wrangler.json \
+            --port 4173 --ip 127.0.0.1 \
             > wrangler.log 2>&1 &
           echo $! > wrangler.pid
           for i in $(seq 1 40); do
