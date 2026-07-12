@@ -1,12 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import { PROVIDER_IDS, syncTime, type ProviderId } from "@/lib/time.functions";
+import { syncTime, type ProviderId } from "@/lib/time.functions";
 import { HISTORY_MAX, initialSyncState, type SyncSample, type TimeSyncState } from "./state";
 import { setAuthoritativeOffset } from "./now";
+import { normalizeProviderIds } from "./provider";
 
 type TimeSyncContextValue = TimeSyncState & {
-  resync: () => Promise<void>;
+  resync: (providers?: ProviderId[]) => Promise<void>;
   setProviders: (ids: ProviderId[]) => void;
 };
 
@@ -167,9 +168,9 @@ async function collectBestProbe(
 export function TimeSyncProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<TimeSyncState>(() => {
     const persisted = loadPersistedTimeSyncState();
-    const validProviders = persisted?.providers?.filter((id): id is ProviderId =>
-      PROVIDER_IDS.includes(id),
-    );
+    const validProviders = Array.isArray(persisted?.providers)
+      ? normalizeProviderIds(persisted.providers)
+      : [];
     return {
       ...initialSyncState,
       ...(validProviders?.length ? { providers: validProviders } : {}),
@@ -240,8 +241,11 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const resync = useCallback(async () => {
-    if (inFlight.current) return;
+  const resync = useCallback(async (requestedProviders?: ProviderId[]) => {
+    const providers = requestedProviders
+      ? normalizeProviderIds(requestedProviders)
+      : providersRef.current;
+    if (providers.length === 0 || inFlight.current) return;
     // Cooldown gate: enforce a hard minimum interval between attempts so no
     // caller — background chime scheduler, visibility flapping, effect loop,
     // or click-spam on the manual "Sync now" button — can hammer the
@@ -253,7 +257,7 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
     inFlight.current = true;
     setState((s) => ({ ...s, syncing: true, error: null }));
     try {
-      const result = await collectBestProbe(providersRef.current);
+      const result = await collectBestProbe(providers);
       if (!result) {
         setState((s) => ({ ...s, syncing: false }));
         return;
@@ -272,8 +276,11 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
 
 
   const setProviders = useCallback((ids: ProviderId[]) => {
+    const nextProviders = normalizeProviderIds(ids);
+    if (nextProviders.length === 0) return;
+    providersRef.current = nextProviders;
     setState((s) => {
-      const next = { ...s, providers: ids };
+      const next = { ...s, providers: nextProviders };
       persistTimeSyncState(next);
       return next;
     });

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   isPlausibleProviderTimestamp,
+  normalizeProviderIds,
   parseProviderTimestamp,
   selectBestProvider,
 } from "./provider.ts";
@@ -41,4 +42,11 @@ test("prefers Time.now, then chooses the lowest RTT", () => {
     "worldtime",
   );
   assert.equal(selectBestProvider([]), null);
+});
+
+test("normalizes obsolete, duplicate, and malformed provider IDs", () => {
+  assert.deepEqual(
+    normalizeProviderIds(["cloudflare", "worldtime", "worldtime", null, "clockNow"]),
+    ["worldtime", "clockNow"],
+  );
 });
