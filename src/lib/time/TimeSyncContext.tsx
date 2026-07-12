@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
-import { syncTime, type ProviderId } from "@/lib/time.functions";
+import { PROVIDER_IDS, syncTime, type ProviderId } from "@/lib/time.functions";
 import { HISTORY_MAX, initialSyncState, type SyncSample, type TimeSyncState } from "./state";
 import { setAuthoritativeOffset } from "./now";
 
@@ -17,7 +17,7 @@ const RESYNC_INTERVAL_MS = 10 * 60 * 1000;
 /**
  * Hard floor between successful sync attempts, enforced regardless of caller.
  *
- * Protects the stratum-1 upstreams (and our own Worker budget) from being
+ * Protects the network time services (and our own Worker budget) from being
  * hammered by background chime scheduling, visibility flapping, click-spam
  * on the manual "Sync now" button, or a runaway effect loop. Anything that
  * calls `resync()` — foreground UI, scheduler, background handoff, retry
@@ -34,7 +34,7 @@ const MIN_RESYNC_INTERVAL_MS = 15 * 1000;
  *
  * Without jitter, every tab that boots at the top of the hour would probe
  * again exactly 10 minutes later, creating a thundering-herd against the
- * stratum-1 upstreams. With ±20% jitter the next fire lands somewhere in
+ * network time services. With ±20% jitter the next fire lands somewhere in
  * [8 min, 12 min], spreading load and making it much harder for an
  * observer to correlate probes across users.
  */
@@ -156,7 +156,7 @@ async function collectBestProbe(
  * React context provider for authoritative time synchronization.
  *
  * On mount (and on tab re-focus, and every {@link RESYNC_INTERVAL_MS}) runs
- * up to four NTP-style HTTPS probes against the user's configured stratum-1
+ * up to four NTP-style HTTPS probes against the user's configured network time
  * providers, keeps the sample with the lowest RTT, writes the derived offset
  * into {@link setAuthoritativeOffset} so every clock face and scheduler picks
  * it up, and persists provider selection + offset history to `localStorage`.
@@ -167,9 +167,12 @@ async function collectBestProbe(
 export function TimeSyncProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<TimeSyncState>(() => {
     const persisted = loadPersistedTimeSyncState();
+    const validProviders = persisted?.providers?.filter((id): id is ProviderId =>
+      PROVIDER_IDS.includes(id),
+    );
     return {
       ...initialSyncState,
-      ...(persisted?.providers ? { providers: persisted.providers } : {}),
+      ...(validProviders?.length ? { providers: validProviders } : {}),
       history: persisted?.history ?? [],
     };
   });
@@ -232,7 +235,7 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
       syncFailed.current = true;
       toast.error("Time sync unavailable", {
         description:
-          "Every stratum-1 provider failed to respond. Showing local device time until the next attempt.",
+          "Every selected time reference failed to respond. Showing local device time until the next attempt.",
       });
     }
   }, []);
@@ -242,7 +245,7 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
     // Cooldown gate: enforce a hard minimum interval between attempts so no
     // caller — background chime scheduler, visibility flapping, effect loop,
     // or click-spam on the manual "Sync now" button — can hammer the
-    // stratum-1 upstreams. Silent no-op; UI state stays untouched so a
+    // network time services. Silent no-op; UI state stays untouched so a
     // gated call doesn't flash "syncing…".
     const sinceLast = Date.now() - lastAttemptAt.current;
     if (sinceLast < MIN_RESYNC_INTERVAL_MS) return;

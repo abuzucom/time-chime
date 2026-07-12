@@ -27,7 +27,7 @@ import { TimeSyncBadge } from "@/components/TimeSyncBadge";
  *   transparent 1 | 0                 (default 1 — no background)
  *   theme       light | grey | dark  (forces a palette, overrides user setting)
  *   size        pixels             (max width/height of the face, default 520)
- *   drift       1 | 0                 (show the NTS drift badge, default 0)
+ *   drift       1 | 0                 (show the network-reference drift badge, default 0)
  *   seconds     1 | 0                 (show second hand / seconds digits)
  *   pad         pixels             (outer padding, default 0)
  *   numerals    roman | arabic | eastern-arabic  (grandfather face only)

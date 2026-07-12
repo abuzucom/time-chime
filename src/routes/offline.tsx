@@ -34,7 +34,7 @@ export const Route = createFileRoute("/offline")({
  *     failed navigation, that's the correct recovery.
  *   - Deep-links to /support for troubleshooting, and back to / because the
  *     local clock face works fully offline (chimes, drift display against
- *     the last-known NTS anchor, settings).
+ *     the last-known network reference, settings).
  */
 function OfflinePage() {
   const [online, setOnline] = useState<boolean>(() =>
@@ -66,7 +66,7 @@ function OfflinePage() {
     try {
       await resync();
       toast.success("Chime time resynced", {
-        description: "Fetched a fresh reading from the configured stratum-1 sources.",
+        description: "Fetched a fresh reading from the configured network time references.",
       });
     } catch (error) {
       toast.error("Couldn't resync chime time", {
@@ -130,7 +130,7 @@ function OfflinePage() {
             className="gap-2"
             title={
               online
-                ? "Fetch a fresh reading from the configured stratum-1 sources"
+                ? "Fetch a fresh reading from the configured network time references"
                 : "Available once your connection returns"
             }
           >
@@ -158,7 +158,7 @@ function OfflinePage() {
           <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
             <li>
               <span className="text-foreground">Clock face:</span> renders from
-              the last-known NTS offset — drift may grow until the next sync.
+              the last-known network-reference offset — drift may grow until the next sync.
             </li>
             <li>
               <span className="text-foreground">Chimes:</span> scheduled

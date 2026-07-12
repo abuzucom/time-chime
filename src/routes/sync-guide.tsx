@@ -3,11 +3,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/sync-guide")({
   head: () => ({
     meta: [
-      { title: "Sync your OS clock to Stratum-1 · Time Chime" },
+      { title: "Understand device time, Stratum 1, and NTS ? Time Chime" },
       {
         name: "description",
         content:
-          "Step-by-step instructions to configure macOS, Windows, Linux, iOS, and Android to synchronise their system clocks against authoritative Stratum-1 NTP and NTS time sources instead of default pool servers.",
+          "Learn how default device time works and why Stratum-1 NTP with NTS authentication provides stronger guarantees.",
       },
       { name: "robots", content: "index,follow" },
     ],
@@ -69,17 +69,15 @@ function SyncGuide() {
       </div>
 
       <h1 className="font-serif text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-        Sync your OS clock to a Stratum-1 source
+        Why Stratum-1 and NTS matter
       </h1>
       <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-        Most operating systems ship with a generic <code>pool.ntp.org</code> or
-        vendor server enabled by default. Those are volunteer stratum-2/3
-        servers with no authentication, variable latency, and no accountability
-        for accuracy. If you care about millisecond-level correctness — for
-        finance, telecoms, logging, forensics, or just principle — point your
-        clock at a <strong>stratum-1</strong> reference disciplined by a
-        caesium clock or GNSS, and prefer <strong>NTS</strong> (Network Time
-        Security, RFC 8915) so the sync is authenticated end-to-end.
+        Modern computers and phones usually rely on operating-system time services, vendor pools,
+        local clocks, and unauthenticated NTP or SNTP exchanges. A Stratum-1 server is directly
+        disciplined by a primary reference such as GNSS or a laboratory clock. NTS (Network Time
+        Security, RFC 8915) authenticates NTP exchanges and helps prevent on-path manipulation.
+        Time Chime's HTTPS JSON providers are convenient network references, not Stratum-1
+        authorities. Use the OS instructions below when you need authenticated system time.
       </p>
 
       {/* ---------------- Recommended anchors ---------------- */}
@@ -191,7 +189,7 @@ timedatectl timesync-status`}</Code>
 
       <PlatformSection
         title="iOS / iPadOS"
-        intro="Apple does not expose an NTP server setting on iOS. The system syncs to time.apple.com, which is a well-run stratum-1/2 anycast fleet — the practical remedy is to keep automatic time enabled and rely on this app for authoritative reference in the UI."
+        intro="Apple does not expose an NTP server setting on iOS. The system syncs to time.apple.com, which is a well-run stratum-1/2 anycast fleet — the practical remedy is to keep automatic time enabled and use this app as an additional network-reference cross-check in the UI."
       >
         <ul className="ml-5 list-disc space-y-1 text-sm text-muted-foreground">
           <li>Settings → General → Date &amp; Time → <em>Set Automatically</em> = ON.</li>

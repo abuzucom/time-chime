@@ -69,7 +69,7 @@ const TROUBLESHOOTING = [
     id: "clock-drift",
     icon: Clock,
     title: "The clock looks off by a second or two",
-    body: "Time Chime shows drift versus Stratum-1 sources. If your device is consistently off, point your OS clock at an authoritative NTP/NTS anchor.",
+    body: "Time Chime estimates device drift against selected network references. For stronger guarantees, point your OS clock at an authenticated NTP/NTS service.",
     to: "/sync-guide",
     linkLabel: "OS clock sync guide",
   },

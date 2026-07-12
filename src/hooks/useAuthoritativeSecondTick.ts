@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { authoritativeNow } from "@/lib/time/now";
 
 /**
- * Fires exactly on each NTS-corrected whole-second boundary.
+ * Fires exactly on each network-corrected whole-second boundary.
  *
  * Unlike an rAF loop (which can lag up to a frame past the true second),
  * this scheduler always aims for the next second in *authoritative* time —

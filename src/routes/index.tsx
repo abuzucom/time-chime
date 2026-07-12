@@ -102,13 +102,13 @@ function Home() {
               className="font-mono text-[10px] font-medium uppercase tracking-[0.24em]"
               style={{ color: "var(--accent-text)" }}
             >
-              NTS Synchronised
+              Network Time Reference
             </span>
             <h1 className="font-sans text-4xl font-semibold leading-[1.05] tracking-tight text-foreground">
               The Chronometer
             </h1>
             <p className="max-w-xs text-sm font-light leading-relaxed text-muted-foreground">
-              Precision stratum-1 timekeeping — the Westminster sequence, tolled on the quarter,
+              A clear network-time reference for the Westminster sequence, tolled on the quarter,
               in five-four metre.
             </p>
           </header>

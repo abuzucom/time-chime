@@ -1,8 +1,7 @@
 # Time Chime
 
 A configurable clock for the web, iOS, and Android that plays the Westminster
-chimes on the quarter and strikes on the hour — synchronised to stratum-1
-authoritative time sources.
+chimes on the quarter and strikes on the hour — calibrated against selectable network time references.
 
 Time Chime is **free, open-source, and privacy-respecting**. It has no
 accounts, no ads, no trackers, and no analytics. All preferences live in your
@@ -58,10 +57,9 @@ browser's local storage.
 
 ### Time synchronisation
 
-- **Stratum-1 sync** via a server-side HTTPS proxy to national metrology
-  institutes (NIST, PTB, NPL, NRC, NICT, INRiM, ROA, VNIIFTRI …) plus
-  Cloudflare (preferred anchor). Google Public NTP is intentionally
-  omitted (leap-smeared).
+- **Network time references** via a server-side HTTPS JSON proxy to Time.now,
+  WorldTimeAPI, timeapi.world, and Clock.now. Time.now is preferred by policy;
+  these services are references, not claimed Stratum-1 authorities.
 - **Provider picker** — pick 1–5 sources; defaults are inferred from the
   request region (`CF-IPCountry`) so European users see PTB/NPL first,
   North Americans see NIST/NRC, etc.
@@ -158,15 +156,30 @@ npx cap open android   # Android Studio
 
 ---
 
+## Time-reference services
+
+Time Chime uses these selectable HTTPS JSON services:
+
+- [Time.now](https://time.now/developer/api)
+- [WorldTimeAPI](https://worldtimeapi.org/)
+- [timeapi.world](https://timeapi.world/)
+- [Clock.now](https://clock.now/)
+
+These responses help estimate device drift but do not prove Stratum-1 status or
+provide NTS authentication. For stronger system-level guarantees, configure the
+operating system with an authenticated NTP/NTS client. An authoritative Time
+Chime server and NTS bridge are deferred to a future major release.
+
+---
+
 ## Time synchronisation architecture
 
 Browsers cannot open raw UDP sockets, so classical NTP is unavailable
 client-side. Time Chime uses a two-tier design:
 
 1. **Server-side function** (`src/lib/time.functions.ts`) queries several
-   stratum-1 HTTPS endpoints in parallel, returns their `Date` header
-   plus a server-side `t_recv`. The target list is a fixed allow-list
-   (SSRF-safe); user input picks *which* providers, never *what URL*.
+   selected HTTPS JSON services in parallel, returns parsed timestamps and
+   server processing time.
 2. **Client** performs an NTP-style four-timestamp exchange
    (`t1, t2, t3, t4`) using `performance.now()` for local monotonicity,
    takes four samples per source, and keeps the sample with the smallest

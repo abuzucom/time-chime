@@ -58,7 +58,7 @@ function Privacy() {
             <li>All preferences and sync history live in your device&rsquo;s local storage.</li>
             <li>
               Network requests during normal use are limited to loading the app bundle and
-              querying public stratum-1 time providers.
+              querying selected public HTTPS JSON time references.
             </li>
             <li>
               You can export or delete all local data at any time from the settings drawer.
@@ -150,8 +150,7 @@ function Privacy() {
         <Section id="section-6" title="6. Third-party time providers">
           <p>
             When you use the time-sync feature, the App makes an HTTPS/NTS request directly from
-            your device to the provider you select (for example, Cloudflare, NIST, PTB, NPL, or
-            NRC). Those providers may log connection metadata &mdash; typically IP address,
+            your device to the provider you select (Time.now, WorldTimeAPI, timeapi.world, or Clock.now). Those providers may log connection metadata &mdash; typically IP address,
             timestamp, and user agent &mdash; under their own privacy policies. The maintainers
             do not receive, aggregate, or have visibility into those logs.
           </p>

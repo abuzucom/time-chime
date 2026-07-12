@@ -138,11 +138,7 @@ function clearAllLocalDataAndReload(): void {
   window.location.reload();
 }
 
-/**
- * Row in the "Time providers" list. Displays the provider's name, "Preferred"
- * and "NTS" badges, operator/stratum, live RTT from the most recent sync,
- * and a Switch to opt the provider in or out of the sync rotation.
- */
+/** Row in the selectable network time reference list. */
 function ProviderRow({
   id,
   active,
@@ -155,26 +151,12 @@ function ProviderRow({
   onToggle: (id: ProviderId, on: boolean) => void;
 }) {
   const provider = PROVIDER_CATALOG[id];
-  const isPreferred = "preferred" in provider && provider.preferred;
   return (
     <li className="flex items-center justify-between gap-2 text-sm">
       <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="truncate">{provider.name}</span>
-          {isPreferred && (
-            <span className="rounded-sm bg-primary/15 px-1 text-[10px] uppercase text-primary">
-              Preferred
-            </span>
-          )}
-          {provider.ntsSupported && (
-            <span className="rounded-sm bg-muted px-1 text-[10px] uppercase text-muted-foreground">
-              NTS
-            </span>
-          )}
-        </div>
+        <div className="truncate">{provider.name}</div>
         <div className="text-[11px] text-muted-foreground">
-          {provider.operator} · stratum {provider.stratum}
-          {live?.ok && ` · ${live.rttMs} ms`}
+          {live?.ok ? "A network sample is available" : "Waiting for a sample"}
         </div>
       </div>
       <Switch checked={active} onCheckedChange={(v) => onToggle(id, v)} />
@@ -183,13 +165,7 @@ function ProviderRow({
 }
 
 
-/**
- * Gear-icon-triggered sheet exposing every user preference: clock face,
- * theme, chime sound set, hour/quarter toggles, chime speed/transpose,
- * quiet-hours window, and stratum-1 provider selection. All controls read
- * from and write directly to `useSettings` / `useTimeSync`, so no props
- * are needed.
- */
+/** Settings drawer for clock preferences and selectable network references. */
 export function SettingsDrawer() {
   const settings = useSettings();
   const sync = useTimeSync();
@@ -515,9 +491,8 @@ export function SettingsDrawer() {
 
           <Section title="Time providers">
             <div className="text-xs text-muted-foreground">
-              Suggested for your region ({sync.inferredCountry ?? "auto"}). At least one, at most
-              five. Cloudflare Time is used as the preferred anchor whenever it responds;
-              other sources fall back to lowest round-trip time.
+              Select one or more independent HTTPS time references. Time.now is preferred when
+              available; other selected services provide fallback readings by latency.
             </div>
             <ul className="space-y-2">
               {PROVIDER_IDS.map((id) => (

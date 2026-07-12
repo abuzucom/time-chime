@@ -20,7 +20,7 @@ The only origin-hittable surfaces are:
 
 | Surface | Path | Cost per call | Abuse risk |
 |---|---|---|---|
-| `syncTime` server function | `POST /_serverFn/syncTime` | 1 outbound HTTPS fetch to NIST / PTB / Cloudflare | An attacker can turn our Worker into a **reflector** against a stratum-1 provider, getting us banned from the upstream. |
+| `syncTime` server function | `POST /_serverFn/syncTime` | parallel outbound HTTPS fetches to selected JSON time references | An attacker can turn our Worker into a **reflector** against a time-reference provider, getting us banned from the upstream. |
 | SSR HTML shell | `GET /`, `/support`, `/obs` | 1 render | Cheap; only DoS-relevant at very high RPS. |
 | Static assets | `GET /assets/*` | Served from Cloudflare cache | Not a concern — cache eats the load. |
 
@@ -189,7 +189,7 @@ for i in $(seq 1 15); do
   curl -sS -o /dev/null -w "%{http_code}\n" \
     -X POST https://<your-host>/_serverFn/syncTime \
     -H "content-type: application/json" \
-    -d '{"data":{"providerId":"cloudflare"}}'
+    -d '{"data":{"providerId":"timeNow"}}'
 done
 ```
 

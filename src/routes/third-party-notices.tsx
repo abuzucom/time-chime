@@ -179,16 +179,16 @@ const GROUPS: Group[] = [
       "External endpoints Time Chime contacts at runtime. Their code is not bundled; they are governed by their own terms.",
     entries: [
       {
-        name: "Cloudflare Time Services",
+        name: "Cloudflare platform services",
         license: "See provider terms",
         url: "https://www.cloudflare.com/time/",
-        purpose: "Preferred NTS/HTTPS time anchor.",
+        purpose: "Cloudflare platform and infrastructure services.",
       },
       {
         name: "NIST, PTB, NPL, NRC and other national metrology institutes",
         license: "See provider terms",
         url: "https://www.bipm.org/en/time-frequency",
-        purpose: "Stratum-1 time providers selectable from the provider picker.",
+        purpose: "Selectable HTTPS JSON time references.",
       },
     ],
   },
