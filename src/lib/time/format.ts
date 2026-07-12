@@ -14,12 +14,12 @@ export function formatOffset(ms: number): string {
 /**
  * Bucket a signed clock offset (in milliseconds) into a UI severity label.
  * @param ms Signed offset between device time and authoritative time.
- * @returns `"ok"` for |offset| < 100 ms, `"warn"` for < 2 s, otherwise `"bad"`.
+ * @returns `"ok"` for |offset| <= 20 ms, `"warn"` for <= 50 ms, otherwise `"bad"`.
  */
 export function driftSeverity(ms: number): "ok" | "warn" | "bad" {
   const abs = Math.abs(ms);
-  if (abs < 100) return "ok";
-  if (abs < 2000) return "warn";
+  if (abs <= 20) return "ok";
+  if (abs <= 50) return "warn";
   return "bad";
 }
 
