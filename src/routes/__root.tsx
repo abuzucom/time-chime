@@ -228,7 +228,7 @@ function RootComponent() {
 
   // Register the app-shell service worker on the client. The registrar is
   // guarded against dev/preview/iframe hosts (see register-sw.ts) so this
-  // is a no-op in the Lovable editor preview.
+  // is a no-op inside an embedded editor preview iframe.
   useEffect(() => {
     registerAppShellServiceWorker();
   }, []);

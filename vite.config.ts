@@ -30,11 +30,11 @@ function browserOnlyAsyncHooksShim() {
   };
 }
 
-// This is a plain Vite config — no Lovable-specific wrapper. It composes
-// the four plugins TanStack Start needs (tanstackStart, viteReact,
-// tailwindcss, tsConfigPaths), adds nitro at build time so the server
-// entry ships as a portable Cloudflare Worker (change `preset` for other
-// deploy targets), plus the app-shell PWA and the async_hooks shim.
+// This is a plain Vite config. It composes the four plugins TanStack Start
+// needs (tanstackStart, viteReact, tailwindcss, tsConfigPaths), adds nitro
+// at build time so the server entry ships as a portable Cloudflare Worker
+// (change `preset` for other deploy targets), plus the app-shell PWA and
+// the async_hooks shim.
 export default defineConfig(({ command }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(appVersion),
