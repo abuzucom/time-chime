@@ -63,11 +63,10 @@ async function readProviderTime(id: ProviderId): Promise<number | null> {
     const res = await fetch(provider.endpoint, {
       signal: controller.signal,
       cache: "no-store",
-      redirect: "error",
+      redirect: "follow",
       headers: { accept: "application/json" },
     });
-    const contentType = res.headers.get("content-type") ?? "";
-    if (!res.ok || !contentType.includes("application/json")) return null;
+    if (!res.ok) return null;
     return await extractMsFromJsonBody(res, id);
   } catch (err) {
     console.warn(`[time-sync] probe of provider "${id}" failed`, err);
