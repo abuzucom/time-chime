@@ -5,6 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-07-12
+
+### Changed
+
+- Removed WorldTimeAPI and timeapi.world from the selectable time-provider set while keeping the rest of time sync intact.
+- Defaulted saved provider state to the remaining providers when obsolete IDs are filtered out.
+- Updated the provider tests and user-facing copy to reflect the narrower network-time set.
+
 ## [0.3.2] - 2026-07-12
 
 ### Fixed
