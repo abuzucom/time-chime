@@ -25,6 +25,13 @@ export const PROVIDER_CATALOG = {
 export type ProviderId = keyof typeof PROVIDER_CATALOG;
 export const PROVIDER_IDS = Object.keys(PROVIDER_CATALOG) as ProviderId[];
 
+/** Keep persisted and caller-supplied provider IDs within the current catalog. */
+export function normalizeProviderIds(ids: readonly unknown[]): ProviderId[] {
+  return Array.from(new Set(ids)).filter(
+    (id): id is ProviderId => typeof id === "string" && PROVIDER_IDS.includes(id as ProviderId),
+  );
+}
+
 const MAX_REFERENCE_SKEW_MS = 24 * 60 * 60 * 1000;
 const ISO_FIELDS = ["utc_datetime", "datetime", "date", "iso", "utc"] as const;
 

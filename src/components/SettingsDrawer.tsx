@@ -198,7 +198,7 @@ export function SettingsDrawer() {
     if (next.length === 0) return;
     if (next.length > 5) return;
     sync.setProviders(next);
-    void sync.resync();
+    void sync.resync(next);
   };
 
   return (
