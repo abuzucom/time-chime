@@ -108,7 +108,10 @@ export type ProviderId = keyof typeof PROVIDER_CATALOG;
 export const PROVIDER_IDS = Object.keys(PROVIDER_CATALOG) as ProviderId[];
 
 const inputSchema = z.object({
-  providers: z.array(z.enum(PROVIDER_IDS as [ProviderId, ...ProviderId[]])).min(1).max(5),
+  providers: z
+    .array(z.enum(PROVIDER_IDS as [ProviderId, ...ProviderId[]]))
+    .min(1)
+    .max(5),
 });
 
 export type ProviderSample = {
@@ -129,6 +132,31 @@ export type TimeSyncResponse = {
   sources: ProviderSample[];
   inferredCountry: string | null;
 };
+
+/**
+ * Extract a millisecond timestamp from a provider's JSON body, preferring
+ * `unixtime` > `dateTime` > `utc_datetime`. Returns `null` on missing or
+ * malformed data so the caller falls back to the already-parsed Date header.
+ */
+async function extractMsFromJsonBody(res: Response, id: ProviderId): Promise<number | null> {
+  try {
+    const body = (await res.json()) as Record<string, unknown>;
+    // Use nullish coalescing (?? / find) rather than `||` so a legitimate
+    // numeric zero from `unixtime` is not discarded by falsy short-circuit
+    // before Number.isFinite gets a chance to accept it.
+    const unixtimeMs = typeof body.unixtime === "number" ? body.unixtime * 1000 : null;
+    const dateTimeMs = typeof body.dateTime === "string" ? Date.parse(body.dateTime) : null;
+    const utcMs = typeof body.utc_datetime === "string" ? Date.parse(body.utc_datetime) : null;
+    const candidate = [unixtimeMs, dateTimeMs, utcMs].find(
+      (value): value is number => typeof value === "number" && Number.isFinite(value),
+    );
+    return candidate ?? null;
+  } catch (err) {
+    // Malformed JSON body — fall back to Date header (already parsed above).
+    console.warn(`[time-sync] provider "${id}" returned unparseable JSON; using Date header`, err);
+    return null;
+  }
+}
 
 /**
  * Fetch the current authoritative time from a single stratum-1 provider.
@@ -175,25 +203,8 @@ async function readProviderTime(id: ProviderId): Promise<number | null> {
     // For providers that expose a millisecond-precision body, prefer that.
     const contentType = res.headers.get("content-type") ?? "";
     if (contentType.includes("application/json")) {
-      try {
-        const body = (await res.json()) as Record<string, unknown>;
-        // Use nullish coalescing (?? / find) rather than `||` so a legitimate
-        // numeric zero from `unixtime` is not discarded by falsy short-circuit
-        // before Number.isFinite gets a chance to accept it.
-        const unixtimeMs =
-          typeof body.unixtime === "number" ? body.unixtime * 1000 : null;
-        const dateTimeMs =
-          typeof body.dateTime === "string" ? Date.parse(body.dateTime) : null;
-        const utcMs =
-          typeof body.utc_datetime === "string" ? Date.parse(body.utc_datetime) : null;
-        const candidate = [unixtimeMs, dateTimeMs, utcMs].find(
-          (value): value is number => typeof value === "number" && Number.isFinite(value),
-        );
-        if (candidate !== undefined) ms = candidate;
-      } catch (err) {
-        // Malformed JSON body — fall back to Date header (already parsed above).
-        console.warn(`[time-sync] provider "${id}" returned unparseable JSON; using Date header`, err);
-      }
+      const candidate = await extractMsFromJsonBody(res, id);
+      if (candidate !== null) ms = candidate;
     } else if (id === "cloudflare") {
       // trace body is "key=value" lines including ts=<unix seconds with fraction>
       const text = await res.text();
@@ -309,9 +320,6 @@ export const syncTime = createServerFn({ method: "POST" })
         });
       }
     }
-
-
-
 
     try {
       const sources = await Promise.all(data.providers.map(probeProvider));

@@ -32,19 +32,24 @@ if (existsSync(reportPath)) {
   const sites = report.site ?? [];
   for (const site of sites) {
     for (const alert of site.alerts ?? []) {
-      const risk = alert.riskdesc?.split(" ")[0] ?? "Informational";
-      if (risk in counts) counts[risk]++;
-      rows.push({
-        risk,
-        name: alert.name,
-        cwe: alert.cweid,
-        wasc: alert.wascid,
-        instances: (alert.instances ?? []).length,
-      });
+      recordAlert(alert, counts, rows);
     }
   }
 } else {
   scanStatus = "no report artefact found";
+}
+
+/** Tally an alert's risk level and append its summary row, in place. */
+function recordAlert(alert, counts, rows) {
+  const risk = alert.riskdesc?.split(" ")[0] ?? "Informational";
+  if (risk in counts) counts[risk]++;
+  rows.push({
+    risk,
+    name: alert.name,
+    cwe: alert.cweid,
+    wasc: alert.wascid,
+    instances: (alert.instances ?? []).length,
+  });
 }
 
 const riskOrder = { High: 0, Medium: 1, Low: 2, Informational: 3 };
@@ -58,9 +63,10 @@ const totals = `| High | Medium | Low | Informational |
 
 let findings;
 if (rows.length === 0) {
-  findings = scanStatus === "completed"
-    ? "_No alerts reported._"
-    : `_Scan did not produce a report (${scanStatus})._`;
+  findings =
+    scanStatus === "completed"
+      ? "_No alerts reported._"
+      : `_Scan did not produce a report (${scanStatus})._`;
 } else {
   findings =
     "| Risk | Alert | CWE | Instances |\n| --- | --- | --- | ---: |\n" +
@@ -78,10 +84,14 @@ if (!re.test(doc)) {
   process.exit(1);
 }
 writeFileSync(DOC, doc.replace(re, block));
-console.log(`Updated ${DOC} — H:${counts.High} M:${counts.Medium} L:${counts.Low} I:${counts.Informational}`);
+console.log(
+  `Updated ${DOC} — H:${counts.High} M:${counts.Medium} L:${counts.Low} I:${counts.Informational}`,
+);
 
 function escapeCell(s) {
-  return String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
+  return String(s ?? "")
+    .replace(/\|/g, "\\|")
+    .replace(/\n/g, " ");
 }
 function escapeRegex(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

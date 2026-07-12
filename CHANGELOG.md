@@ -5,6 +5,38 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-07-12
+
+### Fixed
+
+Retrospective `AGENTS.md` conformance pass, part 1 of 3 (audited by three
+parallel codebase reviews; full findings in the originating PR's description):
+
+- `eslint.config.js`: fixed the composition-over-inheritance lint rule
+  incorrectly flagging classes with no `extends` clause at all, and
+  extended AGENTS.md-mapped lint coverage to `scripts/*.mjs` and
+  `tests/*.mjs` (previously `.ts`/`.tsx` only).
+- Reduced nesting depth in `src/lib/native/notifications.ts`,
+  `src/lib/time.functions.ts`, `src/routes/api/public/csp-report.tsx`,
+  and `scripts/update-zap-report.mjs` (the last one surfaced by the new
+  `.mjs` lint coverage above).
+
+## [0.2.1] - 2026-07-12
+
+### Fixed
+
+- `67b6d73` Fixed the long-broken "Validate response headers" CI check
+  (it ran `wrangler pages dev` against an app that actually deploys as a
+  Cloudflare Worker, not Pages) and, while verifying that fix, found and
+  fixed two related production bugs: `vite-plugin-pwa`'s service worker
+  output landing in the wrong directory (404ing in production), and
+  several security headers (`Cross-Origin-Opener-Policy`,
+  `Cross-Origin-Resource-Policy`, `X-DNS-Prefetch-Control`,
+  `Cache-Control`, `Vary`) silently missing from every SSR/server-function
+  response.
+- `b40fcc0` Removed all remaining Lovable scaffold traces (`.lovable/`,
+  doc mentions, code comments) with no functional behavior change.
+
 ## [0.2.0] - 2026-07-11
 
 ### Added
