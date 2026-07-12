@@ -157,13 +157,12 @@ function Terms() {
 
         <Section title="4. Third-party time providers">
           <p>
-            The App queries public time endpoints operated by national metrology institutes and
-            other independent operators (e.g. NIST, PTB, NPL, NRC, Cloudflare). Those providers
-            are governed by their own terms and privacy policies. The maintainers do not control
-            and are not responsible for their availability, accuracy, or content.
+            The App queries public time endpoints operated by independent operators (currently
+            Time.now and Clock.now). Those providers are governed by their own terms and
+            privacy policies. The maintainers do not control and are not responsible for their
+            availability, accuracy, or content.
           </p>
         </Section>
-
         <Section title="5. Donations">
           <p>
             Donations made through the links on the Support page are processed entirely by the

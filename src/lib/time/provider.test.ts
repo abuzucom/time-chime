@@ -1,11 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  DEFAULT_PROVIDER_IDS,
+  PROVIDER_CATALOG,
+  PROVIDER_IDS,
   isPlausibleProviderTimestamp,
   normalizeProviderIds,
   parseProviderTimestamp,
   selectBestProvider,
 } from "./provider.ts";
+import { initialSyncState } from "./state.ts";
+
+test("exports only the remaining HTTPS providers", () => {
+  assert.deepEqual(PROVIDER_IDS, ["timeNow", "clockNow"]);
+  assert.deepEqual(Object.keys(PROVIDER_CATALOG), ["timeNow", "clockNow"]);
+  assert.deepEqual(DEFAULT_PROVIDER_IDS, ["timeNow", "clockNow"]);
+});
 
 test("parses Unix seconds from the JSON providers", () => {
   assert.equal(parseProviderTimestamp({ unixtime: 1_700_000_000 }), 1_700_000_000_000);
@@ -33,20 +43,21 @@ test("rejects timestamps outside the plausibility window", () => {
 test("prefers Time.now, then chooses the lowest RTT", () => {
   const samples = [
     { id: "clockNow" as const, rttMs: 10 },
-    { id: "worldtime" as const, rttMs: 5 },
     { id: "timeNow" as const, rttMs: 30 },
   ];
   assert.equal(selectBestProvider(samples)?.id, "timeNow");
-  assert.equal(
-    selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id,
-    "worldtime",
-  );
+  assert.equal(selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id, "clockNow");
   assert.equal(selectBestProvider([]), null);
 });
 
 test("normalizes obsolete, duplicate, and malformed provider IDs", () => {
   assert.deepEqual(
-    normalizeProviderIds(["cloudflare", "worldtime", "worldtime", null, "clockNow"]),
-    ["worldtime", "clockNow"],
+    normalizeProviderIds(["cloudflare", "worldtime", "timeapiWorld", "worldtime", null, "clockNow"]),
+    ["clockNow"],
   );
+});
+
+test("defaults to the remaining providers when persistence is empty", () => {
+  assert.deepEqual(initialSyncState.providers, DEFAULT_PROVIDER_IDS);
+  assert.deepEqual(normalizeProviderIds([]), []);
 });

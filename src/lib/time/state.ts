@@ -1,4 +1,5 @@
 import type { ProviderId, ProviderSample } from "@/lib/time.functions";
+import { DEFAULT_PROVIDER_IDS } from "./provider.ts";
 
 /**
  * One completed NTP-style probe against the user's chosen provider set.
@@ -7,7 +8,7 @@ import type { ProviderId, ProviderSample } from "@/lib/time.functions";
  * trend line and the current provider distribution.
  */
 export type SyncSample = {
-  /** Signed clock skew: `authoritative − device` in milliseconds. */
+  /** Signed clock skew: `authoritative âˆ’ device` in milliseconds. */
   offsetMs: number;
   /** Best-case round-trip time (ms) across the providers that answered. */
   rttMs: number;
@@ -57,5 +58,5 @@ export const initialSyncState: TimeSyncState = {
   history: [],
   sources: [],
   inferredCountry: null,
-  providers: ["timeNow", "worldtime", "timeapiWorld", "clockNow"],
+  providers: [...DEFAULT_PROVIDER_IDS],
 };
