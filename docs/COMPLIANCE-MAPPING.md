@@ -138,7 +138,7 @@ and from the operator's office for developer workstations.
 | A.8.14 | Redundancy | Org | Operator: multi-region deploy if required. |
 | A.8.15 | Logging | Partial | Structured `console.error` for CSP violations; no client telemetry. Operator: log aggregation & retention. |
 | A.8.16 | Monitoring activities | Partial | Weekly ZAP baseline. Operator: uptime & error-rate monitoring. |
-| A.8.17 | Clock synchronization | Implemented — **and it's the product**. Server functions and client use user-selected stratum-1 sources (`src/lib/time.functions.ts`, `src/lib/time/TimeSyncContext.tsx`). |
+| A.8.17 | Clock synchronization | Implemented — **and it's the product**. Server functions and client use user-selected HTTPS JSON services; Stratum-1 authority and NTS authentication are not claimed. |
 | A.8.18 | Use of privileged utility programs | N/A | None bundled. |
 | A.8.19 | Installation of software on operational systems | Org | Operator: change management. |
 | A.8.20 | Network security | Partial | HSTS + `upgrade-insecure-requests`; SSRF-safe fetch allow-list. Operator: WAF, DDoS. |

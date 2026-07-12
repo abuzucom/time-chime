@@ -5,13 +5,13 @@
  */
 let currentOffsetMs = 0;
 
-// Hard cap on the applied offset. Real stratum-1 skew is milliseconds to
+// Hard cap on the applied offset. Network reference skew is normally milliseconds to
 // seconds; anything past a day is almost certainly a bad sample and would
 // poison every downstream time-to-chime calculation.
 const MAX_OFFSET_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Store the NTP/NTS-derived correction. Non-finite or absurd values are
+ * Store the network-reference correction. Non-finite or absurd values are
  * rejected so downstream math (chime scheduling, `%`, `setTimeout` delays)
  * never sees NaN or Infinity.
  * @param offsetMs Milliseconds to add to the device clock to obtain true UTC.

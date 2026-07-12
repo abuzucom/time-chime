@@ -76,7 +76,7 @@ const NUMERAL_FONTS: Record<GrandfatherNumerals, string> = {
  * Grandfather / longcase clock face: brass bezel, ivory dial, hour numerals
  * (Roman, Arabic, or Eastern Arabic), filigree hands. Hour and minute hands
  * sweep continuously; the second hand ticks in discrete one-second steps
- * aligned to NTS-authoritative time.
+ * aligned to network-reference time.
  */
 export function GrandfatherFace({ showSeconds = true, numerals = "roman" }: Props) {
   const { active: pulse } = useKonamiCode(
@@ -115,7 +115,7 @@ export function GrandfatherFace({ showSeconds = true, numerals = "roman" }: Prop
 
   // Smooth source for hour + minute (rAF-driven off authoritativeNow()).
   const smooth = useAuthoritativeTick();
-  // Discrete source for the second hand — fires exactly on each NTS whole-second boundary.
+  // Discrete source for the second hand — fires exactly on each network-reference whole-second boundary.
   const secondTick = useAuthoritativeSecondTick();
 
   const smoothDate = new Date(smooth);

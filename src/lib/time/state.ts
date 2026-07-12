@@ -57,5 +57,5 @@ export const initialSyncState: TimeSyncState = {
   history: [],
   sources: [],
   inferredCountry: null,
-  providers: ["cloudflare", "worldtime", "timeapi"],
+  providers: ["timeNow", "worldtime", "timeapiWorld", "clockNow"],
 };

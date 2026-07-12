@@ -1,7 +1,7 @@
 # Architecture: Time → Chime Pipeline
 
 This document describes the composed pipeline that carries a single
-authoritative timestamp from a stratum-1 network source all the way to a
+network reference timestamp from an HTTPS JSON service all the way to a
 speaker playing the correct Westminster quarter. Each stage is a small,
 independently testable module; stages communicate through plain values
 (numbers, records, callbacks) rather than shared mutable state or class
@@ -11,7 +11,7 @@ hierarchies.
 
 ```text
  ┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
- │  Stratum-1 providers │───▶│ Server probe         │───▶│ Client sync loop     │
+ │  HTTPS JSON references │───▶│ Server probe         │───▶│ Client sync loop     │
  │  (NIST, PTB, CF, …)  │    │ time.functions.ts    │    │ TimeSyncContext.tsx  │
  └──────────────────────┘    └──────────────────────┘    └──────────┬───────────┘
                                                                     │ offset, rtt
@@ -67,7 +67,7 @@ hierarchies.
 - **`src/hooks/useAuthoritativeTick.ts`** — coarse re-render hook for
   UI that updates every N ms against `authoritativeNow()`.
 - **`src/hooks/useAuthoritativeSecondTick.ts`** — self-correcting
-  `setTimeout` loop that fires exactly on the NTS-corrected whole-second
+  `setTimeout` loop that fires exactly on the network-reference-corrected whole-second
   boundary. Consumed by digital faces (so seconds/Julian/Unix digits flip
   in lockstep) and by the scheduler to align chime triggers with real
   wall-clock seconds, not `Date.now()` drift.

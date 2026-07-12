@@ -433,3 +433,12 @@ For every code or user-facing change:
 - Use `__APP_VERSION__` for UI version displays; never hard-code a second version value.
 - Verify the displayed version resolves to the same value as `package.json`.
 - Test theme-sensitive UI in light, dark, and grey modes.
+
+
+### Time-reference versioning
+
+- Treat package.json as the sole application version source.
+- Bump the version for every change according to SemVer: patch for compatible fixes, minor for compatible features, and major only with explicit user approval.
+- Update CHANGELOG.md for every change.
+- Never hard-code a separate UI version. Verify the displayed version equals package.json.
+- Test time-sensitive and theme-sensitive UI changes in light, dark, and grey modes.

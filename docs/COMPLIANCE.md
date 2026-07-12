@@ -25,7 +25,7 @@ narrow:
 | Personal data collected            | **None** (all preferences local to the device)     |
 | Third-party trackers / analytics   | **None**                                           |
 | Backend state store                | **None** (server functions are stateless proxies)  |
-| Outbound network calls             | HTTPS to user-selected stratum-1 time providers    |
+| Outbound network calls             | HTTPS JSON to user-selected network time references    |
 | Payment processing                 | **None** (donations link out to external platforms) |
 
 Because there is no backend user data or authentication surface, the

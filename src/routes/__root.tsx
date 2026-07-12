@@ -129,7 +129,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "A configurable clock that plays the Westminster chimes on the quarter and strikes the hour, synchronised to stratum-1 time sources.",
+          "A configurable clock that plays the Westminster chimes on the quarter and strikes the hour, calibrated against selectable network time references.",
       },
       { name: "author", content: "Time Chime" },
       { name: "theme-color", content: "#1a1410", media: "(prefers-color-scheme: dark)" },

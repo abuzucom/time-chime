@@ -22,90 +22,18 @@ const syncTimeBurstLimiter = createBurstLimiter({
   windowMs: 60_000,
 });
 
-/**
- * Stratum-1-backed HTTPS time providers. Browsers cannot open raw UDP so we
- * cannot speak native NTP/NTS from the client; instead the server function
- * queries HTTPS endpoints operated by (or disciplined by) stratum-1 sources
- * and returns a corrected timestamp for the client to compute its offset.
- */
-export const PROVIDER_CATALOG = {
-  cloudflare: {
-    id: "cloudflare",
-    name: "Cloudflare Time (NTS)",
-    operator: "Cloudflare",
-    stratum: 1,
-    region: "global",
-    endpoint: "https://cloudflare.com/cdn-cgi/trace",
-    ntsSupported: true,
-    // Preferred anchor: globally anycast, NTS-authenticated, millisecond-precision
-    // HTTP Date, and strict (unsmeared) UTC. Chosen over other ok sources unless
-    // Cloudflare itself fails, in which case we fall back to lowest-RTT.
-    preferred: true,
-  },
-  // Note: Google Public NTP is intentionally omitted — it serves leap-smeared
-  // time (up to ~0.5 s off strict UTC during a smear window), which conflicts
-  // with this app's "authoritative UTC" contract. Do not re-add without a
-  // user-facing warning and an opt-in.
-  nist: {
-    id: "nist",
-    name: "NIST (time.gov)",
-    operator: "US National Institute of Standards and Technology",
-    stratum: 1,
-    region: "na",
-    // NIST doesn't publish an HTTPS JSON time API; the HTTP Date header on
-    // time.gov is disciplined by their stratum-1 sources (second precision).
-    endpoint: "https://time.gov/",
-    ntsSupported: false,
-  },
-  ptb: {
-    id: "ptb",
-    name: "PTB (Braunschweig)",
-    operator: "Physikalisch-Technische Bundesanstalt (Germany)",
-    stratum: 1,
-    region: "eu",
-    endpoint: "https://www.ptb.de/",
-    ntsSupported: true,
-  },
-  metas: {
-    id: "metas",
-    name: "METAS (Bern)",
-    operator: "Federal Institute of Metrology (Switzerland)",
-    stratum: 1,
-    region: "eu",
-    endpoint: "https://www.metas.ch/",
-    ntsSupported: false,
-  },
-  nrc: {
-    id: "nrc",
-    name: "NRC (Ottawa)",
-    operator: "National Research Council Canada",
-    stratum: 1,
-    region: "na",
-    endpoint: "https://nrc.canada.ca/en",
-    ntsSupported: false,
-  },
-  worldtime: {
-    id: "worldtime",
-    name: "WorldTimeAPI",
-    operator: "worldtimeapi.org",
-    stratum: 1,
-    region: "global",
-    endpoint: "https://worldtimeapi.org/api/timezone/Etc/UTC",
-    ntsSupported: false,
-  },
-  timeapi: {
-    id: "timeapi",
-    name: "TimeAPI.io",
-    operator: "timeapi.io",
-    stratum: 1,
-    region: "global",
-    endpoint: "https://timeapi.io/api/time/current/zone?timeZone=UTC",
-    ntsSupported: false,
-  },
-} as const;
+import {
+  isPlausibleProviderTimestamp,
+  parseProviderTimestamp,
+  PROVIDER_CATALOG,
+  PROVIDER_IDS,
+  selectBestProvider,
+  type ProviderId,
+} from "./time/provider";
 
-export type ProviderId = keyof typeof PROVIDER_CATALOG;
-export const PROVIDER_IDS = Object.keys(PROVIDER_CATALOG) as ProviderId[];
+export { PROVIDER_CATALOG, PROVIDER_IDS };
+export type { ProviderId };
+
 
 const inputSchema = z.object({
   providers: z
@@ -114,11 +42,44 @@ const inputSchema = z.object({
     .max(5),
 });
 
+async function extractMsFromJsonBody(res: Response, id: ProviderId): Promise<number | null> {
+  try {
+    const candidate = parseProviderTimestamp(await res.json());
+    return candidate !== null && isPlausibleProviderTimestamp(candidate) ? candidate : null;
+  } catch (err) {
+    console.warn(`[time-sync] provider "${id}" returned unparseable JSON`, err);
+    return null;
+  }
+}
+
+/** Fetch the current reference time from a single HTTPS JSON provider. */
+async function readProviderTime(id: ProviderId): Promise<number | null> {
+  const provider = PROVIDER_CATALOG[id];
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 3500);
+  try {
+    const parsed = new URL(provider.endpoint);
+    if (parsed.protocol !== "https:") return null;
+    const res = await fetch(provider.endpoint, {
+      signal: controller.signal,
+      cache: "no-store",
+      redirect: "error",
+      headers: { accept: "application/json" },
+    });
+    const contentType = res.headers.get("content-type") ?? "";
+    if (!res.ok || !contentType.includes("application/json")) return null;
+    return await extractMsFromJsonBody(res, id);
+  } catch (err) {
+    console.warn(`[time-sync] probe of provider "${id}" failed`, err);
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export type ProviderSample = {
   id: ProviderId;
   name: string;
-  stratum: number;
-  region: string;
   rttMs: number;
   ok: boolean;
   serverTimeMs?: number;
@@ -134,95 +95,7 @@ export type TimeSyncResponse = {
 };
 
 /**
- * Extract a millisecond timestamp from a provider's JSON body, preferring
- * `unixtime` > `dateTime` > `utc_datetime`. Returns `null` on missing or
- * malformed data so the caller falls back to the already-parsed Date header.
- */
-async function extractMsFromJsonBody(res: Response, id: ProviderId): Promise<number | null> {
-  try {
-    const body = (await res.json()) as Record<string, unknown>;
-    // Use nullish coalescing (?? / find) rather than `||` so a legitimate
-    // numeric zero from `unixtime` is not discarded by falsy short-circuit
-    // before Number.isFinite gets a chance to accept it.
-    const unixtimeMs = typeof body.unixtime === "number" ? body.unixtime * 1000 : null;
-    const dateTimeMs = typeof body.dateTime === "string" ? Date.parse(body.dateTime) : null;
-    const utcMs = typeof body.utc_datetime === "string" ? Date.parse(body.utc_datetime) : null;
-    const candidate = [unixtimeMs, dateTimeMs, utcMs].find(
-      (value): value is number => typeof value === "number" && Number.isFinite(value),
-    );
-    return candidate ?? null;
-  } catch (err) {
-    // Malformed JSON body — fall back to Date header (already parsed above).
-    console.warn(`[time-sync] provider "${id}" returned unparseable JSON; using Date header`, err);
-    return null;
-  }
-}
-
-/**
- * Fetch the current authoritative time from a single stratum-1 provider.
- *
- * Extracts the best-precision timestamp available in the response, tried in
- * this order:
- *  1. Provider-specific JSON body (`unixtime`, `dateTime`, `utc_datetime`).
- *  2. Cloudflare `cdn-cgi/trace` `ts=<seconds.fraction>` line.
- *  3. HTTP `Date` header (second precision, always present).
- *
- * Applies SSRF hardening at call time: enforces `https://`, refuses
- * redirects, and aborts after 3.5 s. All error paths (timeout, DNS,
- * non-2xx, unparseable body, non-finite result) return `null` so the
- * caller can degrade to the next provider without a throw.
- *
- * @param id Provider identifier from {@link PROVIDER_CATALOG}.
- * @returns Unix ms timestamp of the authoritative "now", or `null` on any
- *   failure.
- */
-async function readProviderTime(id: ProviderId): Promise<number | null> {
-  const provider = PROVIDER_CATALOG[id];
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 3500);
-  try {
-    // SSRF defense-in-depth: enforce https:// at call time so a future
-    // mis-edit of PROVIDER_CATALOG can't downgrade to http:// or a non-web
-    // scheme, and refuse to follow redirects so a compromised provider can't
-    // 302 us at an internal or attacker-controlled origin.
-    const parsed = new URL(provider.endpoint);
-    if (parsed.protocol !== "https:") {
-      console.warn(`[time-sync] provider "${id}" rejected: non-https endpoint`);
-      return null;
-    }
-    const res = await fetch(provider.endpoint, {
-      signal: controller.signal,
-      cache: "no-store",
-      redirect: "error",
-      headers: { accept: "text/plain, application/json" },
-    });
-    // Prefer the HTTP Date header — every response has one and it's second-precision.
-    const dateHeader = res.headers.get("date");
-    let ms = dateHeader ? Date.parse(dateHeader) : NaN;
-
-    // For providers that expose a millisecond-precision body, prefer that.
-    const contentType = res.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      const candidate = await extractMsFromJsonBody(res, id);
-      if (candidate !== null) ms = candidate;
-    } else if (id === "cloudflare") {
-      // trace body is "key=value" lines including ts=<unix seconds with fraction>
-      const text = await res.text();
-      const match = text.match(/ts=([\d.]+)/);
-      if (match) ms = Math.round(parseFloat(match[1]) * 1000);
-    }
-    return Number.isFinite(ms) ? ms : null;
-  } catch (err) {
-    // Network error, abort, or non-2xx handled upstream — probe fails, caller decides.
-    console.warn(`[time-sync] probe of provider "${id}" failed`, err);
-    return null;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-/**
- * Probe a single stratum-1 provider and shape the result for the client.
+ * Probe a single reference provider and shape the result for the client.
  *
  * Times the HTTPS round-trip locally and returns either an `ok: true`
  * sample carrying the parsed server time, or an `ok: false` sample with
@@ -237,8 +110,6 @@ async function probeProvider(id: ProviderId): Promise<ProviderSample> {
   const common = {
     id,
     name: provider.name,
-    stratum: provider.stratum,
-    region: provider.region,
     rttMs,
   } as const;
   return serverTimeMs === null
@@ -247,13 +118,12 @@ async function probeProvider(id: ProviderId): Promise<ProviderSample> {
 }
 
 /**
- * TanStack server function: probe the user-selected stratum-1 time providers
+ * TanStack server function: probe the user-selected reference providers
  * in parallel and return the best result.
  *
- * Runs on the edge so we can benefit from the datacenter's own NTS-disciplined
- * clock and expose the client's `CF-IPCountry` header for regional provider
- * suggestions. Cloudflare is preferred when reachable; otherwise the lowest-RTT
- * successful source wins.
+ * Runs on the edge and exposes the client's `CF-IPCountry` header for platform
+ * telemetry. Time.now is preferred by application policy; otherwise the
+ * lowest-RTT successful source wins.
  *
  * @param data.providers Up to 5 provider IDs to query in parallel.
  * @returns A {@link TimeSyncResponse} containing `bestServerUnixMs`,
@@ -325,10 +195,7 @@ export const syncTime = createServerFn({ method: "POST" })
       const sources = await Promise.all(data.providers.map(probeProvider));
 
       const ok = sources.filter((s): s is Required<ProviderSample> & { ok: true } => s.ok);
-      // Prefer Cloudflare (NTS, strict UTC, global anycast) whenever it responds
-      // successfully; otherwise fall back to the lowest-RTT (least-uncertainty) sample.
-      const cf = ok.find((s) => s.id === "cloudflare");
-      const best = cf ?? (ok.length ? ok.reduce((a, b) => (a.rttMs <= b.rttMs ? a : b)) : null);
+      const best = selectBestProvider(ok);
 
       const serverProcessingMs = Date.now() - serverStart;
 

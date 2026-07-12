@@ -118,9 +118,6 @@ function DriftPanelBody({ now }: { now: number }) {
                   )}
                 />
                 <span>{s.name}</span>
-                <span className="rounded-sm bg-muted px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
-                  Stratum {s.stratum}
-                </span>
               </div>
               <span className="font-mono text-xs text-muted-foreground">
                 {s.ok ? `${s.rttMs} ms` : (s.error ?? "error")}
@@ -163,7 +160,7 @@ function DriftPanelBody({ now }: { now: number }) {
 
       <div className="rounded-md border border-dashed border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground">
         Your device clock is set by your operating system, not by this app. To make the OS itself
-        sync against Stratum-1 sources instead of default pool servers,{" "}
+        sync against authenticated NTP/NTS sources instead of relying only on default device handling,{" "}
         <Link
           to="/sync-guide"
           className="font-medium text-foreground underline underline-offset-2 hover:text-primary"

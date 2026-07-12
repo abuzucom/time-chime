@@ -141,7 +141,7 @@ function Terms() {
           <p>
             Time Chime collects no accounts, no analytics, and no personal data. All preferences
             are stored on your device. Network requests during normal use are limited to loading
-            the app bundle and querying stratum-1 time providers.
+            the app bundle and querying selected HTTPS JSON time references.
           </p>
           <p>
             See the{" "}
