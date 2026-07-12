@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.4] - 2026-07-12
+
+### Fixed
+
+Retrospective `AGENTS.md` conformance pass, part 3 of 3:
+
+- `src/lib/http/pre-hydration.ts`: justified the two empty `catch {}`
+  blocks in the pre-hydration script with a one-line comment, and
+  recomputed `PRE_HYDRATION_SCRIPT_SHA256` to match.
+- Added missing doc comments to `DriftPanelBody` and `Sparkline` in
+  `src/components/TimeSyncBadge.tsx`.
+- Renamed the poorly-named `c` variable to `controller` throughout
+  `src/lib/native/consent.test.ts`.
+- `.gitignore`: added an explicit `.env*` / `!.env.example` pattern,
+  matching `.claudeignore`'s existing convention (defense in depth; no
+  `.env` file is tracked).
+
 ## [0.2.3] - 2026-07-12
 
 ### Fixed

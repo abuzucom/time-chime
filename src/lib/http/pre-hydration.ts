@@ -41,7 +41,7 @@ export const PRE_HYDRATION_SCRIPT = `
         var el = origCreate(tag, options);
         var name = (typeof tag === 'string' ? tag : '').toLowerCase();
         if (name === 'style' || name === 'link') {
-          try { el.setAttribute('nonce', nonce); } catch (e) {}
+          try { el.setAttribute('nonce', nonce); } catch (e) { /* best-effort */ }
         }
         return el;
       };
@@ -53,7 +53,7 @@ export const PRE_HYDRATION_SCRIPT = `
             var node = arguments[i];
             var tag = node && node.tagName && String(node.tagName).toLowerCase();
             if ((tag === 'style' || tag === 'link') && !node.getAttribute('nonce')) {
-              try { node.setAttribute('nonce', nonce); } catch (e) {}
+              try { node.setAttribute('nonce', nonce); } catch (e) { /* best-effort */ }
             }
           }
           return orig.apply(this, arguments);
@@ -94,7 +94,7 @@ export const PRE_HYDRATION_SCRIPT = `
 // `'sha256-<value>'` in place of `'unsafe-inline'` — this is the strict-CSP
 // pattern from https://web.dev/articles/strict-csp for known static scripts.
 // Placeholder — recomputed by the test/CI check; see the helper above.
-export const PRE_HYDRATION_SCRIPT_SHA256 = "zj5+Riv9UC93ilYGilI420yOJ81Jwc+2sVqIgxRvADQ=";
+export const PRE_HYDRATION_SCRIPT_SHA256 = "TYE7/ur5x4zGHX/zP07aW6w2Pcr1SN2b1ZLuimXcY/g=";
 
 // Convenience CSP source token — quoted per CSP grammar.
 export const PRE_HYDRATION_SCRIPT_CSP_SOURCE = `'sha256-${PRE_HYDRATION_SCRIPT_SHA256}'`;
