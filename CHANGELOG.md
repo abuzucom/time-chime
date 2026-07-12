@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added a theme-aware GitHub repository badge to the footer.
+- Used a build-safe inline GitHub mark compatible with the pinned icon dependency.
 - Renamed the home-page Settings link to FAQ and aligned its version with `package.json`.
 - Styled the Support the developers link consistently with the FAQ link.
 - Added explicit agent guidance for SemVer and theme-aware UI changes.
