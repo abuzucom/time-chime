@@ -47,12 +47,19 @@ import { specToRequest, verifyHttpsGuardRedirect } from "../scripts/lib/verify-h
 
 const FAILURES_DIR = join(dirname(fileURLToPath(import.meta.url)), "__fuzz-failures__");
 
+// CI sets these env vars to an empty string (not unset) on PR/push runs that
+// don't provide an override, so `??` alone doesn't fall back to `fallback` —
+// Number("") is 0, not NaN/undefined. Treat blank as absent.
+function numericEnvOverride(value, fallback) {
+  return value && value.trim() !== "" ? Number(value) : fallback;
+}
+
 // ---------------------------------------------------------------------------
 // Deterministic PRNG (xorshift32) — good enough for structural fuzzing and
 // keeps the suite hermetic (no reliance on Math.random ordering).
 // ---------------------------------------------------------------------------
 
-const SEED = Number(process.env.HTTPS_GUARD_FUZZ_SEED ?? 0xc10cc0de);
+const SEED = numericEnvOverride(process.env.HTTPS_GUARD_FUZZ_SEED, 0xc10cc0de);
 let rngState = SEED >>> 0 || 1;
 function rand() {
   // xorshift32
@@ -391,7 +398,7 @@ function saveFailure(kind, spec, failure, steps, iteration) {
 // test node would swamp the reporter and hide the summary.
 // ---------------------------------------------------------------------------
 
-const ITERATIONS = Number(process.env.HTTPS_GUARD_FUZZ_ITERS ?? 3000);
+const ITERATIONS = numericEnvOverride(process.env.HTTPS_GUARD_FUZZ_ITERS, 3000);
 
 test(`fuzz: ${ITERATIONS} random proxy-header combinations → safe Location`, () => {
   let redirects = 0;
