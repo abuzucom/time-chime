@@ -87,7 +87,10 @@ interface NormalisedReport {
  * of a violation URL commonly contains user-identifying tokens (auth
  * callbacks, share links) that we don't want to persist even in logs.
  */
-function normaliseCspReport(raw: RawCspReport, format: NormalisedReport["format"]): NormalisedReport {
+function normaliseCspReport(
+  raw: RawCspReport,
+  format: NormalisedReport["format"],
+): NormalisedReport {
   const fields: Record<string, string | number | undefined> = {};
   for (const key of ALLOWED_CSP_FIELDS) {
     const value = raw[key];
@@ -129,13 +132,11 @@ function extractReports(body: string, contentType: string): NormalisedReport[] {
   if (Array.isArray(parsed)) {
     const out: NormalisedReport[] = [];
     for (const envelope of parsed) {
-      if (envelope && typeof envelope === "object") {
-        const body = (envelope as { body?: unknown }).body;
-        const type = (envelope as { type?: unknown }).type;
-        if (type === "csp-violation" && body && typeof body === "object") {
-          out.push(normaliseCspReport(body as RawCspReport, "reports+json"));
-        }
-      }
+      if (!envelope || typeof envelope !== "object") continue;
+      const body = (envelope as { body?: unknown }).body;
+      const type = (envelope as { type?: unknown }).type;
+      if (type !== "csp-violation" || !body || typeof body !== "object") continue;
+      out.push(normaliseCspReport(body as RawCspReport, "reports+json"));
     }
     return out;
   }

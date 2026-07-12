@@ -85,6 +85,22 @@ function coercePermission(state: PermissionState | undefined): PermissionOutcome
   }
 }
 
+/**
+ * Opportunistically request Android 12+'s exact-alarm capability
+ * (`SCHEDULE_EXACT_ALARM`). The plugin only exposes these methods on
+ * Android 12+; absent methods or a denied/already-granted state are all
+ * silent no-ops — inexact alarms still fire, just with jitter.
+ */
+async function requestExactAlarmIfNeeded(plugin: unknown): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anyPlugin = plugin as any;
+  if (typeof anyPlugin.checkExactNotificationSetting !== "function") return;
+  const exact = await anyPlugin.checkExactNotificationSetting();
+  if (exact?.exact_alarm === "granted") return;
+  if (typeof anyPlugin.requestExactNotificationSetting !== "function") return;
+  await anyPlugin.requestExactNotificationSetting();
+}
+
 export const capacitorNotificationAdapter: NotificationAdapter = {
   async checkPermission() {
     try {
@@ -108,15 +124,7 @@ export const capacitorNotificationAdapter: NotificationAdapter = {
       // screen (SCHEDULE_EXACT_ALARM). We attempt to request it opportunistically;
       // failure is not fatal — inexact alarms still fire, just with jitter.
       try {
-        // The plugin exposes changeExactNotificationSetting only on Android 12+.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const anyPlugin = LocalNotifications as any;
-        if (typeof anyPlugin.checkExactNotificationSetting === "function") {
-          const exact = await anyPlugin.checkExactNotificationSetting();
-          if (exact?.exact_alarm !== "granted" && typeof anyPlugin.requestExactNotificationSetting === "function") {
-            await anyPlugin.requestExactNotificationSetting();
-          }
-        }
+        await requestExactAlarmIfNeeded(LocalNotifications);
       } catch (err) {
         console.info("[notifications] exact-alarm request skipped", err);
       }
@@ -167,9 +175,8 @@ export const capacitorNotificationAdapter: NotificationAdapter = {
 
   async openSystemSettings() {
     try {
-      const { NativeSettings, AndroidSettings, IOSSettings } = await import(
-        "capacitor-native-settings"
-      );
+      const { NativeSettings, AndroidSettings, IOSSettings } =
+        await import("capacitor-native-settings");
       await NativeSettings.open({
         optionAndroid: AndroidSettings.AppNotification,
         optionIOS: IOSSettings.App,

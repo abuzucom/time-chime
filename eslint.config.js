@@ -71,14 +71,18 @@ export default tseslint.config(
       "no-restricted-syntax": [
         "error",
         {
+          // `[superClass]` must come first: without it, a plain `class Foo {}`
+          // (no `extends` at all) has `superClass === null`, and `.name` on
+          // that still fails the `!=` regex test — flagging classes that
+          // aren't inheriting from anything at all as if they were.
           selector:
-            "ClassDeclaration[superClass.name!=/^(Error|TypeError|RangeError|SyntaxError|EvalError|ReferenceError|URIError|AggregateError|DOMException|HTMLElement|SVGElement|EventTarget|AbortController|Component|PureComponent|Array|Map|Set|WeakMap|WeakSet|Uint8Array|Uint16Array|Uint32Array|Int8Array|Int16Array|Int32Array|Float32Array|Float64Array)$/]",
+            "ClassDeclaration[superClass][superClass.name!=/^(Error|TypeError|RangeError|SyntaxError|EvalError|ReferenceError|URIError|AggregateError|DOMException|HTMLElement|SVGElement|EventTarget|AbortController|Component|PureComponent|Array|Map|Set|WeakMap|WeakSet|Uint8Array|Uint16Array|Uint32Array|Int8Array|Int16Array|Int32Array|Float32Array|Float64Array)$/]",
           message:
             "Avoid class inheritance except from framework/platform base classes (Error, HTMLElement, EventTarget, React.Component, typed arrays, …). Prefer composition, hooks, or dependency injection.",
         },
         {
           selector:
-            "ClassExpression[superClass.name!=/^(Error|TypeError|RangeError|SyntaxError|EvalError|ReferenceError|URIError|AggregateError|DOMException|HTMLElement|SVGElement|EventTarget|AbortController|Component|PureComponent|Array|Map|Set|WeakMap|WeakSet|Uint8Array|Uint16Array|Uint32Array|Int8Array|Int16Array|Int32Array|Float32Array|Float64Array)$/]",
+            "ClassExpression[superClass][superClass.name!=/^(Error|TypeError|RangeError|SyntaxError|EvalError|ReferenceError|URIError|AggregateError|DOMException|HTMLElement|SVGElement|EventTarget|AbortController|Component|PureComponent|Array|Map|Set|WeakMap|WeakSet|Uint8Array|Uint16Array|Uint32Array|Int8Array|Int16Array|Int32Array|Float32Array|Float64Array)$/]",
           message:
             "Avoid class inheritance except from framework/platform base classes. Prefer composition, hooks, or dependency injection.",
         },
@@ -121,6 +125,49 @@ export default tseslint.config(
     files: ["*.config.ts", "*.config.js"],
     rules: {
       "max-lines-per-function": "off",
+    },
+  },
+  {
+    // scripts/*.mjs and tests/*.mjs sat outside every AGENTS.md-mapped rule
+    // above (the `.ts`/`.tsx` block only): neither tsconfig.json's
+    // `include` nor eslint.config.js's `files` glob ever covered plain
+    // Node ESM. Mirrors the subset of the .ts/.tsx rules above that don't
+    // need type-aware linting (magic-numbers here is the base ESLint rule,
+    // not @typescript-eslint's, since these files aren't part of the
+    // TypeScript project).
+    files: ["scripts/**/*.mjs", "tests/**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: globals.node,
+    },
+    rules: {
+      "max-depth": ["error", 3],
+      "max-lines-per-function": [
+        "warn",
+        { max: 60, skipBlankLines: true, skipComments: true, IIFEs: true },
+      ],
+      "no-magic-numbers": [
+        "warn",
+        { ignore: [0, 1, -1], ignoreArrayIndexes: true, detectObjects: false },
+      ],
+      "no-warning-comments": ["warn", { terms: ["todo", "fixme"], location: "start" }],
+      "no-eval": "error",
+      "no-implied-eval": "error",
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "CallExpression[callee.name='createHash'][arguments.0.value=/^(md5|sha-?1)$/i]",
+          message:
+            "MD5/SHA-1 is banned in security-sensitive contexts (AGENTS.md rule 7). Use SHA-256/SHA-3, or bcrypt/scrypt/Argon2 for passwords. Non-security use requires a justifying comment and an eslint-disable on this line.",
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='createHash'][arguments.0.value=/^(md5|sha-?1)$/i]",
+          message:
+            "MD5/SHA-1 is banned in security-sensitive contexts (AGENTS.md rule 7). Use SHA-256/SHA-3, or bcrypt/scrypt/Argon2 for passwords. Non-security use requires a justifying comment and an eslint-disable on this line.",
+        },
+      ],
     },
   },
   eslintPluginPrettier,
