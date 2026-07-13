@@ -100,18 +100,26 @@ jobs:
       # The Worker's own console.error output (including the stack trace for
       # any unhandled SSR exception - see src/server.ts's catch block) lands
       # in wrangler.log, not in this step's own output, since the server runs
-      # backgrounded. Surface it every run (collapsed) so an intermittent
-      # 500 - like the one seen validating HEAD/OPTIONS on the home route -
-      # leaves the actual exception in the job log instead of just a bare
-      # "HTTP 500" from the header-check script.
-      - name: Print Worker server log
+      # backgrounded in a separate step's shell. Kill it and poll for actual
+      # exit (kill alone doesn't wait - the process's stdout redirection can
+      # still have unflushed, unwritten lines at that instant) before
+      # reading the file, otherwise the tail of the log - exactly the part
+      # covering the most recent requests - can be silently missing.
+      # Surfaced every run (collapsed) so an intermittent 500 - like the one
+      # seen validating HEAD on the home route - leaves the actual exception
+      # in the job log instead of just a bare "HTTP 500" from the
+      # header-check script.
+      - name: Stop server and print its log
         if: always() && github.event.inputs.base_url == ''
         run: |
+          if [ -f wrangler.pid ]; then
+            pid="$(cat wrangler.pid)"
+            kill "$pid" 2>/dev/null || true
+            for i in $(seq 1 20); do
+              kill -0 "$pid" 2>/dev/null || break
+              sleep 0.25
+            done
+          fi
           echo "::group::wrangler dev log (wrangler.log)"
           cat wrangler.log || echo "(no wrangler.log)"
           echo "::endgroup::"
-
-      - name: Stop server
-        if: always() && github.event.inputs.base_url == ''
-        run: |
-          if [ -f wrangler.pid ]; then kill "$(cat wrangler.pid)" || true; fi
