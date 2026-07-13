@@ -107,7 +107,7 @@ function copyObsUrl(face: FaceId): void {
 }
 
 /**
- * Trigger a browser download of the user's local settings + sync history
+ * Trigger a browser download of the user's local settings and provider preferences
  * as a JSON file. Uses an ephemeral object URL revoked immediately after
  * the click so we don't leak Blob memory across repeated exports.
  */
@@ -124,12 +124,12 @@ function downloadUserDataAsJson(payload: unknown, filename: string): void {
 }
 
 /**
- * Wipe all locally persisted settings/history after user confirmation, then
+ * Wipe all locally persisted settings and provider preferences after user confirmation, then
  * reload so every provider re-initializes from defaults. No-op if the user
  * cancels the confirm dialog.
  */
 function clearAllLocalDataAndReload(): void {
-  if (!window.confirm("Erase all locally stored preferences and history?")) return;
+  if (!window.confirm("Erase all locally stored preferences and provider choices?")) return;
   try {
     window.localStorage.clear();
   } catch (err) {
@@ -198,7 +198,7 @@ export function SettingsDrawer() {
     if (next.length === 0) return;
     if (next.length > 5) return;
     sync.setProviders(next);
-    void sync.resync(next);
+    void sync.measure(next);
   };
 
   return (
@@ -540,7 +540,7 @@ export function SettingsDrawer() {
                 variant="outline"
                 onClick={() =>
                   downloadUserDataAsJson(
-                    { settings, timeSync: sync.history },
+                    { settings, timeProviders: sync.providers },
                     "time-chime-my-data.json",
                   )
                 }

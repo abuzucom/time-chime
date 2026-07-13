@@ -1,80 +1,51 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, CloudOff, LifeBuoy, RefreshCw, Wifi, Timer } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, CloudOff, LifeBuoy, RefreshCw, Timer, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTimeSync } from "@/lib/time/TimeSyncContext";
 
 export const Route = createFileRoute("/offline")({
   head: () => ({
     meta: [
-      { title: "Offline · Time Chime" },
+      { title: "Offline - Time Chime" },
       {
         name: "description",
         content:
-          "Time Chime is offline. The clock and chimes keep running locally; time sync and remote resources will resume once your connection is back.",
+          "Time Chime is offline. The clock and chimes keep running locally; network reference measurements resume after reconnection.",
       },
     ],
   }),
   component: OfflinePage,
 });
 
-/**
- * /offline
- * --------
- * Static fallback shown when the app (or a service worker) determines the
- * network is unreachable. Deliberately dependency-light: no server fn call,
- * no loader, no third-party icons beyond lucide. It must render even when
- * every remote source is down.
- *
- * Behaviour:
- *   - Reflects `navigator.onLine` live via the `online`/`offline` events so
- *     the user sees the state flip without a manual reload.
- *   - "Try again" reloads the current tab; when we arrived here via a
- *     failed navigation, that's the correct recovery.
- *   - Deep-links to /support for troubleshooting, and back to / because the
- *     local clock face works fully offline (chimes, drift display against
- *     the last-known network reference, settings).
- */
+/** Show local-clock behavior and recovery actions while offline. */
 function OfflinePage() {
   const [online, setOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
-  const { resync, lastSyncAt } = useTimeSync();
-  const [resyncing, setResyncing] = useState(false);
+  const { measure, measuredAt } = useTimeSync();
+  const [measuring, setMeasuring] = useState(false);
 
   useEffect(() => {
-    const on = () => setOnline(true);
-    const off = () => setOnline(false);
-    window.addEventListener("online", on);
-    window.addEventListener("offline", off);
+    const markOnline = () => setOnline(true);
+    const markOffline = () => setOnline(false);
+    window.addEventListener("online", markOnline);
+    window.addEventListener("offline", markOffline);
     return () => {
-      window.removeEventListener("online", on);
-      window.removeEventListener("offline", off);
+      window.removeEventListener("online", markOnline);
+      window.removeEventListener("offline", markOffline);
     };
   }, []);
 
-  const handleRetry = () => {
-    // Full reload rather than router.invalidate(): the user is on a
-    // fallback route and typically wants to re-attempt whatever failed.
-    window.location.reload();
-  };
+  const reloadPage = () => window.location.reload();
 
-  const handleResync = async () => {
-    if (resyncing) return;
-    setResyncing(true);
+  const measureReference = async () => {
+    if (measuring) return;
+    setMeasuring(true);
     try {
-      await resync();
-      toast.success("Chime time resynced", {
-        description: "Fetched a fresh reading from the configured network time references.",
-      });
-    } catch (error) {
-      toast.error("Couldn't resync chime time", {
-        description:
-          error instanceof Error ? error.message : "Try again once the network is stable.",
-      });
+      await measure();
     } finally {
-      setResyncing(false);
+      setMeasuring(false);
     }
   };
 
@@ -95,9 +66,7 @@ function OfflinePage() {
         <div
           className={
             "inline-flex size-14 items-center justify-center rounded-full " +
-            (online
-              ? "bg-emerald-500/15 text-emerald-500"
-              : "bg-muted text-muted-foreground")
+            (online ? "bg-emerald-500/15 text-emerald-500" : "bg-muted text-muted-foreground")
           }
           aria-hidden="true"
         >
@@ -105,37 +74,33 @@ function OfflinePage() {
         </div>
 
         <h1 className="mt-5 font-serif text-3xl tracking-tight sm:text-4xl">
-          {online ? "You're back online" : "You're offline"}
+          {online ? "You are back online" : "You are offline"}
         </h1>
 
-        <p
-          className="mt-3 text-sm leading-relaxed text-muted-foreground"
-          role="status"
-          aria-live="polite"
-        >
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground" role="status">
           {online
-            ? "Your connection has returned. Retry to reload the page you were on, or head back to the clock."
-            : "Time Chime couldn't reach the network. The clock face and scheduled chimes keep running from your device — only time-sync updates and remote resources are paused."}
+            ? "Your connection has returned. Reload the page or return to the clock."
+            : "The clock face and chimes use device time while network reference measurements are unavailable."}
         </p>
 
-        <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:justify-center sm:flex-wrap">
-          <Button onClick={handleRetry} className="gap-2">
+        <div className="mt-6 flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center">
+          <Button onClick={reloadPage} className="gap-2">
             <RefreshCw className="size-4" />
             Try again
           </Button>
           <Button
-            onClick={handleResync}
+            onClick={measureReference}
             variant="secondary"
-            disabled={!online || resyncing}
+            disabled={!online || measuring}
             className="gap-2"
             title={
               online
-                ? "Fetch a fresh reading from the configured network time references"
-                : "Available once your connection returns"
+                ? "Fetch a fresh reading from the configured network references"
+                : "Available after reconnection"
             }
           >
-            <Timer className={"size-4" + (resyncing ? " animate-spin" : "")} />
-            {resyncing ? "Resyncing…" : "Resync chime time"}
+            <Timer className={"size-4" + (measuring ? " animate-spin" : "")} />
+            {measuring ? "Measuring..." : "Measure network reference"}
           </Button>
           <Button asChild variant="outline" className="gap-2">
             <Link to="/support">
@@ -146,9 +111,9 @@ function OfflinePage() {
         </div>
 
         <p className="mt-3 text-[11px] text-muted-foreground">
-          {lastSyncAt
-            ? `Last successful time sync: ${new Date(lastSyncAt).toLocaleString()}`
-            : "No successful time sync recorded yet."}
+          {measuredAt
+            ? `Last successful measurement: ${new Date(measuredAt).toLocaleString()}`
+            : "No successful measurement recorded in this visit."}
         </p>
 
         <div className="mt-10 w-full rounded-lg border bg-card p-4 text-left">
@@ -157,16 +122,13 @@ function OfflinePage() {
           </div>
           <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
             <li>
-              <span className="text-foreground">Clock face:</span> renders from
-              the last-known network-reference offset — drift may grow until the next sync.
+              <span className="text-foreground">Clock face:</span> uses device time.
             </li>
             <li>
-              <span className="text-foreground">Chimes:</span> scheduled
-              locally, so quarter-hour strikes continue on time.
+              <span className="text-foreground">Chimes:</span> remain scheduled locally.
             </li>
             <li>
-              <span className="text-foreground">Settings:</span> persist to
-              local storage; no network required.
+              <span className="text-foreground">Settings:</span> remain in local storage.
             </li>
           </ul>
         </div>

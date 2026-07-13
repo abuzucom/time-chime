@@ -103,7 +103,7 @@ const GROUPS: Group[] = [
         name: "sonner",
         license: "MIT",
         url: "https://github.com/emilkowalski/sonner",
-        purpose: "Toast notifications for sync and settings errors.",
+        purpose: "Toast notifications for reference-measurement and settings errors.",
       },
       {
         name: "vaul",

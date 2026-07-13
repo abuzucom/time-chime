@@ -88,7 +88,7 @@ function Terms() {
           </h3>
           <ul className="list-disc space-y-1 break-words pl-5 sm:pl-6">
             <li>
-              Do not attempt to disrupt, overload, or abuse the time-sync endpoints or any
+              Do not attempt to disrupt, overload, or abuse the time-reference endpoints or any
               third-party services the App relies on (see{" "}
               <Link
                 to="/sync-guide"
