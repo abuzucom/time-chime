@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-07-13
+
+### Changed
+
+- `security-headers.yml` now always prints the local `wrangler dev` server's own log (including any unhandled SSR exception stack trace) as a collapsed CI group, so an intermittent 500 on the header-check probes surfaces the actual error instead of just "HTTP 500". Diagnostic only; does not change app behavior or the check's pass/fail outcome.
+
 ## [0.4.0] - 2026-07-13
 
 ### Added
