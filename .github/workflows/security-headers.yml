@@ -97,6 +97,20 @@ jobs:
         run: node scripts/check-route-headers.mjs "$BASE_URL"
 
 
+      # The Worker's own console.error output (including the stack trace for
+      # any unhandled SSR exception - see src/server.ts's catch block) lands
+      # in wrangler.log, not in this step's own output, since the server runs
+      # backgrounded. Surface it every run (collapsed) so an intermittent
+      # 500 - like the one seen validating HEAD/OPTIONS on the home route -
+      # leaves the actual exception in the job log instead of just a bare
+      # "HTTP 500" from the header-check script.
+      - name: Print Worker server log
+        if: always() && github.event.inputs.base_url == ''
+        run: |
+          echo "::group::wrangler dev log (wrangler.log)"
+          cat wrangler.log || echo "(no wrangler.log)"
+          echo "::endgroup::"
+
       - name: Stop server
         if: always() && github.event.inputs.base_url == ''
         run: |
