@@ -1,6 +1,6 @@
 {
   "name": "tanstack_start_ts",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "check:headers": "node scripts/check-headers.mjs",
+    "check:action-pins": "node scripts/check-action-pins.mjs",
     "sync:agent-docs": "node scripts/sync-agent-docs.mjs",
     "check:agent-docs": "node scripts/sync-agent-docs.mjs --check",
     "test:headers": "node --test tests/check-headers.test.mjs",
