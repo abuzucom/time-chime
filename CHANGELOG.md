@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-07-12
+
+### Fixed
+
+- Replaced time-sync claims with explicit HTTPS reference measurement states.
+- Removed unsupported uncertainty and persisted history graph claims.
+- Identified the selected provider and retained RTT only as response time.
+- Reset the app-only offset while measuring and after failed measurements.
+- Projected provider timestamps to the end of server processing before midpoint estimation.
+- Preferred sub-second ISO provider timestamps over coarse integer-second values.
+
 ## [0.3.3] - 2026-07-12
 
 ### Changed

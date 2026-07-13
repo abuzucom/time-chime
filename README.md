@@ -38,8 +38,8 @@ browser's local storage.
   the previous baseline) up to 4×.
 - **Transpose** −5 to +6 semitones.
 - **Subtle vibrato** via LFO modulation of every voice.
-- **Preview button** always plays the *last* quarter that would have
-  fired against authoritative time (rounded to the nearest 15 min
+- **Preview button** always plays the _last_ quarter that would have
+  fired against the current app clock (rounded to the nearest 15 min
   boundary), so what you hear is what the next real chime will be.
 
 ### Sound modes
@@ -55,13 +55,13 @@ browser's local storage.
   permission, and (Android 12+) the `SCHEDULE_EXACT_ALARM` gate.
   Foreground/background handshake prevents double-fire.
 
-### Time synchronisation
+### Time reference measurement
 
-- **Network time references** via a server-side HTTPS JSON proxy to Time.now and Clock.now. Time.now is preferred by policy; these services are references, not claimed Stratum-1 authorities.
-- **Provider picker** - pick 1-2 sources; defaults are Time.now then Clock.now.
-- **NTP-style 4-sample sync** with min-RTT selection, client-side minimum interval (60 s), and a circuit breaker on repeated failure.
-- **Drift indicator** - colour-coded chip beneath the face; the detail panel shows offset, RTT, uncertainty, a 30-sample sparkline, current sources, and a manual **Resync** button.
-- **Latency calibration** - Settings -> *Calibrate* measures your device's audio output latency and shifts scheduled chimes so the strike lands on the wall-clock second.
+- **HTTPS references** - the server queries Time.now and Clock.now; Time.now is preferred by policy.
+- **Automatic measurement** - page load, tab focus, and a jittered background schedule request fresh readings.
+- **App-only calibration** - a valid estimate adjusts Time Chime's clock and chimes but never changes the operating-system clock.
+- **Honest status** - the panel identifies the selected reference, measurement age, and provider response times. It does not claim NTP synchronization or a certified accuracy bound.
+- **Provider picker** - choose 1-2 sources; defaults are Time.now then Clock.now.
 
 ### Themes & appearance
 
@@ -76,7 +76,7 @@ browser's local storage.
 - **Konami code easter eggs** — enter ↑↑↓↓←→←→BA on any face for a
   face-specific hidden fanfare.
 - **PWA offline shell** — the app loads offline; the `/offline` route
-  offers a manual resync when connectivity returns.
+  offers a manual reference measurement when connectivity returns.
 - **Donations** — entirely optional links to GitHub Sponsors, Ko-fi,
   and Liberapay on `/support`. No IAP, no store fees, no tracking.
 
@@ -131,19 +131,19 @@ npx cap open android   # Android Studio
 
 ## Routes
 
-| Path | Purpose |
-| ---- | ------- |
-| `/` | Main clock (face + preview + settings drawer) |
-| `/support` | Donation links |
-| `/obs` | Browser-source overlay for OBS/Streamlabs (URL-configurable) |
-| `/offline` | Offline fallback shown when the PWA has no network |
-| `/sync-guide` | User-facing guide to how time sync works |
-| `/background-chimes` | Guide for enabling mobile background chimes |
-| `/permissions` | Explains every permission the app can request |
-| `/privacy` | Privacy policy |
-| `/terms` | Terms of use |
-| `/third-party-notices` | Licences of bundled OSS |
-| `/sitemap` | HTML sitemap |
+| Path                   | Purpose                                                      |
+| ---------------------- | ------------------------------------------------------------ |
+| `/`                    | Main clock (face + preview + settings drawer)                |
+| `/support`             | Donation links                                               |
+| `/obs`                 | Browser-source overlay for OBS/Streamlabs (URL-configurable) |
+| `/offline`             | Offline fallback shown when the PWA has no network           |
+| `/sync-guide`          | User-facing guide to OS clock accuracy                       |
+| `/background-chimes`   | Guide for enabling mobile background chimes                  |
+| `/permissions`         | Explains every permission the app can request                |
+| `/privacy`             | Privacy policy                                               |
+| `/terms`               | Terms of use                                                 |
+| `/third-party-notices` | Licences of bundled OSS                                      |
+| `/sitemap`             | HTML sitemap                                                 |
 
 ---
 
@@ -161,29 +161,17 @@ Chime server and NTS bridge are deferred to a future major release.
 
 ---
 
-## Time synchronisation architecture
+## Time reference architecture
 
-Browsers cannot open raw UDP sockets, so classical NTP is unavailable
-client-side. Time Chime uses a two-tier design:
+Browsers cannot open raw UDP sockets, so Time Chime does not perform NTP.
+The application uses this measurement pipeline:
 
-1. **Server-side function** (`src/lib/time.functions.ts`) queries several
-   selected HTTPS JSON services in parallel, returns parsed timestamps and
-   server processing time.
-2. **Client** performs an NTP-style four-timestamp exchange
-   (`t1, t2, t3, t4`) using `performance.now()` for local monotonicity,
-   takes four samples per source, and keeps the sample with the smallest
-   round-trip time.
-3. Every rendered pixel and every scheduled chime reads
-   `authoritativeNow()` (`Date.now() + offsetMs`), never `Date.now()`
-   directly. An ESLint rule enforces this outside the time library.
-4. `useAuthoritativeSecondTick` fires exactly on the NTS-corrected
-   whole-second boundary so digital digits flip and chime strikes align
-   with real wall-clock time, not local `Date.now()` drift.
+1. The server function queries selected HTTPS JSON references and records when each provider timestamp arrives.
+2. The server projects the selected timestamp to the end of its processing interval.
+3. The browser estimates an offset against the midpoint of the complete request and keeps the lowest client-observed response time from four measurements.
+4. A valid estimate adjusts only Time Chime's internal clock and chime scheduler. Failure resets the app to device time.
 
-Resync runs on load, on tab focus, on network reconnect, and every 15 min.
-See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the full
-composed pipeline diagram.
-
+The estimate depends on network-latency assumptions. It is not operating-system clock synchronization, an authoritative time source, or a certified accuracy bound. Measurements are not persisted across page loads; provider preferences are.
 ---
 
 ## Privacy
@@ -193,7 +181,7 @@ Time Chime is **privacy-by-design**:
 - No cookies, no analytics, no third-party scripts.
 - The only network requests during normal use are:
   1. Loading the app bundle from the origin.
-  2. The stratum-1 time sync (server-side proxy, no PII forwarded).
+  2. Server-side HTTPS reference measurements with no browser PII forwarded.
 - Preferences are stored in `localStorage` (web) or the Capacitor
   Preferences vault (native), both on-device only. A versioned settings
   migration (`v1 → v2`) normalises legacy keys without loss.
@@ -232,7 +220,7 @@ a single lazily-constructed, module-level context in
   failure to shake off a wedged driver, muted output device, or
   autoplay-policy state change.
 - `measureAudioLatencyMs()` sums `baseLatency` + `outputLatency` and
-  feeds the Settings → *Calibrate* flow, which shifts scheduled chimes
+  feeds the Settings → _Calibrate_ flow, which shifts scheduled chimes
   earlier so the physical strike lands on the wall-clock second (matters
   most on Bluetooth speakers, where ~200 ms is normal).
 
@@ -265,21 +253,21 @@ a single lazily-constructed, module-level context in
 
 The chime scheduler does **not** poll `Date.now()`. Every visible pixel
 and every scheduled strike derives from `authoritativeNow()` —
-`Date.now() + offsetMs`, where `offsetMs` comes from the NTP-style
-four-timestamp exchange in `src/lib/time/TimeSyncContext.tsx`. An
+`Date.now() + offsetMs`, where `offsetMs` comes from the HTTPS reference estimate in
+`src/lib/time/TimeSyncContext.tsx`. An
 ESLint rule enforces this outside the time library.
 
 `useAuthoritativeSecondTick()` (`src/hooks/useAuthoritativeSecondTick.ts`)
 is the heartbeat:
 
 1. Read `authoritativeNow()`.
-2. Compute `1000 - (auth % 1000)` — ms until the next NTS-corrected
+2. Compute `1000 - (auth % 1000)` — ms until the next app-clock
    whole-second boundary — and defensively clamp to `[1, 1000]` so a
    corrupted offset can't spin the loop.
 3. `setTimeout` for exactly that delay.
 4. On fire, re-read `authoritativeNow()` and recurse. This self-
    correcting loop absorbs OS timer jitter and, more importantly, picks
-   up a fresh sync's offset delta on the *next* tick without any
+   up a fresh measurement's offset delta on the _next_ tick without any
    explicit invalidation.
 5. `visibilitychange` cancels the pending timer on hide and re-arms on
    show, so a backgrounded tab doesn't accumulate a queue of stale
@@ -291,8 +279,8 @@ checks whether the second just crossed a quarter (`:00`, `:15`, `:30`,
 phrase (`q1`–`q4` or `hour`), passing user-controlled `speed`,
 `transpose`, `volume`, and — for `hour` — the 12-hour reckoned
 `hourCount`. `playPhrase` schedules every note against
-`audioCtx.currentTime + 0.05`, so the tick fires the *scheduling call*
-on the boundary and Web Audio guarantees the *audible strike* is
+`audioCtx.currentTime + 0.05`, so the tick fires the _scheduling call_
+on the boundary and Web Audio guarantees the _audible strike_ is
 sample-accurate from that anchor.
 
 On mobile, background chimes take a different path — see
@@ -325,12 +313,12 @@ in `src/lib/native/consent.ts`, driven by a Capacitor
 `App.appStateChange` listener wired up in
 `src/hooks/useBackgroundConsent.ts`. States distinguish
 `declined_by_user`, `denied_by_os`, and `revoked` so the sheet copy can
-reflect *why* chimes are off. Every foreground resume calls
+reflect _why_ chimes are off. Every foreground resume calls
 `reconcileWithOs()` to detect out-of-app permission changes.
 
 See [`docs/BACKGROUND-CONSENT.md`](./docs/BACKGROUND-CONSENT.md) for
 the state diagram, the async-setup / sync-teardown pattern, and the
-listener-leak guard that has to run *after* `App.addListener` resolves.
+listener-leak guard that has to run _after_ `App.addListener` resolves.
 
 ---
 
