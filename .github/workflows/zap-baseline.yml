@@ -24,7 +24,7 @@ jobs:
       contents: write # commit the updated compliance report
       issues: write # ZAP action opens/updates a tracking issue on findings
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Resolve target URL
         id: target
