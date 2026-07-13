@@ -6,6 +6,7 @@ import {
   PROVIDER_IDS,
   isPlausibleProviderTimestamp,
   normalizeProviderIds,
+  parsePersistedProviderPreferences,
   parseProviderTimestamp,
   selectBestProvider,
 } from "./provider.ts";
@@ -46,13 +47,23 @@ test("prefers Time.now, then chooses the lowest RTT", () => {
     { id: "timeNow" as const, rttMs: 30 },
   ];
   assert.equal(selectBestProvider(samples)?.id, "timeNow");
-  assert.equal(selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id, "clockNow");
+  assert.equal(
+    selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id,
+    "clockNow",
+  );
   assert.equal(selectBestProvider([]), null);
 });
 
 test("normalizes obsolete, duplicate, and malformed provider IDs", () => {
   assert.deepEqual(
-    normalizeProviderIds(["cloudflare", "worldtime", "timeapiWorld", "worldtime", null, "clockNow"]),
+    normalizeProviderIds([
+      "cloudflare",
+      "worldtime",
+      "timeapiWorld",
+      "worldtime",
+      null,
+      "clockNow",
+    ]),
     ["clockNow"],
   );
 });
@@ -60,4 +71,31 @@ test("normalizes obsolete, duplicate, and malformed provider IDs", () => {
 test("defaults to the remaining providers when persistence is empty", () => {
   assert.deepEqual(initialSyncState.providers, DEFAULT_PROVIDER_IDS);
   assert.deepEqual(normalizeProviderIds([]), []);
+});
+
+test("retains the selected provider identity", () => {
+  const clock = { id: "clockNow" as const, rttMs: 10 };
+  assert.equal(selectBestProvider([clock]), clock);
+});
+
+test("ignores persisted measurements while preserving valid providers", () => {
+  assert.deepEqual(
+    parsePersistedProviderPreferences({
+      providers: ["clockNow"],
+      history: [{ offsetMs: 500 }],
+      offsetMs: 500,
+    }),
+    ["clockNow"],
+  );
+  assert.deepEqual(parsePersistedProviderPreferences({ history: [] }), DEFAULT_PROVIDER_IDS);
+});
+
+test("prefers a sub-second ISO timestamp over integer Unix seconds", () => {
+  assert.equal(
+    parseProviderTimestamp({
+      unixtime: 1_700_000_000,
+      utc_datetime: "2023-11-14T22:13:20.875Z",
+    }),
+    1_700_000_000_875,
+  );
 });

@@ -1,62 +1,50 @@
 import type { ProviderId, ProviderSample } from "@/lib/time.functions";
 import { DEFAULT_PROVIDER_IDS } from "./provider.ts";
 
-/**
- * One completed NTP-style probe against the user's chosen provider set.
- *
- * Stored in the rolling `history` array so the drift panel can render the
- * trend line and the current provider distribution.
- */
+export type MeasurementStatus = "not_measured" | "measuring" | "available" | "unavailable";
+
+/** Legacy sample shape retained for context compatibility. */
 export type SyncSample = {
-  /** Signed clock skew: `authoritative âˆ’ device` in milliseconds. */
   offsetMs: number;
-  /** Best-case round-trip time (ms) across the providers that answered. */
   rttMs: number;
-  /** `Date.now()` on the device at the moment the sample was completed. */
   at: number;
-  /** Per-provider results contributing to this sample. */
   sources: ProviderSample[];
-  /** Country inferred from the fastest responder, or `null` when unknown. */
   inferredCountry: string | null;
 };
 
-/**
- * Full reducer state held by `TimeSyncProvider`. Persisted (partially) to
- * `localStorage` so the app can boot with a warm offset and the user's
- * previously selected providers.
- */
 export type TimeSyncState = {
-  /** Currently active offset applied to `Date.now()` for authoritative time. */
+  status: MeasurementStatus;
   offsetMs: number;
-  /** RTT associated with the currently active offset. */
   rttMs: number;
-  /** Device timestamp of the last successful sync, or `null` if never synced. */
-  lastSyncAt: number | null;
-  /** `true` while a probe is in flight (drives the badge spinner). */
-  syncing: boolean;
-  /** Human-readable message from the most recent failed probe, else `null`. */
-  error: string | null;
-  /** Rolling window of the last {@link HISTORY_MAX} samples, newest last. */
-  history: SyncSample[];
-  /** Providers contributing to the current offset (mirrors newest sample). */
+  measuredAt: number | null;
+  selectedReferenceId: ProviderId | null;
+  selectedReferenceName: string | null;
   sources: ProviderSample[];
-  /** Country inferred from the current sample, or `null` when unknown. */
   inferredCountry: string | null;
-  /** User-selected provider IDs, in priority order. */
   providers: ProviderId[];
+  error: string | null;
+  measuring: boolean;
+  lastSyncAt: number | null;
+  syncing: boolean;
+  history: SyncSample[];
 };
 
-/** Maximum number of {@link SyncSample}s retained in the rolling history. */
+/** Kept for callers that import the previous history limit. */
 export const HISTORY_MAX = 30;
 
 export const initialSyncState: TimeSyncState = {
+  status: "not_measured",
   offsetMs: 0,
   rttMs: 0,
-  lastSyncAt: null,
-  syncing: false,
-  error: null,
-  history: [],
+  measuredAt: null,
+  selectedReferenceId: null,
+  selectedReferenceName: null,
   sources: [],
   inferredCountry: null,
   providers: [...DEFAULT_PROVIDER_IDS],
+  error: null,
+  measuring: false,
+  lastSyncAt: null,
+  syncing: false,
+  history: [],
 };

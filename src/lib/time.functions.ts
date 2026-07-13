@@ -8,6 +8,7 @@ import {
 } from "./time/telemetry";
 import { clientIpKey, createBurstLimiter } from "./http/burst-limiter";
 import { jsonErrorResponse } from "./http/json-error";
+import { projectProviderTimestamp } from "./time/measurement";
 
 /**
  * Per-isolate burst limiter for {@link syncTime}. 10 requests/minute/IP is
@@ -34,7 +35,6 @@ import {
 export { PROVIDER_CATALOG, PROVIDER_IDS };
 export type { ProviderId };
 
-
 const inputSchema = z.object({
   providers: z
     .array(z.enum(PROVIDER_IDS as [ProviderId, ...ProviderId[]]))
@@ -53,7 +53,9 @@ async function extractMsFromJsonBody(res: Response, id: ProviderId): Promise<num
 }
 
 /** Fetch the current reference time from a single HTTPS JSON provider. */
-async function readProviderTime(id: ProviderId): Promise<number | null> {
+async function readProviderTime(
+  id: ProviderId,
+): Promise<{ timestampMs: number; receivedAtServerMs: number } | null> {
   const provider = PROVIDER_CATALOG[id];
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 3500);
@@ -67,7 +69,8 @@ async function readProviderTime(id: ProviderId): Promise<number | null> {
       headers: { accept: "application/json" },
     });
     if (!res.ok) return null;
-    return await extractMsFromJsonBody(res, id);
+    const timestampMs = await extractMsFromJsonBody(res, id);
+    return timestampMs === null ? null : { timestampMs, receivedAtServerMs: Date.now() };
   } catch (err) {
     console.warn(`[time-sync] probe of provider "${id}" failed`, err);
     return null;
@@ -82,6 +85,7 @@ export type ProviderSample = {
   rttMs: number;
   ok: boolean;
   serverTimeMs?: number;
+  receivedAtServerMs?: number;
   error?: string;
 };
 
@@ -91,6 +95,8 @@ export type TimeSyncResponse = {
   serverProcessingMs: number;
   sources: ProviderSample[];
   inferredCountry: string | null;
+  selectedProviderId?: ProviderId | null;
+  selectedProviderName?: string | null;
 };
 
 /**
@@ -104,16 +110,21 @@ export type TimeSyncResponse = {
 async function probeProvider(id: ProviderId): Promise<ProviderSample> {
   const provider = PROVIDER_CATALOG[id];
   const start = Date.now();
-  const serverTimeMs = await readProviderTime(id);
+  const reading = await readProviderTime(id);
   const rttMs = Date.now() - start;
   const common = {
     id,
     name: provider.name,
     rttMs,
   } as const;
-  return serverTimeMs === null
+  return reading === null
     ? { ...common, ok: false, error: "no_response" }
-    : { ...common, ok: true, serverTimeMs };
+    : {
+        ...common,
+        ok: true,
+        serverTimeMs: reading.timestampMs,
+        receivedAtServerMs: reading.receivedAtServerMs,
+      };
 }
 
 /**
@@ -196,7 +207,12 @@ export const syncTime = createServerFn({ method: "POST" })
       const ok = sources.filter((s): s is Required<ProviderSample> & { ok: true } => s.ok);
       const best = selectBestProvider(ok);
 
-      const serverProcessingMs = Date.now() - serverStart;
+      const serverEndMs = Date.now();
+      const serverProcessingMs = serverEndMs - serverStart;
+      const projectedBestServerUnixMs =
+        best && best.receivedAtServerMs
+          ? projectProviderTimestamp(best.serverTimeMs, best.receivedAtServerMs, serverEndMs)
+          : serverEndMs;
 
       // Collect per-provider failure reasons so log analysis can distinguish
       // "one flaky upstream" from "our entire outbound path is down".
@@ -219,10 +235,12 @@ export const syncTime = createServerFn({ method: "POST" })
 
       return {
         serverUnixMs: Date.now(),
-        bestServerUnixMs: best ? best.serverTimeMs : Date.now(),
+        bestServerUnixMs: projectedBestServerUnixMs,
         serverProcessingMs,
         sources,
         inferredCountry,
+        selectedProviderId: best?.id ?? null,
+        selectedProviderName: best?.name ?? null,
       };
     } catch (err) {
       emitSyncTimeTelemetry({
