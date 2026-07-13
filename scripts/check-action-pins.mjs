@@ -30,7 +30,7 @@ const isMain = process.argv[1] && fileURLToPath(import.meta.url) === resolve(pro
 // action reference (`owner/repo[/subpath]@ref`), and any trailing comment.
 const USES_LINE = /^(\s*(?:-\s+)?uses:\s*)(\S+)(.*)$/;
 const FULL_SHA = /^[0-9a-f]{40}$/;
-const VERSION_COMMENT = /^\s*#\s*\S+/;
+const VERSION_COMMENT = /^\s*#\s*v\S+/;
 
 function listWorkflowFiles() {
   return readdirSync(WORKFLOWS_DIR)
@@ -40,7 +40,7 @@ function listWorkflowFiles() {
 
 // Parses a `uses:` value into { actionPath, ref } or null when the line
 // doesn't reference a pinnable remote action (local composite actions and
-// docker:// refs are exempt — there is no tag/SHA to pin for those).
+// docker:// refs are exempt - there is no tag/SHA to pin for those).
 function parseActionRef(value) {
   if (value.startsWith("./") || value.startsWith("docker://")) return null;
   const at = value.indexOf("@");
@@ -64,8 +64,10 @@ function findViolations(filePath) {
   return violations;
 }
 
-// Resolves `ref` (a tag or branch name) to the commit SHA it currently
-// points at, for the GitHub repo backing `owner/repo[/subpath]`.
+// Resolves `ref` (a tag name - the only kind of mutable ref this repo's
+// workflows use) to the commit SHA it currently points at, for the GitHub
+// repo backing `owner/repo[/subpath]`. Branch refs (e.g. `@main`) are not
+// resolved; git ls-remote --tags only matches tags.
 function resolveShaForRef(actionPath, ref) {
   const [owner, repo] = actionPath.split("/");
   const url = `https://github.com/${owner}/${repo}.git`;
