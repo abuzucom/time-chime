@@ -22,7 +22,7 @@ export const Route = createFileRoute("/support")({
       {
         name: "description",
         content:
-          "Get help with Time Chime: troubleshooting for chimes, background notifications, and clock sync, plus ways to contact the developers or support the project.",
+          "Get help with Time Chime: troubleshooting for chimes, background notifications, and clock reference measurements, plus ways to contact the developers or support the project.",
       },
     ],
   }),
@@ -69,7 +69,7 @@ const TROUBLESHOOTING = [
     id: "clock-drift",
     icon: Clock,
     title: "The clock looks off by a second or two",
-    body: "Time Chime estimates device drift against selected network references. For stronger guarantees, point your OS clock at an authenticated NTP/NTS service.",
+    body: "Time Chime estimates an app-only device offset against selected HTTPS references. For stronger guarantees, point your OS clock at an authenticated NTP/NTS service.",
     to: "/sync-guide",
     linkLabel: "OS clock sync guide",
   },
@@ -77,7 +77,7 @@ const TROUBLESHOOTING = [
     id: "privacy",
     icon: ShieldAlert,
     title: "What data does the app store?",
-    body: "Nothing leaves your device. Preferences and sync history live only in local storage. See the full policy for details on GDPR/CCPA/TDPSA.",
+    body: "Measurement history is not retained. Preferences and provider choices live only in local storage. See the full policy for details on GDPR/CCPA/TDPSA.",
     to: "/privacy",
     linkLabel: "Read the Privacy Policy",
   },

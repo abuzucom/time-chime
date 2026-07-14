@@ -226,11 +226,11 @@ timedatectl timesync-status`}</Code>
       <section className="mt-10">
         <h2 className="font-serif text-2xl font-semibold text-foreground">Verify the result</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Once configured, open the time-sync badge in the top corner of the
-          clock. A green pill under ±50 ms means your OS is now within a
-          hair's breadth of primary time. Anything red typically means the
-          service is disabled, firewalled (UDP/123 outbound blocked), or your
-          upstream is still an ISP-provided pool server.
+          Once configured, open the time-reference badge in the top corner of the
+          clock for an HTTPS-based offset estimate. The color bands help compare
+          the estimate, but they do not certify OS synchronization or accuracy.
+          Verify the operating-system service separately with its native status
+          command.
         </p>
         <div className="mt-4">
           <Link

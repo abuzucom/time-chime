@@ -55,7 +55,7 @@ function Privacy() {
           <ul className="list-disc space-y-1 break-words pl-5 sm:pl-6">
             <li>No accounts. No sign-in. No user profiles.</li>
             <li>No analytics, telemetry, advertising, or tracking pixels.</li>
-            <li>All preferences and sync history live in your device&rsquo;s local storage.</li>
+            <li>Preferences and time-provider choices live in your device&rsquo;s local storage.</li>
             <li>
               Network requests during normal use are limited to loading the app bundle and
               querying selected public HTTPS JSON time references.
@@ -91,8 +91,8 @@ function Privacy() {
               theme, and time-provider preferences.
             </li>
             <li>
-              A rolling local record of time-sync attempts (timestamp, provider, measured offset,
-              round-trip time) used to display the drift indicator.
+              Your selected HTTPS time providers. Measurement results and clock offsets are not
+              retained across page loads.
             </li>
             <li>
               Your consent choice for OS-level background notifications, if you granted it.
@@ -111,13 +111,13 @@ function Privacy() {
               Loading the App bundle and static assets from the origin that served the page.
             </li>
             <li>
-            Querying the public HTTPS JSON time reference you selected in settings,
-              so the App can display authoritative time and drift. See{" "}
+              Querying selected public HTTPS JSON references through the App server so Time Chime
+              can estimate an app-only clock offset. See{" "}
               <Link
                 to="/sync-guide"
                 className="underline underline-offset-2 hover:text-foreground"
               >
-                the sync guide
+                the OS time guide
               </Link>{" "}
               for the provider list.
             </li>
@@ -149,14 +149,12 @@ function Privacy() {
 
         <Section id="section-6" title="6. Third-party time providers">
           <p>
-            When you use the time-sync feature, the App makes an HTTPS request directly from
-            your device to the provider you select (Time.now or Clock.now). Those providers may log connection metadata &mdash; typically IP address,
-            timestamp, and user agent &mdash; under their own privacy policies. The maintainers
-            do not receive, aggregate, or have visibility into those logs.
+            When the App measures a network reference, its server queries the selected provider
+            (Time.now or Clock.now). Providers may log server connection metadata under their own
+            privacy policies. The App does not send your browser IP address or user agent to them.
           </p>
           <p>
-            You can change your provider, restrict the App to a specific provider, or disable
-            time sync entirely from the settings drawer.
+            You can change or restrict the selected provider from the settings drawer.
           </p>
         </Section>
         <Section id="section-7" title="7. Your rights (GDPR, CCPA, TDPSA and similar)">

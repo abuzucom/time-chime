@@ -26,7 +26,7 @@
     "fuzz:report": "node --experimental-strip-types scripts/report-fuzz-failure.mjs",
     "test:security-headers-e2e": "node --test tests/security-headers-e2e.test.mjs",
     "test": "npm run test:headers && npm run test:clickjacking && npm run test:error-page-clickjacking && npm run test:csp-hash && npm run test:consent && npm run test:https-guard-host && npm run test:https-guard-fuzz && npm run test:security-headers-e2e && npm run test:time-provider",
-    "test:time-provider": "node --experimental-strip-types src/lib/time/provider.test.ts"
+    "test:time-provider": "node --experimental-strip-types src/lib/time/provider.test.ts && node --experimental-strip-types src/lib/time/measurement.test.ts && node --experimental-strip-types src/lib/time/format.test.ts"
   },
   "dependencies": {
     "@capacitor/app": "8.1.0",

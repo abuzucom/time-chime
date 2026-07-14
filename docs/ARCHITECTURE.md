@@ -1,66 +1,27 @@
-# Architecture: Time → Chime Pipeline
+# Architecture: Time Reference to Chime Pipeline
 
-This document describes the composed pipeline that carries a single
-network reference timestamp from an HTTPS JSON service all the way to a
-speaker playing the correct Westminster quarter. Each stage is a small,
-independently testable module; stages communicate through plain values
-(numbers, records, callbacks) rather than shared mutable state or class
-hierarchies.
+This document describes how an HTTPS reference measurement calibrates Time Chime's internal clock and chime scheduler. The application does not synchronize the operating-system clock and does not claim a certified accuracy bound.
 
 ## Pipeline overview
 
 ```text
- ┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
- │  HTTPS JSON references │───▶│ Server probe         │───▶│ Client sync loop     │
- │  (NIST, PTB, CF, …)  │    │ time.functions.ts    │    │ TimeSyncContext.tsx  │
- └──────────────────────┘    └──────────────────────┘    └──────────┬───────────┘
-                                                                    │ offset, rtt
-                                                                    ▼
- ┌──────────────────────┐    ┌──────────────────────┐    ┌──────────────────────┐
- │  Clock faces / UI    │◀───│ Second-boundary tick │◀───│ authoritativeNow()   │
- │  faces/*.tsx         │    │ useAuthoritative…    │    │ time/now.ts          │
- └──────────────────────┘    └──────────────────────┘    └──────────┬───────────┘
-                                                                    │
-                                                                    ▼
-                             ┌──────────────────────┐    ┌──────────────────────┐
-                             │ Audio graph          │◀───│ Chime scheduler      │
-                             │ chimes/audio.ts      │    │ chimes/scheduler.ts  │
-                             └──────────────────────┘    └──────────┬───────────┘
-                                                                    │
-                                                                    ▼
-                                                        ┌──────────────────────┐
-                                                        │ Westminster score    │
-                                                        │ chimes/westminster.ts│
-                                                        └──────────────────────┘
+HTTPS JSON references -> server probe -> client measurement -> app-only offset
+                                                         |
+                                                         v
+clock faces <- second-boundary tick <- app clock <- chime scheduler
 ```
 
 ## Module responsibilities
 
 ### Time acquisition
 
-- **`src/lib/time.functions.ts`** — server-only `createServerFn`s. Owns
-  `probeProvider`, which issues an HTTPS request to a single stratum-1
-  source from a fixed **allow-list** (`PROVIDER_CATALOG`) — user input
-  selects *which* provider, never *what URL* (SSRF-safe by design).
-  Cloudflare is the preferred anchor; leap-smeared sources
-  (Google Public NTP) are intentionally excluded. Records send/receive
-  timestamps and returns a sample
-  `{ providerId, serverTime, rtt, uncertainty }`. Knows nothing about
-  React, audio, or scheduling. Default provider selection is region-aware
-  via the `CF-IPCountry` header.
-- **`src/lib/time/TimeSyncContext.tsx`** — client sync loop. Composes
-  `takeSingleSample` → `collectBestProbe` → `reduceBestSampleIntoState`,
-  with `handleSyncFailure` on the error path and a circuit breaker on
-  repeated failure. Enforces `MIN_SYNC_INTERVAL_MS = 60_000` and jitters
-  scheduled syncs so multiple tabs do not stampede. Publishes the current
-  `{ offsetMs, rttMs, uncertaintyMs, lastSyncAt, history }` via React
-  context.
-- **`src/lib/time/now.ts`** — pure function `authoritativeNow()` that
-  returns `Date.now() + offsetMs`, with `safeFinite` guards so a broken
-  sync state can never leak `NaN`/`Infinity` downstream.
-- **`src/lib/time/state.ts` / `format.ts`** — plain data helpers built on
-  Luxon: drift classification, UTC/local/Julian/Unix formatting, natural
-  language dates. No I/O.
+- **`src/lib/time.functions.ts`** - probes fixed, allow-listed HTTPS JSON services. It records each provider timestamp and when that timestamp reaches the server. The selected timestamp is projected to the end of server processing. The response retains the existing fields and adds selected-provider identity.
+- **`src/lib/time/TimeSyncContext.tsx`** - represents not-measured, measuring, available, and unavailable states. It estimates an app-only offset against the complete client request midpoint and keeps the lowest client-observed response time from four measurements. Provider preferences persist; measurements and offsets do not.
+- **`src/lib/time/measurement.ts`** - contains timestamp projection, midpoint offset estimation, and exact state-to-presentation claims.
+- **`src/lib/time/now.ts`** - stores the app-only offset used by clock faces and chime scheduling. A failed or pending measurement resets the offset to zero, which means device time.
+- **`src/lib/time/state.ts` / `format.ts`** - define state and plain formatting helpers with no I/O.
+
+The HTTPS estimate assumes network delay is sufficiently balanced for a midpoint estimate. RTT is displayed only as provider response time. It is not converted into an uncertainty or accuracy claim.
 
 ### Tick generation
 
@@ -74,7 +35,6 @@ hierarchies.
 - **`src/hooks/useSweepAngle.ts`** — `requestAnimationFrame`-driven hook
   that produces a continuous linear angle for the Mid-Century face's
   vintage synchronous-electric sweep.
-
 
 ### Presentation (composition, not inheritance)
 
@@ -159,6 +119,5 @@ hierarchies.
   into `setTimeout` or the Web Audio graph.
 - **Deny-by-default at the transport edge.** Every capability
   (Permissions-Policy directive, CSP source, outbound provider URL) is
-  opted *in* from an empty baseline, not opted *out* from a permissive
+  opted _in_ from an empty baseline, not opted _out_ from a permissive
   one.
-

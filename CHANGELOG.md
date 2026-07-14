@@ -22,6 +22,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pinned every remaining mutable-tag `uses:` reference across `.github/workflows/*.yml` (13 lines, 6 workflows) to a commit SHA with a version comment, matching the convention already used for `zaproxy/action-baseline` and `oven-sh/setup-bun`. Includes adopting `actions/checkout` v7.0.0 and `actions/github-script` v9.0.0 (superseding PRs #2 and #3).
 
+## [0.3.4] - 2026-07-12
+
+### Fixed
+
+- Replaced time-sync claims with explicit HTTPS reference measurement states.
+- Removed unsupported uncertainty and persisted history graph claims.
+- Identified the selected provider and retained RTT only as response time.
+- Reset the app-only offset while measuring and after failed measurements.
+- Projected provider timestamps to the end of server processing before midpoint estimation.
+- Preferred sub-second ISO provider timestamps over coarse integer-second values.
+
 ## [0.3.3] - 2026-07-12
 
 ### Changed
