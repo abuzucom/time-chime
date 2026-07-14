@@ -138,11 +138,10 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
   const storageToastShown = useRef(false);
   providersRef.current = state.providers;
 
-  const recordFailure = useCallback((error: unknown, sources: ProviderSample[] = []) => {
-    const message = error instanceof Error ? error.message : "unknown_error";
-    lastAttemptAt.current = 0;
-    setAuthoritativeOffset(0);
-    setState((previous) => ({
+const recordFailure = useCallback((error: unknown, sources: ProviderSample[] = []) => {
+  const message = error instanceof Error ? error.message : "unknown_error";
+  setAuthoritativeOffset(0);
+  setState((previous) => ({
       ...previous,
       status: "unavailable",
       offsetMs: 0,
