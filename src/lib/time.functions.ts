@@ -136,7 +136,7 @@ async function probeProvider(id: ProviderId): Promise<ProviderSample> {
  * telemetry. Time.now is preferred by application policy; otherwise the
  * lowest-RTT successful source wins.
  *
- * @param data.providers Up to 2 provider IDs to query in parallel.
+ * @param data.providers Provider IDs to query in parallel.
  * @returns A {@link TimeSyncResponse} containing `bestServerUnixMs`,
  *          per-source results, server processing time, and inferred country.
  */

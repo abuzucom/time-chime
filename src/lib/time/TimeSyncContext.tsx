@@ -29,6 +29,7 @@ const TimeSyncContext = createContext<TimeSyncContextValue | null>(null);
 const STORAGE_KEY = "westminster.timeSync.v1";
 const MEASUREMENT_INTERVAL_MS = 10 * 60 * 1000;
 const MIN_MEASUREMENT_INTERVAL_MS = 15 * 1000;
+const MIN_FORCE_MEASUREMENT_INTERVAL_MS = 5 * 1000;
 const MEASUREMENT_JITTER_RATIO = 0.2;
 const SAMPLE_COUNT = 4;
 
@@ -75,12 +76,14 @@ function persistProviderPreferences(providers: ProviderId[]): boolean {
 /** Collect one client-to-reference estimate. */
 async function takeSingleMeasurement(providers: ProviderId[]): Promise<MeasurementResult> {
   const requestStartedMs = Date.now();
+  const perfStarted = performance.now();
   const response = await syncTime({ data: { providers } });
   if (!response.sources.some((source) => source.ok)) {
     throw new NoNetworkReferenceError(response);
   }
-  const responseReceivedMs = Date.now();
-  const rttMs = Math.max(0, responseReceivedMs - requestStartedMs);
+  const elapsedMs = performance.now() - perfStarted;
+  const responseReceivedMs = requestStartedMs + elapsedMs;
+  const rttMs = Math.max(0, elapsedMs);
   const offsetMs = estimateReferenceOffset(
     response.bestServerUnixMs,
     requestStartedMs,
@@ -172,10 +175,12 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
         : providersRef.current;
       if (providers.length === 0 || inFlight.current) return;
       const sinceLastAttemptMs = Date.now() - lastAttemptAt.current;
-      if (!options?.force && sinceLastAttemptMs < MIN_MEASUREMENT_INTERVAL_MS) return;
+      const minRequiredMs = options?.force
+        ? MIN_FORCE_MEASUREMENT_INTERVAL_MS
+        : MIN_MEASUREMENT_INTERVAL_MS;
+      if (sinceLastAttemptMs < minRequiredMs) return;
       lastAttemptAt.current = Date.now();
       inFlight.current = true;
-      setAuthoritativeOffset(0);
       setState((previous) => ({
         ...previous,
         status: "measuring",
