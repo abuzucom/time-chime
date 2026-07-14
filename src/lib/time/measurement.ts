@@ -66,8 +66,8 @@ export function deriveReferencePresentation(
   if (
     input.status === "available" &&
     typeof input.offsetMs === "number" &&
-    input.measuredAt &&
-    input.selectedReferenceName
+    typeof input.measuredAt === "number" &&
+    typeof input.selectedReferenceName === "string"
   ) {
     const offsetLabel = formatEstimatedOffset(input.offsetMs);
     const direction = input.offsetMs >= 0 ? "behind" : "ahead of";

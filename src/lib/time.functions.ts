@@ -65,12 +65,13 @@ async function readProviderTime(
     const res = await fetch(provider.endpoint, {
       signal: controller.signal,
       cache: "no-store",
-      redirect: "follow",
+      redirect: "error",
       headers: { accept: "application/json" },
     });
     if (!res.ok) return null;
+    const receivedAtServerMs = Date.now();
     const timestampMs = await extractMsFromJsonBody(res, id);
-    return timestampMs === null ? null : { timestampMs, receivedAtServerMs: Date.now() };
+    return timestampMs === null ? null : { timestampMs, receivedAtServerMs };
   } catch (err) {
     console.warn(`[time-sync] probe of provider "${id}" failed`, err);
     return null;

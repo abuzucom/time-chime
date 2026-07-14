@@ -145,7 +145,7 @@ function ReferencePanelBody({ now }: { now: number }) {
           size="sm"
           variant="outline"
           disabled={reference.measuring || cooling}
-          onClick={() => void reference.measure()}
+          onClick={() => void reference.measure(undefined, { force: true })}
           title={cooling ? `Wait ${remainingSeconds}s before measuring again` : undefined}
         >
           <RefreshCw className={cn(reference.measuring && "animate-spin")} />

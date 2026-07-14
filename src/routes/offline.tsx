@@ -43,7 +43,7 @@ function OfflinePage() {
     if (measuring) return;
     setMeasuring(true);
     try {
-      await measure();
+      await measure(undefined, { force: true });
     } finally {
       setMeasuring(false);
     }

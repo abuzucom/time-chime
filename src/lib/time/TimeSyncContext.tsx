@@ -20,8 +20,8 @@ import {
 import { initialSyncState, type SyncSample, type TimeSyncState } from "./state.ts";
 
 type TimeSyncContextValue = TimeSyncState & {
-  measure: (providers?: ProviderId[]) => Promise<void>;
-  resync: (providers?: ProviderId[]) => Promise<void>;
+  measure: (providers?: ProviderId[], options?: { force?: boolean }) => Promise<void>;
+  resync: (providers?: ProviderId[], options?: { force?: boolean }) => Promise<void>;
   setProviders: (ids: ProviderId[]) => void;
 };
 
@@ -140,7 +140,6 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
 
   const recordFailure = useCallback((error: unknown, sources: ProviderSample[] = []) => {
     const message = error instanceof Error ? error.message : "unknown_error";
-    lastAttemptAt.current = 0;
     setAuthoritativeOffset(0);
     setState((previous) => ({
       ...previous,
@@ -167,13 +166,13 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const measure = useCallback(
-    async (requestedProviders?: ProviderId[]) => {
+    async (requestedProviders?: ProviderId[], options?: { force?: boolean }) => {
       const providers = requestedProviders
         ? normalizeProviderIds(requestedProviders)
         : providersRef.current;
       if (providers.length === 0 || inFlight.current) return;
       const sinceLastAttemptMs = Date.now() - lastAttemptAt.current;
-      if (sinceLastAttemptMs < MIN_MEASUREMENT_INTERVAL_MS) return;
+      if (!options?.force && sinceLastAttemptMs < MIN_MEASUREMENT_INTERVAL_MS) return;
       lastAttemptAt.current = Date.now();
       inFlight.current = true;
       setAuthoritativeOffset(0);
