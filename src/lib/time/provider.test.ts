@@ -47,15 +47,20 @@ test("prefers Time.now, then chooses the lowest RTT", () => {
     { id: "timeNow" as const, rttMs: 30 },
   ];
   assert.equal(selectBestProvider(samples)?.id, "timeNow");
+<<<<<<< HEAD
   assert.equal(
     selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id,
     "clockNow",
   );
+=======
+  assert.equal(selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id, "clockNow");
+>>>>>>> origin/main
   assert.equal(selectBestProvider([]), null);
 });
 
 test("normalizes obsolete, duplicate, and malformed provider IDs", () => {
   assert.deepEqual(
+<<<<<<< HEAD
     normalizeProviderIds([
       "cloudflare",
       "worldtime",
@@ -97,5 +102,14 @@ test("prefers a sub-second ISO timestamp over integer Unix seconds", () => {
       utc_datetime: "2023-11-14T22:13:20.875Z",
     }),
     1_700_000_000_875,
+=======
+    normalizeProviderIds(["cloudflare", "worldtime", "timeapiWorld", "worldtime", null, "clockNow"]),
+    ["clockNow"],
+>>>>>>> origin/main
   );
+});
+
+test("defaults to the remaining providers when persistence is empty", () => {
+  assert.deepEqual(initialSyncState.providers, DEFAULT_PROVIDER_IDS);
+  assert.deepEqual(normalizeProviderIds([]), []);
 });

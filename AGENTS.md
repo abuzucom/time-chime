@@ -45,6 +45,10 @@ Maintainers: extend as needed; enforce in CI (see README).
   `test:https-guard-host`, `test:https-guard-fuzz`,
   `test:security-headers-e2e`
 - Header/CSP check: `bun run check:headers`
+- GitHub Actions pin check: `bun run check:action-pins` (`node
+  scripts/check-action-pins.mjs --fix` resolves and rewrites violations;
+  `.github/workflows/action-pin-autofix.yml` runs this automatically and
+  opens a draft PR)
 - Fuzz-failure tooling: `fuzz:replay`, `fuzz:report`
 
 ## Do not touch

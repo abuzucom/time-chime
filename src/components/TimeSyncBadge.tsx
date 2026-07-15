@@ -24,6 +24,7 @@ export function TimeSyncBadge() {
     const intervalId = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(intervalId);
   }, []);
+<<<<<<< HEAD
   const presentation = deriveReferencePresentation({
     status: reference.status,
     now,
@@ -32,6 +33,17 @@ export function TimeSyncBadge() {
     selectedReferenceName: reference.selectedReferenceName,
   });
   const severity = reference.status === "available" ? driftSeverity(reference.offsetMs) : null;
+=======
+  const hasReference =
+    sync.lastSyncAt !== null && !sync.error && sync.sources.some((source) => source.ok);
+  const severity = hasReference ? driftSeverity(sync.offsetMs) : "warn";
+  const label =
+    sync.syncing
+      ? "Syncing…"
+      : hasReference
+        ? `Device clock ${formatOffset(sync.offsetMs)}`
+        : "Time sync unavailable";
+>>>>>>> origin/main
 
   return (
     <Dialog>
@@ -59,7 +71,14 @@ export function TimeSyncBadge() {
               reference.measuring && "animate-pulse",
             )}
           />
+<<<<<<< HEAD
           <span>{presentation.badgeLabel}</span>
+=======
+          <span>{label}</span>
+          {hasReference && sync.rttMs > 0 && (
+            <span className="text-muted-foreground">± {Math.round(sync.rttMs / 2)} ms</span>
+          )}
+>>>>>>> origin/main
         </button>
       </DialogTrigger>
       <DialogContent>
@@ -72,6 +91,7 @@ export function TimeSyncBadge() {
   );
 }
 
+<<<<<<< HEAD
 /** Show the current estimate, provider responses, and measurement action. */
 function ReferencePanelBody({ now }: { now: number }) {
   const reference = useTimeSync();
@@ -88,6 +108,14 @@ function ReferencePanelBody({ now }: { now: number }) {
     : 0;
   const cooling = remainingMs > 0;
   const remainingSeconds = Math.ceil(remainingMs / 1000);
+=======
+/** Dialog body: current drift magnitude/severity, provider list, and sparkline history. */
+function DriftPanelBody({ now }: { now: number }) {
+  const sync = useTimeSync();
+  const hasReference =
+    sync.lastSyncAt !== null && !sync.error && sync.sources.some((source) => source.ok);
+  const severity = hasReference ? driftSeverity(sync.offsetMs) : "warn";
+>>>>>>> origin/main
 
   return (
     <div className="space-y-4">
@@ -104,7 +132,21 @@ function ReferencePanelBody({ now }: { now: number }) {
             severity === "bad" && "text-[color:var(--drift-bad-text)]",
           )}
         >
+<<<<<<< HEAD
           {presentation.offsetLabel}
+=======
+          {hasReference ? formatOffset(sync.offsetMs) : "No reference"}
+        </div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          {hasReference
+            ? sync.offsetMs >= 0
+              ? "device clock is behind reference"
+              : "device clock is ahead of reference"
+            : "No current network reference is available"}
+          {hasReference && (
+            <>{" · uncertainty ± "}{Math.round(sync.rttMs / 2)} ms</>
+          )}
+>>>>>>> origin/main
         </div>
         <div className="mt-1 text-xs text-muted-foreground">{presentation.detail}</div>
       </div>
@@ -140,6 +182,7 @@ function ReferencePanelBody({ now }: { now: number }) {
       </div>
 
       <div className="flex items-center justify-between border-t pt-3">
+<<<<<<< HEAD
         <div className="text-xs text-muted-foreground">{presentation.ageLabel}</div>
         <Button
           size="sm"
@@ -151,6 +194,38 @@ function ReferencePanelBody({ now }: { now: number }) {
           <RefreshCw className={cn(reference.measuring && "animate-spin")} />
           {cooling ? `Wait ${remainingSeconds}s` : "Measure again"}
         </Button>
+=======
+        <div className="text-xs text-muted-foreground">
+          {sync.lastSyncAt && hasReference
+            ? `Last successful sync ${formatRelative(sync.lastSyncAt, now)}`
+            : "No successful sync"}
+          {sync.inferredCountry && ` · region ${sync.inferredCountry}`}
+        </div>
+        {(() => {
+          // Client-side cooldown to respect NTS operator acceptable-use
+          // policies (Cloudflare, NIST, PTB, etc. all forbid tight polling
+          // from user-initiated actions). Matches the server-side minimum
+          // resync interval so hammering the button cannot flood upstreams.
+          const RESYNC_COOLDOWN_MS = 30_000;
+          const remainingMs = sync.lastSyncAt
+            ? Math.max(0, RESYNC_COOLDOWN_MS - (now - sync.lastSyncAt))
+            : 0;
+          const cooling = remainingMs > 0;
+          const remainingSec = Math.ceil(remainingMs / 1000);
+          return (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={sync.syncing || cooling}
+              onClick={() => void sync.resync()}
+              title={cooling ? `Please wait ${remainingSec}s before resyncing again` : undefined}
+            >
+              <RefreshCw className={cn(sync.syncing && "animate-spin")} />
+              {cooling ? `Wait ${remainingSec}s` : "Resync now"}
+            </Button>
+          );
+        })()}
+>>>>>>> origin/main
       </div>
 
       <div className="rounded-md border border-dashed border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground">

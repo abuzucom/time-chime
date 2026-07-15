@@ -1,6 +1,10 @@
 {
   "name": "tanstack_start_ts",
+<<<<<<< HEAD
   "version": "0.3.4",
+=======
+  "version": "0.4.1",
+>>>>>>> origin/main
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -12,6 +16,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "check:headers": "node scripts/check-headers.mjs",
+    "check:action-pins": "node scripts/check-action-pins.mjs",
     "sync:agent-docs": "node scripts/sync-agent-docs.mjs",
     "check:agent-docs": "node scripts/sync-agent-docs.mjs --check",
     "test:headers": "node --test tests/check-headers.test.mjs",
@@ -89,7 +94,7 @@
   "devDependencies": {
     "@eslint/js": "9.39.4",
     "@types/luxon": "3.7.2",
-    "@types/node": "22.20.1",
+    "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.2.0",

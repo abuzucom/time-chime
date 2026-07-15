@@ -57,11 +57,19 @@ browser's local storage.
 
 ### Time reference measurement
 
+<<<<<<< HEAD
 - **HTTPS references** - the server queries Time.now and Clock.now; Time.now is preferred by policy.
 - **Automatic measurement** - page load, tab focus, and a jittered background schedule request fresh readings.
 - **App-only calibration** - a valid estimate adjusts Time Chime's clock and chimes but never changes the operating-system clock.
 - **Honest status** - the panel identifies the selected reference, measurement age, and provider response times. It does not claim NTP synchronization or a certified accuracy bound.
 - **Provider picker** - choose 1-2 sources; defaults are Time.now then Clock.now.
+=======
+- **Network time references** via a server-side HTTPS JSON proxy to Time.now and Clock.now. Time.now is preferred by policy; these services are references, not claimed Stratum-1 authorities.
+- **Provider picker** - pick 1-2 sources; defaults are Time.now then Clock.now.
+- **NTP-style 4-sample sync** with min-RTT selection, client-side minimum interval (60 s), and a circuit breaker on repeated failure.
+- **Drift indicator** - colour-coded chip beneath the face; the detail panel shows offset, RTT, uncertainty, a 30-sample sparkline, current sources, and a manual **Resync** button.
+- **Latency calibration** - Settings -> *Calibrate* measures your device's audio output latency and shifts scheduled chimes so the strike lands on the wall-clock second.
+>>>>>>> origin/main
 
 ### Themes & appearance
 

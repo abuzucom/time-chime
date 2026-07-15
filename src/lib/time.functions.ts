@@ -65,13 +65,17 @@ async function readProviderTime(
     const res = await fetch(provider.endpoint, {
       signal: controller.signal,
       cache: "no-store",
-      redirect: "error",
+      redirect: "follow",
       headers: { accept: "application/json" },
     });
     if (!res.ok) return null;
+<<<<<<< HEAD
     const receivedAtServerMs = Date.now();
     const timestampMs = await extractMsFromJsonBody(res, id);
     return timestampMs === null ? null : { timestampMs, receivedAtServerMs };
+=======
+    return await extractMsFromJsonBody(res, id);
+>>>>>>> origin/main
   } catch (err) {
     console.warn(`[time-sync] probe of provider "${id}" failed`, err);
     return null;
@@ -136,7 +140,11 @@ async function probeProvider(id: ProviderId): Promise<ProviderSample> {
  * telemetry. Time.now is preferred by application policy; otherwise the
  * lowest-RTT successful source wins.
  *
+<<<<<<< HEAD
  * @param data.providers Provider IDs to query in parallel.
+=======
+ * @param data.providers Up to 2 provider IDs to query in parallel.
+>>>>>>> origin/main
  * @returns A {@link TimeSyncResponse} containing `bestServerUnixMs`,
  *          per-source results, server processing time, and inferred country.
  */

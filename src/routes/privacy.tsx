@@ -111,8 +111,13 @@ function Privacy() {
               Loading the App bundle and static assets from the origin that served the page.
             </li>
             <li>
+<<<<<<< HEAD
               Querying selected public HTTPS JSON references through the App server so Time Chime
               can estimate an app-only clock offset. See{" "}
+=======
+            Querying the public HTTPS JSON time reference you selected in settings,
+              so the App can display authoritative time and drift. See{" "}
+>>>>>>> origin/main
               <Link
                 to="/sync-guide"
                 className="underline underline-offset-2 hover:text-foreground"
@@ -149,9 +154,16 @@ function Privacy() {
 
         <Section id="section-6" title="6. Third-party time providers">
           <p>
+<<<<<<< HEAD
             When the App measures a network reference, its server queries the selected provider
             (Time.now or Clock.now). Providers may log server connection metadata under their own
             privacy policies. The App does not send your browser IP address or user agent to them.
+=======
+            When you use the time-sync feature, the App makes an HTTPS request directly from
+            your device to the provider you select (Time.now or Clock.now). Those providers may log connection metadata &mdash; typically IP address,
+            timestamp, and user agent &mdash; under their own privacy policies. The maintainers
+            do not receive, aggregate, or have visibility into those logs.
+>>>>>>> origin/main
           </p>
           <p>
             You can change or restrict the selected provider from the settings drawer.

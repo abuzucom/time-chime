@@ -5,6 +5,10 @@ export type MeasurementStatus = "not_measured" | "measuring" | "available" | "un
 
 /** Legacy sample shape retained for context compatibility. */
 export type SyncSample = {
+<<<<<<< HEAD
+=======
+  /** Signed clock skew: `authoritative âˆ’ device` in milliseconds. */
+>>>>>>> origin/main
   offsetMs: number;
   rttMs: number;
   at: number;
@@ -42,9 +46,12 @@ export const initialSyncState: TimeSyncState = {
   sources: [],
   inferredCountry: null,
   providers: [...DEFAULT_PROVIDER_IDS],
+<<<<<<< HEAD
   error: null,
   measuring: false,
   lastSyncAt: null,
   syncing: false,
   history: [],
+=======
+>>>>>>> origin/main
 };

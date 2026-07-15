@@ -5,6 +5,7 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+<<<<<<< HEAD
 ## [0.3.4] - 2026-07-12
 
 ### Fixed
@@ -15,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reset the app-only offset while measuring and after failed measurements.
 - Projected provider timestamps to the end of server processing before midpoint estimation.
 - Preferred sub-second ISO provider timestamps over coarse integer-second values.
+=======
+## [0.4.1] - 2026-07-13
+
+### Changed
+
+- `security-headers.yml` now always prints the local `wrangler dev` server's own log (including any unhandled SSR exception stack trace) as a collapsed CI group, so an intermittent 500 on the header-check probes surfaces the actual error instead of just "HTTP 500". Diagnostic only; does not change app behavior or the check's pass/fail outcome.
+
+## [0.4.0] - 2026-07-13
+
+### Added
+
+- `scripts/check-action-pins.mjs` (`bun run check:action-pins`) to detect GitHub Actions referenced by a mutable tag instead of a pinned commit SHA, with a `--fix` mode that resolves and rewrites them.
+- `.github/workflows/action-pin-autofix.yml`, a scheduled/push-triggered workflow that runs the fixer and opens a draft PR when it finds unpinned actions. Never runs on `pull_request`/`pull_request_target`, so it never executes with a write-scoped token against fork-controlled workflow content.
+
+### Changed
+
+- Pinned every remaining mutable-tag `uses:` reference across `.github/workflows/*.yml` (13 lines, 6 workflows) to a commit SHA with a version comment, matching the convention already used for `zaproxy/action-baseline` and `oven-sh/setup-bun`. Includes adopting `actions/checkout` v7.0.0 and `actions/github-script` v9.0.0 (superseding PRs #2 and #3).
+>>>>>>> origin/main
 
 ## [0.3.3] - 2026-07-12
 
