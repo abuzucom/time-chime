@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.2] - 2026-07-16
+
+### Changed
+
+- Synced `AGENTS.md` (and its fanned-out copies) with the `abuzucom/agents` 1.1.0 upstream conventions, adapted to this repo's TypeScript/ESLint idioms: added a "No suppressing checks" workflow rule (no `eslint-disable`/`@ts-ignore`/`@ts-expect-error` or CI weakening), added a "History safety" rule against rewriting pushed history without consent, merged the run-on-sentence prohibition into the em/en-dash style rule, renamed "No extended ASCII" to "No non-ASCII characters" with tightened wording, and expanded the incomplete-work-marker rule beyond TODO/FIXME to XXX, HACK, stubs, and bare placeholders.
+- Extended the `no-warning-comments` ESLint rule terms to `xxx` and `hack` (alongside `todo`/`fixme`) to back the expanded incomplete-work-marker convention. No new dependency.
+
 ## [0.4.1] - 2026-07-13
 
 ### Changed
