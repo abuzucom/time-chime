@@ -54,8 +54,11 @@ export default tseslint.config(
           detectObjects: false,
         },
       ],
-      // AGENTS.md code-quality rule: no TODO/FIXME left in code.
-      "no-warning-comments": ["warn", { terms: ["todo", "fixme"], location: "start" }],
+      // AGENTS.md code-quality rule: no incomplete-work markers left in code.
+      "no-warning-comments": [
+        "warn",
+        { terms: ["todo", "fixme", "xxx", "hack"], location: "start" },
+      ],
       // AGENTS.md rule 1: no untrusted input in evaluated code.
       "no-eval": "error",
       "no-implied-eval": "error",

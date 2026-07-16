@@ -240,12 +240,25 @@ A task is not complete until the test runs and passes in the terminal.
 project's lint command (see Commands); fix all errors before presenting
 work as finished.
 
+**No suppressing checks.** Never silence ESLint, `tsc`, or a CI step to make
+work pass. No `eslint-disable`, `@ts-ignore`, or `@ts-expect-error`, and no
+disabling or weakening a workflow in `.github/workflows/`. Fix the cause, or
+stop and report it, the same stance as rule 3 for tests. The one exception is
+rule 7's justified inline `eslint-disable` for a non-security MD5/SHA-1 use,
+which still requires the purpose comment the rule mandates.
+
 **Edit safely.** `sed` and bash regex edits are dangerous — a loose pattern
 destroys surrounding logic. Prefer rewriting small files entirely, or
 strict literal search-and-replace.
 
 **Retry discipline.** Do not rerun a failing command more than twice.
 Stop, analyze the error output, pivot strategy.
+
+**History safety.** Never rewrite commits already pushed to a shared branch.
+Do not force-push, rebase, amend, or reset published history without explicit
+human consent; add new commits instead. A consented force-with-lease, such as
+restarting a feature branch off the default branch after its PR merged, is
+fine because the human asked for it.
 
 **Documentation and versioning.** Update `README.md` for substantial or
 user-facing changes (new clock faces, chime behavior, features). Update
@@ -374,8 +387,11 @@ separate PRs/commits; explain the split.
 **No duplication.** Extract repeated code sequences into a helper function,
 loop, or data structure.
 
-**No TODO or FIXME.** Surface incomplete work to the user directly instead
-of leaving an unresolved placeholder in code.
+**No incomplete work left in code.** Do not leave deferred or placeholder
+work behind a marker (`TODO`, `FIXME`, `XXX`, `HACK`, "later"), as a stubbed
+function body, a bare `...` placeholder, or an unexplained
+`throw new Error("not implemented")`. Surface incomplete work to the user
+directly instead.
 
 ## Style
 
@@ -385,14 +401,18 @@ documentation.
 ❌ `// This function is responsible for handling the parsing of the config`
 ✅ `// Parse the config`
 
-**No em or en dashes.** Use hyphens (`-`) for ranges and compounds in code,
-commit messages, and new documentation; restructure clauses or use
-semicolons instead of a run-on. Applies going forward — existing prose in
-this repo's docs, including this file, predates the rule and isn't
-retroactively rewritten.
+**No run-on sentences; no em or en dashes.** Do not splice independent
+clauses into one sentence. Never use the em or en dash character, and never
+substitute `--`, `---`, or a spaced hyphen (` - `) for one. To add an aside
+or a second clause, start a new sentence or join with a comma, colon, or
+semicolon. Hyphens are for ranges, compounds, CLI flags, and negative
+numbers only. Applies going forward — existing prose in this repo's docs,
+including this file, predates the rule and isn't retroactively rewritten.
 
-**No extended ASCII.** Use 7-bit ASCII (0-127) for code and comments; limit
-Unicode to what the domain or framework actually requires.
+**No non-ASCII characters.** Use 7-bit ASCII (0-127) for code, comments, and
+prose. Limit Unicode to string literals or data where the domain or
+framework actually requires it (for example a translated message), never in
+identifiers, comments, or documentation.
 
 **Avoid emojis.** Don't use emojis unless contextually justified and
 approved by the user.
