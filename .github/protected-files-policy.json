@@ -1,0 +1,35 @@
+{
+  "owner": "itsjustatank",
+  "allow_owner_authored": true,
+  "max_file_pages": 50,
+  "max_review_pages": 50,
+  "protected_file_names": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "CONVENTIONS.md",
+    ".cursorrules",
+    ".clinerules",
+    ".windsurfrules",
+    ".claudeignore",
+    "package.json",
+    "bun.lock",
+    "bunfig.toml",
+    "eslint.config.js",
+    "tsconfig.json",
+    "vite.config.ts",
+    ".prettierrc",
+    ".prettierignore"
+  ],
+  "protected_prefixes": [
+    ".github/",
+    ".agents/",
+    "scripts/",
+    "src/",
+    "tests/"
+  ],
+  "protected_globs": [
+    "public/_headers",
+    ".zap/*"
+  ]
+}

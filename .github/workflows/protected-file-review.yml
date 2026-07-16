@@ -1,0 +1,28 @@
+name: Protected file review
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  protected-file-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Require current owner approval
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          PROTECTED_FILES_OWNER: itsjustatank
+          PROTECTED_FILES_POLICY: .github/protected-files-policy.json
+          PROTECTED_FILES_ALLOW_OWNER_AUTHORED: "true"
+        run: python3 scripts/check_protected_files.py

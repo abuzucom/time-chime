@@ -1,0 +1,24 @@
+# Protect agent instructions, automation, application code, and deployment rules.
+AGENTS.md @itsjustatank
+CLAUDE.md @itsjustatank
+GEMINI.md @itsjustatank
+CONVENTIONS.md @itsjustatank
+.cursorrules @itsjustatank
+.clinerules @itsjustatank
+.windsurfrules @itsjustatank
+.claudeignore @itsjustatank
+.github/** @itsjustatank
+.agents/** @itsjustatank
+scripts/** @itsjustatank
+src/** @itsjustatank
+tests/** @itsjustatank
+public/_headers @itsjustatank
+package.json @itsjustatank
+bun.lock @itsjustatank
+bunfig.toml @itsjustatank
+eslint.config.js @itsjustatank
+tsconfig.json @itsjustatank
+vite.config.ts @itsjustatank
+.prettierrc @itsjustatank
+.prettierignore @itsjustatank
+.zap/** @itsjustatank

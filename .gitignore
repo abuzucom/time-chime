@@ -38,3 +38,7 @@ dist-ssr
 # Fuzz test minimised counterexamples
 tests/__fuzz-failures__/
 !tests/__fuzz-failures__/.gitkeep
+
+# Python checker caches
+__pycache__/
+*.py[cod]

@@ -408,6 +408,10 @@ Issues and pull requests are welcome. Please read `CONTRIBUTING.md` and
 `CODE_OF_CONDUCT.md` first. By contributing, you agree to license your
 work under the project's MIT licence.
 
+Protected files require the `Protected file review` check. The check runs from
+the trusted default branch, never executes pull request code, and requires
+current approval from `itsjustatank` for protected changes by other authors.
+
 ---
 
 ## Licence
