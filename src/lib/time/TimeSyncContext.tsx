@@ -28,8 +28,10 @@ type TimeSyncContextValue = TimeSyncState & {
 const TimeSyncContext = createContext<TimeSyncContextValue | null>(null);
 const STORAGE_KEY = "westminster.timeSync.v1";
 const MEASUREMENT_INTERVAL_MS = 10 * 60 * 1000;
+// Matches the server-side minimum resync interval so hammering the button
+// cannot flood upstream providers. Applies to forced (user-triggered)
+// measurements too; keep in step with the server's syncTimeBurstLimiter.
 const MIN_MEASUREMENT_INTERVAL_MS = 15 * 1000;
-const MIN_FORCE_MEASUREMENT_INTERVAL_MS = 5 * 1000;
 const MEASUREMENT_JITTER_RATIO = 0.2;
 const SAMPLE_COUNT = 4;
 
@@ -169,16 +171,15 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const measure = useCallback(
-    async (requestedProviders?: ProviderId[], options?: { force?: boolean }) => {
+    // `force` is accepted for caller compatibility but no longer shortens
+    // the cooldown; every measurement honors MIN_MEASUREMENT_INTERVAL_MS.
+    async (requestedProviders?: ProviderId[], _options?: { force?: boolean }) => {
       const providers = requestedProviders
         ? normalizeProviderIds(requestedProviders)
         : providersRef.current;
       if (providers.length === 0 || inFlight.current) return;
       const sinceLastAttemptMs = Date.now() - lastAttemptAt.current;
-      const minRequiredMs = options?.force
-        ? MIN_FORCE_MEASUREMENT_INTERVAL_MS
-        : MIN_MEASUREMENT_INTERVAL_MS;
-      if (sinceLastAttemptMs < minRequiredMs) return;
+      if (sinceLastAttemptMs < MIN_MEASUREMENT_INTERVAL_MS) return;
       lastAttemptAt.current = Date.now();
       inFlight.current = true;
       setState((previous) => ({
