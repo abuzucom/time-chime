@@ -91,6 +91,13 @@ export default defineConfig(({ command }) => ({
       ? [
           nitro({
             preset: "cloudflare-module",
+            // Pinned, not floating. Nitro defaults this to the build date
+            // (see nitro/dist/_presets.mjs), so every build asked the Worker
+            // runtime for a date only the very newest wrangler could serve,
+            // and CI's `wrangler dev` broke the moment its binary fell
+            // behind. Bump this deliberately, together with the wrangler pin
+            // in .github/workflows/security-headers.yml.
+            compatibilityDate: "2026-08-20",
             output: { dir: "dist", serverDir: "dist/server", publicDir: "dist/client" },
             cloudflare: { nodeCompat: true, deployConfig: true },
           }),
