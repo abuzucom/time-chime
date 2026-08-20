@@ -46,7 +46,6 @@ function announceCloseEncounters(): void {
   });
 }
 
-
 /**
  * Digital face showing local time with day + date + IANA zone label.
  *
@@ -70,7 +69,9 @@ export function DigitalLocalFace() {
     [hour24, showSeconds],
   );
 
-  const offsetLabel = OFFSET_FMT.formatToParts(nowDate).find((p) => p.type === "timeZoneName")?.value;
+  const offsetLabel = OFFSET_FMT.formatToParts(nowDate).find(
+    (p) => p.type === "timeZoneName",
+  )?.value;
 
   const { active: flicker } = useKonamiCode(
     function onKonamiActivated() {
@@ -79,7 +80,6 @@ export function DigitalLocalFace() {
     },
     { cooldownMs: 3200 },
   );
-
 
   return (
     <div

@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { syncTime, type ProviderId, type ProviderSample } from "@/lib/time.functions";
@@ -141,10 +149,7 @@ async function takeSingleSample(providers: ProviderId[]): Promise<{
 async function collectBestProbe(
   providers: ProviderId[],
   maxSamples = 4,
-): Promise<
-  | { best: SyncSample; lastResponse: ProbeResponse }
-  | { failure: ProbeResponse }
-  | null> {
+): Promise<{ best: SyncSample; lastResponse: ProbeResponse } | { failure: ProbeResponse } | null> {
   let best: SyncSample | null = null;
   let lastResponse: ProbeResponse | null = null;
   let lastError: unknown = null;
@@ -243,8 +248,7 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
    * error condition and show a deduped toast so we don't spam the user
    * every RESYNC_INTERVAL_MS while offline.
    */
-  const handleSyncFailure = useCallback(
-    (err: unknown, sources: ProviderSample[] = []) => {
+  const handleSyncFailure = useCallback((err: unknown, sources: ProviderSample[] = []) => {
     const message = err instanceof Error ? err.message : "unknown_error";
     lastAttemptAt.current = 0;
     setAuthoritativeOffset(0);
@@ -267,46 +271,48 @@ export function TimeSyncProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const resync = useCallback(async (requestedProviders?: ProviderId[]) => {
-    const providers = requestedProviders
-      ? normalizeProviderIds(requestedProviders)
-      : providersRef.current;
-    if (providers.length === 0 || inFlight.current) return;
-    // Cooldown gate: enforce a hard minimum interval between attempts so no
-    // caller — background chime scheduler, visibility flapping, effect loop,
-    // or click-spam on the manual "Sync now" button — can hammer the
-    // network time services. Silent no-op; UI state stays untouched so a
-    // gated call doesn't flash "syncing…".
-    const sinceLast = Date.now() - lastAttemptAt.current;
-    if (sinceLast < MIN_RESYNC_INTERVAL_MS) return;
-    lastAttemptAt.current = Date.now();
-    inFlight.current = true;
-    setState((s) => ({ ...s, syncing: true, error: null }));
-    try {
-      const result = await collectBestProbe(providers);
-      if (!result) {
-        setState((s) => ({ ...s, syncing: false }));
-        return;
+  const resync = useCallback(
+    async (requestedProviders?: ProviderId[]) => {
+      const providers = requestedProviders
+        ? normalizeProviderIds(requestedProviders)
+        : providersRef.current;
+      if (providers.length === 0 || inFlight.current) return;
+      // Cooldown gate: enforce a hard minimum interval between attempts so no
+      // caller — background chime scheduler, visibility flapping, effect loop,
+      // or click-spam on the manual "Sync now" button — can hammer the
+      // network time services. Silent no-op; UI state stays untouched so a
+      // gated call doesn't flash "syncing…".
+      const sinceLast = Date.now() - lastAttemptAt.current;
+      if (sinceLast < MIN_RESYNC_INTERVAL_MS) return;
+      lastAttemptAt.current = Date.now();
+      inFlight.current = true;
+      setState((s) => ({ ...s, syncing: true, error: null }));
+      try {
+        const result = await collectBestProbe(providers);
+        if (!result) {
+          setState((s) => ({ ...s, syncing: false }));
+          return;
+        }
+        if ("failure" in result) {
+          handleSyncFailure(
+            new Error("No network time reference responded"),
+            result.failure.sources,
+          );
+          return;
+        }
+        setAuthoritativeOffset(result.best.offsetMs);
+        const recovered = syncFailed.current;
+        syncFailed.current = false;
+        setState(reduceBestSampleIntoState(result.best, result.lastResponse));
+        if (recovered) toast.success("Time sync restored");
+      } catch (err) {
+        handleSyncFailure(err);
+      } finally {
+        inFlight.current = false;
       }
-      if ("failure" in result) {
-        handleSyncFailure(
-          new Error("No network time reference responded"),
-          result.failure.sources,
-        );
-        return;
-      }
-      setAuthoritativeOffset(result.best.offsetMs);
-      const recovered = syncFailed.current;
-      syncFailed.current = false;
-      setState(reduceBestSampleIntoState(result.best, result.lastResponse));
-      if (recovered) toast.success("Time sync restored");
-    } catch (err) {
-      handleSyncFailure(err);
-    } finally {
-      inFlight.current = false;
-    }
-  }, [reduceBestSampleIntoState, handleSyncFailure]);
-
+    },
+    [reduceBestSampleIntoState, handleSyncFailure],
+  );
 
   const setProviders = useCallback((ids: ProviderId[]) => {
     const nextProviders = normalizeProviderIds(ids);

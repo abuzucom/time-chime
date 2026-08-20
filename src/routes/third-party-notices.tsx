@@ -215,9 +215,9 @@ function ThirdPartyNotices() {
         </p>
 
         <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-          Time Chime is built on the open-source ecosystem. The components below are bundled
-          with the App or contacted at runtime. Each is used under the licence indicated; the
-          full licence text ships with the corresponding package under{" "}
+          Time Chime is built on the open-source ecosystem. The components below are bundled with
+          the App or contacted at runtime. Each is used under the licence indicated; the full
+          licence text ships with the corresponding package under{" "}
           <code>node_modules/&lt;package&gt;/LICENSE</code> in the repository, and authoritative
           copies are available at the linked upstream projects.
         </p>

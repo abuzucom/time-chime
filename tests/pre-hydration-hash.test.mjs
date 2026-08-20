@@ -13,16 +13,11 @@ import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const source = readFileSync(
-  resolve(__dirname, "../src/lib/http/pre-hydration.ts"),
-  "utf8",
-);
+const source = readFileSync(resolve(__dirname, "../src/lib/http/pre-hydration.ts"), "utf8");
 
 function extract(name, src) {
   // Matches: export const NAME = `...`;   OR   export const NAME = "...";
-  const backtick = new RegExp(
-    `export const ${name} = \`([\\s\\S]*?)\`;`,
-  ).exec(src);
+  const backtick = new RegExp(`export const ${name} = \`([\\s\\S]*?)\`;`).exec(src);
   if (backtick) return backtick[1];
   const dquote = new RegExp(`export const ${name} = "([^"]*)";`).exec(src);
   if (dquote) return dquote[1];
@@ -33,9 +28,5 @@ test("PRE_HYDRATION_SCRIPT_SHA256 matches PRE_HYDRATION_SCRIPT bytes", () => {
   const script = extract("PRE_HYDRATION_SCRIPT", source);
   const declared = extract("PRE_HYDRATION_SCRIPT_SHA256", source);
   const actual = createHash("sha256").update(script).digest("base64");
-  assert.equal(
-    declared,
-    actual,
-    `Hash drift! Update PRE_HYDRATION_SCRIPT_SHA256 to "${actual}".`,
-  );
+  assert.equal(declared, actual, `Hash drift! Update PRE_HYDRATION_SCRIPT_SHA256 to "${actual}".`);
 });

@@ -44,11 +44,11 @@ function Privacy() {
         </p>
 
         <p className="mt-6 text-sm leading-relaxed text-muted-foreground">
-          This page is maintained by the Time Chime maintainers to describe how the App
-          (&ldquo;Time Chime&rdquo;) handles data. It is app-owned editable content, not
-          independent legal verification. Time Chime is a free, open-source clock and chime
-          application. If you deploy a fork commercially, you are responsible for tailoring this
-          policy to your jurisdiction and operational reality.
+          This page is maintained by the Time Chime maintainers to describe how the App (&ldquo;Time
+          Chime&rdquo;) handles data. It is app-owned editable content, not independent legal
+          verification. Time Chime is a free, open-source clock and chime application. If you deploy
+          a fork commercially, you are responsible for tailoring this policy to your jurisdiction
+          and operational reality.
         </p>
 
         <Section id="section-1" title="1. Summary">
@@ -57,19 +57,17 @@ function Privacy() {
             <li>No analytics, telemetry, advertising, or tracking pixels.</li>
             <li>All preferences and sync history live in your device&rsquo;s local storage.</li>
             <li>
-              Network requests during normal use are limited to loading the app bundle and
-              querying selected public HTTPS JSON time references.
+              Network requests during normal use are limited to loading the app bundle and querying
+              selected public HTTPS JSON time references.
             </li>
-            <li>
-              You can export or delete all local data at any time from the settings drawer.
-            </li>
+            <li>You can export or delete all local data at any time from the settings drawer.</li>
           </ul>
         </Section>
 
         <Section id="section-2" title="2. What we do not collect">
           <p>
-            The maintainers do not operate an account system, ad network, or analytics pipeline
-            for Time Chime. Specifically, the App does not collect:
+            The maintainers do not operate an account system, ad network, or analytics pipeline for
+            Time Chime. Specifically, the App does not collect:
           </p>
           <ul className="list-disc space-y-1 break-words pl-5 sm:pl-6">
             <li>Names, email addresses, phone numbers, or other contact identifiers.</li>
@@ -81,9 +79,8 @@ function Privacy() {
 
         <Section id="section-3" title="3. What is stored on your device">
           <p>
-            The App stores the following in your browser&rsquo;s <code>localStorage</code> (or
-            the equivalent app-container storage on iOS and Android). None of it leaves your
-            device:
+            The App stores the following in your browser&rsquo;s <code>localStorage</code> (or the
+            equivalent app-container storage on iOS and Android). None of it leaves your device:
           </p>
           <ul className="list-disc space-y-1 break-words pl-5 sm:pl-6">
             <li>
@@ -94,9 +91,7 @@ function Privacy() {
               A rolling local record of time-sync attempts (timestamp, provider, measured offset,
               round-trip time) used to display the drift indicator.
             </li>
-            <li>
-              Your consent choice for OS-level background notifications, if you granted it.
-            </li>
+            <li>Your consent choice for OS-level background notifications, if you granted it.</li>
           </ul>
           <p>
             You can review, export as JSON, or delete this data at any time from the{" "}
@@ -107,16 +102,11 @@ function Privacy() {
         <Section id="section-4" title="4. Network requests during use">
           <p>The App contacts the network only in narrow, documented cases:</p>
           <ul className="list-disc space-y-1 break-words pl-5 sm:pl-6">
+            <li>Loading the App bundle and static assets from the origin that served the page.</li>
             <li>
-              Loading the App bundle and static assets from the origin that served the page.
-            </li>
-            <li>
-            Querying the public HTTPS JSON time reference you selected in settings,
-              so the App can display authoritative time and drift. See{" "}
-              <Link
-                to="/sync-guide"
-                className="underline underline-offset-2 hover:text-foreground"
-              >
+              Querying the public HTTPS JSON time reference you selected in settings, so the App can
+              display authoritative time and drift. See{" "}
+              <Link to="/sync-guide" className="underline underline-offset-2 hover:text-foreground">
                 the sync guide
               </Link>{" "}
               for the provider list.
@@ -127,43 +117,41 @@ function Privacy() {
             </li>
           </ul>
           <p>
-            The maintainers do not log these requests. Third-party providers can see the IP
-            address and timing of your request under their own privacy policies &mdash; see
-            Section 6.
+            The maintainers do not log these requests. Third-party providers can see the IP address
+            and timing of your request under their own privacy policies &mdash; see Section 6.
           </p>
         </Section>
 
         <Section id="section-5" title="5. Background chimes & notifications">
           <p>
             If you enable background chimes, the App uses your operating system&rsquo;s local
-            notification / alarm scheduler to fire chimes when the App is not in the
-            foreground. Notification content is generated on-device from your local settings; no
-            push server is involved and no notification payload is sent over the network by the
-            maintainers.
+            notification / alarm scheduler to fire chimes when the App is not in the foreground.
+            Notification content is generated on-device from your local settings; no push server is
+            involved and no notification payload is sent over the network by the maintainers.
           </p>
           <p>
-            You can revoke the notification/alarm permission at any time from your OS settings,
-            or clear the in-app consent from <em>Settings &rarr; Privacy</em>.
+            You can revoke the notification/alarm permission at any time from your OS settings, or
+            clear the in-app consent from <em>Settings &rarr; Privacy</em>.
           </p>
         </Section>
 
         <Section id="section-6" title="6. Third-party time providers">
           <p>
-            When you use the time-sync feature, the App makes an HTTPS request directly from
-            your device to the provider you select (Time.now or Clock.now). Those providers may log connection metadata &mdash; typically IP address,
-            timestamp, and user agent &mdash; under their own privacy policies. The maintainers
-            do not receive, aggregate, or have visibility into those logs.
+            When you use the time-sync feature, the App makes an HTTPS request directly from your
+            device to the provider you select (Time.now or Clock.now). Those providers may log
+            connection metadata &mdash; typically IP address, timestamp, and user agent &mdash;
+            under their own privacy policies. The maintainers do not receive, aggregate, or have
+            visibility into those logs.
           </p>
           <p>
-            You can change your provider, restrict the App to a specific provider, or disable
-            time sync entirely from the settings drawer.
+            You can change your provider, restrict the App to a specific provider, or disable time
+            sync entirely from the settings drawer.
           </p>
         </Section>
         <Section id="section-7" title="7. Your rights (GDPR, CCPA, TDPSA and similar)">
           <p>
             Because the maintainers do not collect or store personal data server-side, most
-            statutory data-subject requests reduce to actions you can perform yourself in the
-            App:
+            statutory data-subject requests reduce to actions you can perform yourself in the App:
           </p>
           <ul className="list-disc space-y-1 break-words pl-5 sm:pl-6">
             <li>
@@ -171,48 +159,48 @@ function Privacy() {
               drawer to download a JSON copy of everything Time Chime stores about you locally.
             </li>
             <li>
-              <strong>Deletion</strong>: use <em>Delete all my data</em> in the settings drawer,
-              or clear site data from your browser / uninstall the app.
+              <strong>Deletion</strong>: use <em>Delete all my data</em> in the settings drawer, or
+              clear site data from your browser / uninstall the app.
             </li>
             <li>
               <strong>Correction / restriction / objection</strong>: adjust the corresponding
               preference in settings, or delete the data as above.
             </li>
             <li>
-              <strong>Do Not Sell / Share (CCPA), GPC, DNT</strong>: the App does not sell or
-              share personal information and honours Global Privacy Control and Do Not Track
-              signals by design.
+              <strong>Do Not Sell / Share (CCPA), GPC, DNT</strong>: the App does not sell or share
+              personal information and honours Global Privacy Control and Do Not Track signals by
+              design.
             </li>
           </ul>
           <p>
-            If you deploy a fork of Time Chime that collects additional data (for example, by
-            adding analytics or accounts), you are the controller for that data and must publish
-            your own privacy policy and rights-request contact.
+            If you deploy a fork of Time Chime that collects additional data (for example, by adding
+            analytics or accounts), you are the controller for that data and must publish your own
+            privacy policy and rights-request contact.
           </p>
         </Section>
 
         <Section id="section-8" title="8. Children">
           <p>
             Time Chime is a general-audience clock application and does not knowingly collect
-            information from anyone, including children. The App is suitable for use by minors
-            under adult supervision on the same terms as any other clock or utility app.
+            information from anyone, including children. The App is suitable for use by minors under
+            adult supervision on the same terms as any other clock or utility app.
           </p>
         </Section>
 
         <Section id="section-9" title="9. Security">
           <p>
-            The App is delivered over HTTPS with a strict Content Security Policy, HSTS, and
-            related headers. Because the App holds no server-side account or payload, there is
-            no server-side data breach surface controlled by the maintainers. For security
-            reports, see <code>SECURITY.md</code> in the public repository.
+            The App is delivered over HTTPS with a strict Content Security Policy, HSTS, and related
+            headers. Because the App holds no server-side account or payload, there is no
+            server-side data breach surface controlled by the maintainers. For security reports, see{" "}
+            <code>SECURITY.md</code> in the public repository.
           </p>
         </Section>
 
         <Section id="section-10" title="10. Changes to this policy">
           <p>
             This policy may be updated from time to time. Material changes will be reflected by
-            updating the effective date above. Continued use of the App after changes take
-            effect constitutes acceptance of the revised policy. See the{" "}
+            updating the effective date above. Continued use of the App after changes take effect
+            constitutes acceptance of the revised policy. See the{" "}
             <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
               Terms of Service
             </Link>{" "}
@@ -229,9 +217,9 @@ function Privacy() {
         </Section>
 
         <p className="mt-10 text-[11px] text-muted-foreground">
-          Nothing on this page is legal advice. This policy describes the upstream Time Chime
-          App as maintained by its authors; a fork or hosted deployment may behave differently
-          and is responsible for its own privacy disclosures.
+          Nothing on this page is legal advice. This policy describes the upstream Time Chime App as
+          maintained by its authors; a fork or hosted deployment may behave differently and is
+          responsible for its own privacy disclosures.
         </p>
 
         <div className="mt-6">
@@ -259,9 +247,7 @@ function Section({
   return (
     <section id={id} className="mt-8 scroll-mt-20">
       <h2 className="font-serif text-xl">{title}</h2>
-      <div className="mt-2 space-y-3 text-sm leading-relaxed text-muted-foreground">
-        {children}
-      </div>
+      <div className="mt-2 space-y-3 text-sm leading-relaxed text-muted-foreground">{children}</div>
     </section>
   );
 }

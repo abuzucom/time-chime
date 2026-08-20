@@ -75,7 +75,6 @@ export function DigitalUtcFace() {
     { cooldownMs: 4200 },
   );
 
-
   return (
     <div
       className={`flex h-full w-full flex-col items-center justify-center gap-4 text-center transition-opacity duration-150 ${flicker ? "animate-pulse" : ""}`}
@@ -100,24 +99,25 @@ export function DigitalUtcFace() {
         {formatNaturalLocalDate(now, localZone)}
       </div>
 
-      {utcExtras && (() => {
-        const extras: { label: string; value: string | number }[] = [
-          { label: "Unix time", value: Math.floor(now / 1000) },
-          { label: "Day of year", value: dayOfYear(nowDate) },
-          { label: "ISO week", value: isoWeek(nowDate) },
-          { label: "Julian date", value: julianDate(now).toFixed(6) },
-        ];
-        return (
-          <div className="grid grid-cols-2 gap-6 pt-2 text-xs font-mono text-muted-foreground sm:grid-cols-4">
-            {extras.map((x) => (
-              <div key={x.label}>
-                <div className="text-[10px] uppercase tracking-widest">{x.label}</div>
-                <div className="mt-1 text-base text-foreground">{x.value}</div>
-              </div>
-            ))}
-          </div>
-        );
-      })()}
+      {utcExtras &&
+        (() => {
+          const extras: { label: string; value: string | number }[] = [
+            { label: "Unix time", value: Math.floor(now / 1000) },
+            { label: "Day of year", value: dayOfYear(nowDate) },
+            { label: "ISO week", value: isoWeek(nowDate) },
+            { label: "Julian date", value: julianDate(now).toFixed(6) },
+          ];
+          return (
+            <div className="grid grid-cols-2 gap-6 pt-2 text-xs font-mono text-muted-foreground sm:grid-cols-4">
+              {extras.map((x) => (
+                <div key={x.label}>
+                  <div className="text-[10px] uppercase tracking-widest">{x.label}</div>
+                  <div className="mt-1 text-base text-foreground">{x.value}</div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
     </div>
   );
 }
