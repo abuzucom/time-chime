@@ -163,9 +163,8 @@ function Support() {
           </div>
           <h1 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">Support</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Something not working? Start with the troubleshooting shortcuts
-            below. If you're still stuck, the developers are one email or
-            issue away.
+            Something not working? Start with the troubleshooting shortcuts below. If you're still
+            stuck, the developers are one email or issue away.
           </p>
         </div>
 
@@ -191,9 +190,7 @@ function Support() {
                     </span>
                     <div className="min-w-0">
                       <div className="text-sm font-medium text-foreground">{t.title}</div>
-                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                        {t.body}
-                      </p>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{t.body}</p>
                     </div>
                   </div>
                   <div className="mt-3 sm:mt-0 sm:shrink-0">
@@ -242,9 +239,8 @@ function Support() {
             })}
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            There is no ticketing system and no live chat. Email is read by a
-            small team on best-effort basis; GitHub issues are the fastest
-            route for bugs.
+            There is no ticketing system and no live chat. Email is read by a small team on
+            best-effort basis; GitHub issues are the fastest route for bugs.
           </p>
         </section>
 
@@ -257,9 +253,8 @@ function Support() {
             Support the project
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Time Chime is free and always will be. If it's earned a spot on
-            your desk, you can send the developers a small thank-you — every
-            option is optional.
+            Time Chime is free and always will be. If it's earned a spot on your desk, you can send
+            the developers a small thank-you — every option is optional.
           </p>
           <div className="mt-3 space-y-2">
             {DONATE.map((p) => {
@@ -287,8 +282,8 @@ function Support() {
             })}
           </div>
           <p className="mt-3 text-[11px] text-muted-foreground">
-            Time Chime never processes payments itself. Donations are handled
-            by the linked platforms under their own terms.
+            Time Chime never processes payments itself. Donations are handled by the linked
+            platforms under their own terms.
           </p>
         </section>
       </main>

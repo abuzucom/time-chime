@@ -75,24 +75,24 @@ function SyncGuide() {
         Modern computers and phones usually rely on operating-system time services, vendor pools,
         local clocks, and unauthenticated NTP or SNTP exchanges. A Stratum-1 server is directly
         disciplined by a primary reference such as GNSS or a laboratory clock. NTS (Network Time
-        Security, RFC 8915) authenticates NTP exchanges and helps prevent on-path manipulation.
-        Time Chime's HTTPS JSON providers are convenient network references, not Stratum-1
-        authorities. Use the OS instructions below when you need authenticated system time.
+        Security, RFC 8915) authenticates NTP exchanges and helps prevent on-path manipulation. Time
+        Chime's HTTPS JSON providers are convenient network references, not Stratum-1 authorities.
+        Use the OS instructions below when you need authenticated system time.
       </p>
 
       {/* ---------------- Recommended anchors ---------------- */}
       <section className="mt-10">
-        <h2 className="font-serif text-2xl font-semibold text-foreground">
-          Recommended anchors
-        </h2>
+        <h2 className="font-serif text-2xl font-semibold text-foreground">Recommended anchors</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pick two or three from different operators. Diversity across
-          jurisdictions and networks protects you from a single misbehaving
-          source.
+          Pick two or three from different operators. Diversity across jurisdictions and networks
+          protects you from a single misbehaving source.
         </p>
         <ul className="mt-4 divide-y divide-border rounded-lg border border-border">
           {RECOMMENDED.map((r) => (
-            <li key={r.host} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <li
+              key={r.host}
+              className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
               <div>
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-foreground">{r.name}</span>
@@ -126,9 +126,8 @@ sudo systemsetup -setusingnetworktime on
 # Force an immediate sync
 sudo sntp -sS time.cloudflare.com`}</Code>
         <p className="mt-2 text-xs text-muted-foreground">
-          For authenticated NTS on macOS, install <code>chrony</code> via
-          Homebrew and disable <code>timed</code>. See the Linux section for a
-          chrony config that also applies to macOS.
+          For authenticated NTS on macOS, install <code>chrony</code> via Homebrew and disable{" "}
+          <code>timed</code>. See the Linux section for a chrony config that also applies to macOS.
         </p>
       </PlatformSection>
 
@@ -145,9 +144,8 @@ w32tm /resync /rediscover
 w32tm /query /status
 w32tm /query /peers`}</Code>
         <p className="mt-2 text-xs text-muted-foreground">
-          For NTS on Windows, run <code>chrony</code> or <code>ntpsec</code>{" "}
-          inside WSL2 and disable w32time, or use a hardware GNSS/PTP appliance
-          for regulated workloads.
+          For NTS on Windows, run <code>chrony</code> or <code>ntpsec</code> inside WSL2 and disable
+          w32time, or use a hardware GNSS/PTP appliance for regulated workloads.
         </p>
       </PlatformSection>
 
@@ -192,15 +190,16 @@ timedatectl timesync-status`}</Code>
         intro="Apple does not expose an NTP server setting on iOS. The system syncs to time.apple.com, which is a well-run stratum-1/2 anycast fleet — the practical remedy is to keep automatic time enabled and use this app as an additional network-reference cross-check in the UI."
       >
         <ul className="ml-5 list-disc space-y-1 text-sm text-muted-foreground">
-          <li>Settings → General → Date &amp; Time → <em>Set Automatically</em> = ON.</li>
           <li>
-            On managed devices, MDM can push a custom{" "}
-            <code>com.apple.MCX</code> NTP profile pointing at any host you
-            choose (e.g. <code>time.cloudflare.com</code>).
+            Settings → General → Date &amp; Time → <em>Set Automatically</em> = ON.
           </li>
           <li>
-            For sub-second accuracy on an untethered device, cross-check
-            against this app's drift indicator.
+            On managed devices, MDM can push a custom <code>com.apple.MCX</code> NTP profile
+            pointing at any host you choose (e.g. <code>time.cloudflare.com</code>).
+          </li>
+          <li>
+            For sub-second accuracy on an untethered device, cross-check against this app's drift
+            indicator.
           </li>
         </ul>
       </PlatformSection>
@@ -210,10 +209,12 @@ timedatectl timesync-status`}</Code>
         intro="Stock Android uses NITZ (from the carrier) and Google's NTP servers. There is no per-user server setting without root."
       >
         <ul className="ml-5 list-disc space-y-1 text-sm text-muted-foreground">
-          <li>Settings → System → Date &amp; time → <em>Set time automatically</em> = ON.</li>
           <li>
-            GrapheneOS, LineageOS, and CalyxOS expose an NTP server field —
-            set it to <code>time.cloudflare.com</code>.
+            Settings → System → Date &amp; time → <em>Set time automatically</em> = ON.
+          </li>
+          <li>
+            GrapheneOS, LineageOS, and CalyxOS expose an NTP server field — set it to{" "}
+            <code>time.cloudflare.com</code>.
           </li>
           <li>
             Rooted devices can override <code>ntp_server</code> via{" "}
@@ -226,10 +227,9 @@ timedatectl timesync-status`}</Code>
       <section className="mt-10">
         <h2 className="font-serif text-2xl font-semibold text-foreground">Verify the result</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Once configured, open the time-sync badge in the top corner of the
-          clock. A green pill under ±50 ms means your OS is now within a
-          hair's breadth of primary time. Anything red typically means the
-          service is disabled, firewalled (UDP/123 outbound blocked), or your
+          Once configured, open the time-sync badge in the top corner of the clock. A green pill
+          under ±50 ms means your OS is now within a hair's breadth of primary time. Anything red
+          typically means the service is disabled, firewalled (UDP/123 outbound blocked), or your
           upstream is still an ISP-provided pool server.
         </p>
         <div className="mt-4">
@@ -243,8 +243,8 @@ timedatectl timesync-status`}</Code>
       </section>
 
       <p className="mt-10 text-xs text-muted-foreground">
-        Nothing you configure here is transmitted to us. All commands run
-        locally on your machine and talk directly to the operator you choose.
+        Nothing you configure here is transmitted to us. All commands run locally on your machine
+        and talk directly to the operator you choose.
       </p>
     </div>
   );

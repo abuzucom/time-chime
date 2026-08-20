@@ -65,17 +65,18 @@ function coerceQueryBool(v: unknown, fallback: 0 | 1): 0 | 1 {
 
 export const Route = createFileRoute("/obs")({
   validateSearch: (raw: Record<string, unknown>): Search => {
-    const face = typeof raw.face === "string" && FACE_IDS.includes(raw.face as FaceId)
-      ? (raw.face as FaceId)
-      : undefined;
-    const theme = raw.theme === "light" || raw.theme === "grey" || raw.theme === "dark"
-      ? raw.theme
-      : undefined;
+    const face =
+      typeof raw.face === "string" && FACE_IDS.includes(raw.face as FaceId)
+        ? (raw.face as FaceId)
+        : undefined;
+    const theme =
+      raw.theme === "light" || raw.theme === "grey" || raw.theme === "dark" ? raw.theme : undefined;
     const size = raw.size !== undefined ? Number(raw.size) : undefined;
     const pad = raw.pad !== undefined ? Number(raw.pad) : undefined;
-    const numerals = typeof raw.numerals === "string" && NUMERAL_IDS.includes(raw.numerals as GrandfatherNumerals)
-      ? (raw.numerals as GrandfatherNumerals)
-      : undefined;
+    const numerals =
+      typeof raw.numerals === "string" && NUMERAL_IDS.includes(raw.numerals as GrandfatherNumerals)
+        ? (raw.numerals as GrandfatherNumerals)
+        : undefined;
     return {
       face,
       theme,
@@ -169,9 +170,14 @@ function ObsBrowserSource() {
     >
       <div style={faceStyle}>
         {face === "grandfather" && (search.numerals !== undefined || settings.ready) && (
-          <GrandfatherFace showSeconds={showSeconds} numerals={search.numerals ?? settings.grandfatherNumerals} />
+          <GrandfatherFace
+            showSeconds={showSeconds}
+            numerals={search.numerals ?? settings.grandfatherNumerals}
+          />
         )}
-        {face === "midcentury" && <MidCenturyFace showSeconds={showSeconds} numerals={settings.midcenturyNumerals} />}
+        {face === "midcentury" && (
+          <MidCenturyFace showSeconds={showSeconds} numerals={settings.midcenturyNumerals} />
+        )}
         {face === "digital-local" && <DigitalLocalFace />}
         {face === "digital-utc" && <DigitalUtcFace />}
       </div>

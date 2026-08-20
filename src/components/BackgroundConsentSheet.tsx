@@ -84,12 +84,13 @@ export function BackgroundConsentSheet() {
           <DialogDescription asChild>
             <div className="space-y-3 pt-2 text-sm text-muted-foreground">
               <p>
-                Time Chime can chime the quarters and toll the hour even when
-                the app isn't visible or your screen is off. This uses the
-                device's notification scheduler — nothing runs on our servers.
+                Time Chime can chime the quarters and toll the hour even when the app isn't visible
+                or your screen is off. This uses the device's notification scheduler — nothing runs
+                on our servers.
               </p>
               <p>
-                To do that, {platform === "ios" ? "iOS" : platform === "android" ? "Android" : "your browser"}{" "}
+                To do that,{" "}
+                {platform === "ios" ? "iOS" : platform === "android" ? "Android" : "your browser"}{" "}
                 needs to grant permission to post scheduled notifications
                 {platform === "android"
                   ? ", and — on Android 12 and newer — permission to schedule exact alarms."
@@ -124,7 +125,6 @@ export function BackgroundConsentSheet() {
             Allow background chimes
           </Button>
         </DialogFooter>
-
       </DialogContent>
     </Dialog>
   );

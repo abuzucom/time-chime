@@ -95,7 +95,6 @@ export function MidCenturyFace({ showSeconds = true, numerals = true }: Props) {
     { cooldownMs: 2500 },
   );
 
-
   return (
     <svg
       viewBox="-110 -110 220 220"

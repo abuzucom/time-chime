@@ -37,25 +37,19 @@ export const CLICKJACKING_FRAME_OPTIONS = "DENY";
  * a frame, which is enough surface for a UI-redress feint against error
  * pages if a caller loads `/api/...` directly in an iframe.
  */
-export const CLICKJACKING_JSON_CSP =
-  "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
+export const CLICKJACKING_JSON_CSP = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'";
 
 /**
  * Merge the two clickjacking headers into an existing header map without
  * clobbering values a caller already set (matches the setIfAbsent semantics
  * of `withSecurityHeaders`).
  */
-export function withClickjackingHeaders(
-  headers: Record<string, string>,
-): Record<string, string> {
+export function withClickjackingHeaders(headers: Record<string, string>): Record<string, string> {
   const out = { ...headers };
   if (!("X-Frame-Options" in out) && !("x-frame-options" in out)) {
     out["X-Frame-Options"] = CLICKJACKING_FRAME_OPTIONS;
   }
-  if (
-    !("Content-Security-Policy" in out) &&
-    !("content-security-policy" in out)
-  ) {
+  if (!("Content-Security-Policy" in out) && !("content-security-policy" in out)) {
     out["Content-Security-Policy"] = CLICKJACKING_JSON_CSP;
   }
   return out;

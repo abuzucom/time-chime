@@ -25,10 +25,7 @@ import {
   type ConsentController,
   type ConsentSnapshot,
 } from "@/lib/native/consent";
-import {
-  capacitorNotificationAdapter,
-  webNotificationAdapter,
-} from "@/lib/native/notifications";
+import { capacitorNotificationAdapter, webNotificationAdapter } from "@/lib/native/notifications";
 import { isNativePlatform } from "@/lib/native/platform";
 
 // Module-singleton controller. The consent machine is app-global — every

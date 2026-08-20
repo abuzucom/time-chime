@@ -52,11 +52,14 @@ export function isPlausibleProviderTimestamp(timestampMs: number, nowMs = Date.n
 }
 
 /** Select the preferred reference, then the successful lowest-RTT sample. */
-export function selectBestProvider<T extends {
-  id: ProviderId;
-  rttMs: number;
-}>(samples: T[]): T | null {
+export function selectBestProvider<
+  T extends {
+    id: ProviderId;
+    rttMs: number;
+  },
+>(samples: T[]): T | null {
   const preferred = samples.find((sample) => sample.id === "timeNow");
-  return preferred ??
-    (samples.length ? samples.reduce((a, b) => (a.rttMs <= b.rttMs ? a : b)) : null);
+  return (
+    preferred ?? (samples.length ? samples.reduce((a, b) => (a.rttMs <= b.rttMs ? a : b)) : null)
+  );
 }

@@ -262,10 +262,6 @@ function notePlayerForSoundSet(setId: SoundSetId): NotePlayer {
   return setId === "bell" ? playBellNote : setId === "train" ? playTrainNote : playMidiNote;
 }
 
-
-
-
-
 export type PlayOptions = {
   setId: SoundSetId;
   volume: number; // 0..1
@@ -331,7 +327,10 @@ export async function playPhrase(phrase: Phrase, opts: PlayOptions): Promise<boo
     // Safe scheduler: guarantees Web Audio only ever sees finite freq/when/dur.
     const scheduleNote = (freq: number, when: number, dur: number): void => {
       const safeFreq = Math.max(20, Math.min(20000, safeFinite(freq, 440)));
-      const safeWhen = Math.max(audioCtx.currentTime, safeFinite(when, audioCtx.currentTime + 0.05));
+      const safeWhen = Math.max(
+        audioCtx.currentTime,
+        safeFinite(when, audioCtx.currentTime + 0.05),
+      );
       const safeDur = Math.max(0.05, Math.min(30, safeFinite(dur, 0.5)));
       voice(audioCtx, bus, safeFreq, safeWhen, safeDur);
     };
