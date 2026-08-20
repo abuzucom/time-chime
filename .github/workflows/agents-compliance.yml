@@ -14,12 +14,24 @@ on:
     paths:
       - ".github/workflows/**"
       - "scripts/check-persist-credentials.mjs"
+      - "scripts/check-branch-name.mjs"
+      - "scripts/check-banned-agents.mjs"
+      - "hooks/**"
+      - ".claude/settings.json"
       - "tests/check-persist-credentials.test.mjs"
+      - "tests/check-banned-agents.test.mjs"
+      - "tests/enforce-branch-name.test.mjs"
   pull_request:
     paths:
       - ".github/workflows/**"
       - "scripts/check-persist-credentials.mjs"
+      - "scripts/check-branch-name.mjs"
+      - "scripts/check-banned-agents.mjs"
+      - "hooks/**"
+      - ".claude/settings.json"
       - "tests/check-persist-credentials.test.mjs"
+      - "tests/check-banned-agents.test.mjs"
+      - "tests/enforce-branch-name.test.mjs"
 
 permissions:
   contents: read
@@ -34,12 +46,33 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # fetch-depth: 0 so the banned-agents check can walk the base..head range.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Check persist-credentials on checkout steps
         run: node scripts/check-persist-credentials.mjs .github/workflows/*.yml
 
+      # Dependabot's branch and commit format is not configurable, so the
+      # naming convention does not apply to its pull requests.
+      - name: Check branch name
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.user.login != 'dependabot[bot]'
+        run: node scripts/check-branch-name.mjs
+
+      - name: Check banned-agent authorship
+        if: github.event_name == 'pull_request'
+        run: |
+          node scripts/check-banned-agents.mjs \
+            --base "origin/${{ github.event.pull_request.base.ref }}" \
+            --head "${{ github.event.pull_request.head.sha }}"
+
       - name: Run checker unit tests
-        run: node --test tests/check-persist-credentials.test.mjs
+        run: |
+          node --test \
+            tests/check-persist-credentials.test.mjs \
+            tests/check-banned-agents.test.mjs \
+            tests/enforce-branch-name.test.mjs
