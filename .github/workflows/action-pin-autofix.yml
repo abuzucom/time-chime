@@ -34,6 +34,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       BRANCH: automation/pin-github-actions
     steps:
+      # persist-credentials: true: this job pushes the fix branch (Rule 11 exception).
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Resolve and pin unpinned actions
