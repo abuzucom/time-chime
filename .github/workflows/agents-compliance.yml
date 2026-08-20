@@ -1,0 +1,45 @@
+name: Agents Compliance
+
+# Mechanical backing for the AGENTS.md rules that claim it. Rule 12 requires
+# that a rule never claim enforcement it lacks, so every checker referenced
+# from AGENTS.md runs here.
+#
+# Upstream abuzucom/agents ships a reusable `agents-compliance.yml`, but has
+# cut no release tag, and rule 9 forbids referencing a workflow at `@main`.
+# These checks are local ports of its scripts until a tag exists.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/**"
+      - "scripts/check-persist-credentials.mjs"
+      - "tests/check-persist-credentials.test.mjs"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "scripts/check-persist-credentials.mjs"
+      - "tests/check-persist-credentials.test.mjs"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agents-compliance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: AGENTS.md mechanical checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Check persist-credentials on checkout steps
+        run: node scripts/check-persist-credentials.mjs .github/workflows/*.yml
+
+      - name: Run checker unit tests
+        run: node --test tests/check-persist-credentials.test.mjs

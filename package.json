@@ -13,9 +13,11 @@
     "format": "prettier --write .",
     "check:headers": "node scripts/check-headers.mjs",
     "check:action-pins": "node scripts/check-action-pins.mjs",
+    "check:persist-credentials": "node scripts/check-persist-credentials.mjs .github/workflows/*.yml",
     "sync:agent-docs": "node scripts/sync-agent-docs.mjs",
     "check:agent-docs": "node scripts/sync-agent-docs.mjs --check",
     "test:headers": "node --test tests/check-headers.test.mjs",
+    "test:persist-credentials": "node --test tests/check-persist-credentials.test.mjs",
     "test:clickjacking": "node --test tests/clickjacking-defences.test.mjs",
     "test:error-page-clickjacking": "node --test tests/error-page-clickjacking.test.mjs",
     "test:csp-hash": "node --test tests/pre-hydration-hash.test.mjs",
@@ -25,7 +27,7 @@
     "fuzz:replay": "node --experimental-strip-types scripts/replay-fuzz-failure.mjs",
     "fuzz:report": "node --experimental-strip-types scripts/report-fuzz-failure.mjs",
     "test:security-headers-e2e": "node --test tests/security-headers-e2e.test.mjs",
-    "test": "npm run test:headers && npm run test:clickjacking && npm run test:error-page-clickjacking && npm run test:csp-hash && npm run test:consent && npm run test:https-guard-host && npm run test:https-guard-fuzz && npm run test:security-headers-e2e && npm run test:time-provider",
+    "test": "npm run test:headers && npm run test:clickjacking && npm run test:error-page-clickjacking && npm run test:csp-hash && npm run test:consent && npm run test:https-guard-host && npm run test:https-guard-fuzz && npm run test:security-headers-e2e && npm run test:time-provider && npm run test:persist-credentials",
     "test:time-provider": "node --experimental-strip-types src/lib/time/provider.test.ts"
   },
   "dependencies": {
