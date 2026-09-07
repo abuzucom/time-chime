@@ -47,7 +47,9 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   const body = await response.clone().text();
   if (!isH3SwallowedErrorBody(body)) return response;
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${sanitizeForLog(body)}`));
+  console.error(
+    consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${sanitizeForLog(body)}`),
+  );
   return buildErrorResponse();
 }
 
@@ -68,7 +70,6 @@ function sanitizeForLog(value: string, maxLen = 500): string {
   const stripped = value.replace(/[\r\n\t\u2028\u2029]+/g, " ");
   return stripped.length > maxLen ? `${stripped.slice(0, maxLen)}…[truncated]` : stripped;
 }
-
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {

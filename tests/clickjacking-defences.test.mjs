@@ -106,14 +106,8 @@ test("sanity: at least the known HTML routes are discovered", () => {
     HTML_ROUTES.length >= 4,
     `expected >=4 HTML route files, found ${HTML_ROUTES.length}: ${HTML_ROUTES.join(", ")}`,
   );
-  for (const required of [
-    "src/routes/__root.tsx",
-    "src/routes/index.tsx",
-  ]) {
-    assert.ok(
-      HTML_ROUTES.includes(required),
-      `expected ${required} in the route enumeration`,
-    );
+  for (const required of ["src/routes/__root.tsx", "src/routes/index.tsx"]) {
+    assert.ok(HTML_ROUTES.includes(required), `expected ${required} in the route enumeration`);
   }
 });
 
@@ -164,9 +158,7 @@ test("public/_headers sets X-Frame-Options: DENY on /* (all routes)", () => {
   const groups = parseHeadersFile(headersFile);
   const globalGroup = groups.find((g) => g.pattern === "/*");
   assert.ok(globalGroup, "public/_headers must define a /* group");
-  const xfo = globalGroup.headers.find(
-    (h) => h.name.toLowerCase() === "x-frame-options",
-  );
+  const xfo = globalGroup.headers.find((h) => h.name.toLowerCase() === "x-frame-options");
   assert.ok(xfo, "X-Frame-Options missing from /* group in public/_headers");
   assert.equal(
     xfo.value.trim().toUpperCase(),
@@ -179,10 +171,7 @@ test("security-headers middleware stamps X-Frame-Options: DENY", () => {
   // Static-check the middleware source: the Worker SSR path does NOT go
   // through public/_headers, so this assertion is the ONLY guarantee for
   // server-function and SSR responses.
-  const src = readFileSync(
-    resolve(repoRoot, "src/lib/http/security-headers.ts"),
-    "utf8",
-  );
+  const src = readFileSync(resolve(repoRoot, "src/lib/http/security-headers.ts"), "utf8");
   assert.match(
     src,
     /["']X-Frame-Options["']\s*,\s*["']DENY["']/i,
@@ -270,9 +259,7 @@ test("src/server.ts wraps every 500 response with withSecurityHeaders()", () => 
   // Every place we construct a Response with renderErrorPage() must go
   // through the wrapper. Grep for direct `new Response(renderErrorPage(...)`
   // that isn't inside a withSecurityHeaders(...) call.
-  const unwrapped = src.match(
-    /(?<!withSecurityHeaders\(\s*)new Response\(\s*renderErrorPage\(/g,
-  );
+  const unwrapped = src.match(/(?<!withSecurityHeaders\(\s*)new Response\(\s*renderErrorPage\(/g);
   assert.equal(
     unwrapped,
     null,
@@ -287,11 +274,7 @@ test("renderErrorPage() does not weaken frame-ancestors in its inline <head>", (
   // Two acceptable states: (1) no CSP meta at all (response header wins),
   // (2) a CSP meta that keeps frame-ancestors 'none'.
   const weakened = src.match(/frame-ancestors\s+(?!'none')/i);
-  assert.equal(
-    weakened,
-    null,
-    `src/lib/error-page.ts weakens frame-ancestors: "${weakened?.[0]}"`,
-  );
+  assert.equal(weakened, null, `src/lib/error-page.ts weakens frame-ancestors: "${weakened?.[0]}"`);
 });
 
 // ---------------------------------------------------------------------------
@@ -315,10 +298,7 @@ test("renderErrorPage() does not weaken frame-ancestors in its inline <head>", (
 // public API route(s) use it too.
 
 test("clickjacking helper defines DENY + frame-ancestors 'none' and preserves caller values", () => {
-  const src = readFileSync(
-    resolve(repoRoot, "src/lib/http/clickjacking.ts"),
-    "utf8",
-  );
+  const src = readFileSync(resolve(repoRoot, "src/lib/http/clickjacking.ts"), "utf8");
   // Contract 1: exported constants carry the exact values used elsewhere.
   assert.match(
     src,
@@ -350,10 +330,7 @@ test("clickjacking helper defines DENY + frame-ancestors 'none' and preserves ca
 });
 
 test("jsonErrorResponse stamps clickjacking defences on every envelope", () => {
-  const src = readFileSync(
-    resolve(repoRoot, "src/lib/http/json-error.ts"),
-    "utf8",
-  );
+  const src = readFileSync(resolve(repoRoot, "src/lib/http/json-error.ts"), "utf8");
   assert.match(
     src,
     /from\s+["']\.\/clickjacking["']/,
@@ -385,8 +362,7 @@ test("public API routes stamp clickjacking defences on non-HTML responses", () =
     // withClickjackingHeaders / jsonErrorResponse, or explicitly sets both
     // X-Frame-Options and frame-ancestors on every response it constructs.
     const usesHelper =
-      /withClickjackingHeaders\s*\(/.test(src) ||
-      /jsonErrorResponse\s*\(/.test(src);
+      /withClickjackingHeaders\s*\(/.test(src) || /jsonErrorResponse\s*\(/.test(src);
     if (usesHelper) continue;
 
     const setsXfo = /["']X-Frame-Options["']\s*[,:]\s*["']DENY["']/i.test(src);
@@ -397,4 +373,3 @@ test("public API routes stamp clickjacking defences on non-HTML responses", () =
     );
   }
 });
-
