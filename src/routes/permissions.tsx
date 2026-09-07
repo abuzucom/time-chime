@@ -69,8 +69,7 @@ function PermissionsPage() {
       });
     } else if (result.state === "denied_by_os") {
       toast.error("Permission denied by the OS", {
-        description:
-          "Open System Settings to allow notifications for Time Chime.",
+        description: "Open System Settings to allow notifications for Time Chime.",
       });
     } else if (result.state === "unavailable") {
       toast.error("Notifications aren't available on this device.");
@@ -88,17 +87,14 @@ function PermissionsPage() {
   async function handleOpenSettings() {
     if (!native) {
       toast("Open your browser's site settings", {
-        description:
-          "Look for Notifications under this site's permissions in your browser.",
+        description: "Look for Notifications under this site's permissions in your browser.",
       });
       return;
     }
     // Delegates to capacitor-native-settings via the adapter used by the
     // consent controller; we import here to avoid coupling the page to the
     // notifications module surface.
-    const { capacitorNotificationAdapter } = await import(
-      "@/lib/native/notifications"
-    );
+    const { capacitorNotificationAdapter } = await import("@/lib/native/notifications");
     await capacitorNotificationAdapter.openSystemSettings();
   }
 
@@ -131,10 +127,9 @@ function PermissionsPage() {
             Let the chimes ring in the background
           </h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Time Chime asks for one permission — local notifications — and
-            uses it to schedule the chime for the next few quarters. The OS
-            plays the sound at the exact moment, even when the app is
-            closed. Nothing about your schedule leaves your device.
+            Time Chime asks for one permission — local notifications — and uses it to schedule the
+            chime for the next few quarters. The OS plays the sound at the exact moment, even when
+            the app is closed. Nothing about your schedule leaves your device.
           </p>
         </div>
 
@@ -144,7 +139,9 @@ function PermissionsPage() {
           className={`mt-8 rounded-xl border p-5 ${status.container}`}
         >
           <div className="flex items-start gap-3">
-            <span className={`mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full ${status.iconWrap}`}>
+            <span
+              className={`mt-0.5 inline-flex size-8 shrink-0 items-center justify-center rounded-full ${status.iconWrap}`}
+            >
               <status.Icon className="size-4" />
             </span>
             <div className="min-w-0">
@@ -156,15 +153,12 @@ function PermissionsPage() {
                 Platform: <span className="font-mono">{platform}</span>
                 {snapshot.lastOsPermission ? (
                   <>
-                    {" "}· OS answer:{" "}
-                    <span className="font-mono">{snapshot.lastOsPermission}</span>
+                    {" "}
+                    · OS answer: <span className="font-mono">{snapshot.lastOsPermission}</span>
                   </>
                 ) : null}
                 {snapshot.updatedAt ? (
-                  <>
-                    {" "}· Updated{" "}
-                    {new Date(snapshot.updatedAt).toLocaleString()}
-                  </>
+                  <> · Updated {new Date(snapshot.updatedAt).toLocaleString()}</>
                 ) : null}
               </p>
             </div>
@@ -176,11 +170,7 @@ function PermissionsPage() {
               snapshot.state === "asking") && (
               <>
                 <Button onClick={handleGrant} disabled={snapshot.state === "asking"}>
-                  {snapshot.state === "asking" ? (
-                    <Loader2 className="animate-spin" />
-                  ) : (
-                    <Bell />
-                  )}
+                  {snapshot.state === "asking" ? <Loader2 className="animate-spin" /> : <Bell />}
                   Enable background chimes
                 </Button>
                 <Button variant="outline" onClick={handleDecline}>
@@ -290,9 +280,9 @@ function PermissionsPage() {
         </section>
 
         <p className="mt-8 text-center text-[11px] text-muted-foreground">
-          The notification permission grants Time Chime nothing beyond the
-          ability to post local notifications. No location, contacts,
-          microphone, or network access is enabled by allowing this.
+          The notification permission grants Time Chime nothing beyond the ability to post local
+          notifications. No location, contacts, microphone, or network access is enabled by allowing
+          this.
         </p>
       </main>
     </div>

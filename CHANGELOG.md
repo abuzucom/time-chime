@@ -5,6 +5,40 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.2] - 2026-08-20
+
+### Changed
+
+- Applied Prettier to every file ESLint checks (`**/*.{ts,tsx}`,
+  `scripts/**/*.mjs`, `tests/**/*.mjs`, `hooks/**/*.mjs`), clearing 443
+  `prettier/prettier` errors that had accumulated on `main`. Formatting only; no
+  behavior change, and the test results are identical before and after.
+- Scoped deliberately to the files ESLint lints rather than running
+  `bun run format` (`prettier --write .`) across the repo. Prettier's Markdown
+  reflow strips the hanging indents inside `AGENTS.md` list items, and it
+  reformats `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, and `CONVENTIONS.md` while
+  leaving `.cursorrules`, `.clinerules`, and `.windsurfrules` untouched, which
+  breaks the byte-identical invariant `scripts/sync-agent-docs.mjs` enforces.
+  Markdown is not linted by ESLint, so reformatting it would not have cleared a
+  single error.
+
+## [0.5.1] - 2026-08-20
+
+### Fixed
+
+- Pinned Nitro's `compatibilityDate` to `2026-08-20` in `vite.config.ts`. Nitro
+  defaults it to the build date, so `dist/server/wrangler.json` asked the Worker
+  runtime for a date only the very newest wrangler binary could serve. The
+  "Validate response headers" CI job broke the moment its pinned wrangler fell
+  behind that moving date. The last green run was 2026-07-13; every run from
+  2026-07-16 onward failed, because that binary served no date later than
+  2026-07-15. Builds are now reproducible, and the date moves only when someone
+  changes it.
+- Bumped the wrangler pin in `.github/workflows/security-headers.yml` from
+  `4.110.0` to `4.124.0`, whose runtime serves the pinned date. Verified
+  locally: `4.110.0` reproduces the failure, `4.124.0` starts and passes all 14
+  header assertions and all 200 per-route assertions.
+
 ## [0.5.0] - 2026-08-20
 
 ### Added

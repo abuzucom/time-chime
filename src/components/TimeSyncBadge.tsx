@@ -29,12 +29,11 @@ export function TimeSyncBadge() {
   const hasReference =
     sync.lastSyncAt !== null && !sync.error && sync.sources.some((source) => source.ok);
   const severity = hasReference ? driftSeverity(sync.offsetMs) : "warn";
-  const label =
-    sync.syncing
-      ? "Syncing…"
-      : hasReference
-        ? `Device clock ${formatOffset(sync.offsetMs)}`
-        : "Time sync unavailable";
+  const label = sync.syncing
+    ? "Syncing…"
+    : hasReference
+      ? `Device clock ${formatOffset(sync.offsetMs)}`
+      : "Time sync unavailable";
 
   return (
     <Dialog>
@@ -104,7 +103,10 @@ function DriftPanelBody({ now }: { now: number }) {
               : "device clock is ahead of reference"
             : "No current network reference is available"}
           {hasReference && (
-            <>{" · uncertainty ± "}{Math.round(sync.rttMs / 2)} ms</>
+            <>
+              {" · uncertainty ± "}
+              {Math.round(sync.rttMs / 2)} ms
+            </>
           )}
         </div>
       </div>
@@ -169,7 +171,8 @@ function DriftPanelBody({ now }: { now: number }) {
 
       <div className="rounded-md border border-dashed border-border/70 bg-muted/30 p-3 text-xs text-muted-foreground">
         Your device clock is set by your operating system, not by this app. To make the OS itself
-        sync against authenticated NTP/NTS sources instead of relying only on default device handling,{" "}
+        sync against authenticated NTP/NTS sources instead of relying only on default device
+        handling,{" "}
         <Link
           to="/sync-guide"
           className="font-medium text-foreground underline underline-offset-2 hover:text-primary"
