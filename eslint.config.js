@@ -138,7 +138,7 @@ export default tseslint.config(
     // need type-aware linting (magic-numbers here is the base ESLint rule,
     // not @typescript-eslint's, since these files aren't part of the
     // TypeScript project).
-    files: ["scripts/**/*.mjs", "tests/**/*.mjs"],
+    files: ["scripts/**/*.mjs", "tests/**/*.mjs", "hooks/**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",

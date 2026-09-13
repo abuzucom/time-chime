@@ -5,6 +5,53 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-08-20
+
+### Added
+
+- `scripts/check-persist-credentials.mjs` (`bun run check:persist-credentials`),
+  a Node port of `abuzucom/agents` `check_persist_credentials.py`, enforcing new
+  rule 11: an `actions/checkout` step must set `persist-credentials: false`
+  unless the job needs the credential afterward.
+- `scripts/check-branch-name.mjs` (`bun run check:branch-name`), enforcing the
+  `<type>/<kebab-description>` branch convention and the new `claude/` ban.
+- `scripts/check-banned-agents.mjs` (`bun run check:banned-agents`), matching
+  commit author, committer, and `Co-authored-by` trailers, plus the pull request
+  author login, against the Banned agents denylist. This replaces an unbacked
+  claim: `AGENTS.md` previously said the section was enforced in CI when no such
+  check existed.
+- `hooks/enforce-branch-name.mjs` and `.claude/settings.json`, wiring the branch
+  check into Claude Code. `SessionStart` injects a stop-and-rename instruction;
+  `PreToolUse` exits 2 on `git commit` or `git push` from a non-conforming
+  branch. The split exists because Claude Code ignores a non-zero `SessionStart`
+  exit. `git branch -m` is never blocked.
+- `.github/workflows/agents-compliance.yml`, running all three checkers and
+  their unit tests on every pull request. Upstream's reusable workflow is not
+  referenced because upstream has cut no release tag, and rule 9 forbids
+  `@main`.
+- 42 unit tests across `tests/check-persist-credentials.test.mjs`,
+  `tests/check-banned-agents.test.mjs`, and `tests/enforce-branch-name.test.mjs`,
+  the last including a group asserting `.claude/settings.json` still registers
+  the hook for both events. No new dependency; all use `node --test`.
+
+### Changed
+
+- Synced `AGENTS.md` (and its six fanned-out copies) with `abuzucom/agents`
+  1.11.0. Added critical rule 10 (verify state before assuming workflow intent),
+  rule 11 (no persisted git credentials in CI), and rule 12 (back enforcement
+  claims with real checks). Extended rule 9 to cover pinning reusable workflows
+  referenced with `uses:`. Upstream's rule 12, non-root containers, is pruned:
+  this repo ships no Dockerfile, compose file, or Kubernetes manifest, so
+  upstream rule 13 is local rule 12.
+- Branch naming conventions now ban the `claude/` prefix, state that a
+  harness-assigned or dispatcher-assigned name is not an exception and gets
+  renamed before the first commit, and exempt Dependabot.
+- Set `persist-credentials: false` on six `actions/checkout` steps.
+  `zap-baseline.yml` and `action-pin-autofix.yml` both push, so they carry the
+  rule 11 exception comment instead.
+- `eslint.config.js` now lints `hooks/**/*.mjs` under the same rules already
+  applied to `scripts/` and `tests/` Node ESM files.
+
 ## [0.4.2] - 2026-07-16
 
 ### Changed
