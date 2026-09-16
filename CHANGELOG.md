@@ -4,8 +4,70 @@ All notable changes to this project are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+Headings parenthesize the release date. The house style bans the spaced hyphen.
 
-## [0.5.0] - 2026-08-20
+## [0.6.0] (2026-09-16)
+
+### Added
+
+- Vendored `abuzucom/agents` 2.0.30 (upstream commit
+  d48643773171004ae36dfbed077ee1850a8e2016) as a whole gate ecosystem:
+  Python hooks under `hooks/` (destructive-command gates for Bash,
+  PowerShell, and CMD, test-consent, branch and identity enforcement,
+  lifecycle policy re-injection, infrastructure file gate), Python checkers
+  under `scripts/` (sync, gate adoption, changelog, policy size, prose
+  policy, external PR references, conflict markers, compliance tree, hook
+  coverage, `read_git_state.py`, `trusted_gh.py`, `trusted_git.py`), the
+  `tests/` Python suite, `docs/agent-policy/` supporting documents,
+  `shared-files.json` manifest, `Makefile`, `requirements-checkers.txt`,
+  `.pre-commit-config.yaml`, `CONTRIBUTING.md.example`, and
+  `SECURITY.md.example`.
+- `.claude/settings.json`, `.codex/`, `.gemini/`, and `.agents/`
+  registrations for the gate hooks.
+- `.github/workflows/sync-check.yml`, `agents-compliance.yml`,
+  `agents-md-compliance.yml`, and `immutable-conflict-check.yml` vendored
+  from upstream. The last is a `pull_request_target` workflow whose sole job
+  runs an immutable compliance scan with a read-only token.
+- `scripts/trusted-gh.mjs` (`node scripts/trusted-gh.mjs run <gh
+arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
+  the repository, verifies the authenticated account, injects validated
+  `--repo` and `--head` targets, enforces the shared denylist, and denies
+  unsafe `gh api` methods. Gated shell hooks recognize only the Python
+  wrapper; the Node port covers contexts without Python.
+  `tests/trusted-gh.test.mjs` supplies 28 behavioral tests.
+- `.gitattributes` for the policy LF rule, `.editorconfig`,
+  `docs/gate-threat-model.md`, `docs/template-drift.md`, `DRIFT.md`, GitHub
+  issue and pull request templates, `plan/HANDOFF.md.example`, and
+  `tools/hook-trace/`.
+- New rules and sections: git identity verification, external-repository
+  consent, whole-gate adoption, Git Credential Manager and browser token
+  bans, Authorization and Precedence sections, lifecycle re-adoption, strict
+  branch preflight, LF/UTF-8 policy, controlled vocabulary, the `ci` commit
+  type, and parenthesized CHANGELOG dates.
+- `bun run check:gate-adoption`, `bun run check:shared`, and
+  `bun run test:policy` scripts.
+
+### Changed
+
+- `AGENTS.md` rewritten to upstream 2.0.30, keeping repository-local
+  sections (Commands, Architecture, Do not touch, Gotchas, Read before
+  touching, Version and theme checklist). Upstream rule 12 (non-root
+  containers) stays pruned with the renumbering recorded in rule 12;
+  upstream rules 13 through 20 map to local rules 12 through 19.
+- Rule 15 scoped for this repository: non-destructive `wrangler` operations
+  stay prompt-free; destructive Cloudflare state changes require consent.
+  Detail lives in `docs/agent-policy/security.md`.
+- `scripts/check-persist-credentials.mjs`, `check-branch-name.mjs`,
+  `check-banned-agents.mjs`, `sync-agent-docs.mjs`,
+  `hooks/enforce-branch-name.mjs`, and their tests removed. Vendored Python
+  equivalents replace them. Local `agent-docs-sync.yml` removed; the
+  vendored `sync-check.yml` covers copy verification.
+- `package.json` scripts re-pointed to the Python checkers. CHANGELOG
+  headings switched to the parenthesized date form for every historical
+  entry.
+- README documents the Python 3 prerequisite for policy tooling.
+
+## [0.5.0] (2026-08-20)
 
 ### Added
 
@@ -52,20 +114,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `eslint.config.js` now lints `hooks/**/*.mjs` under the same rules already
   applied to `scripts/` and `tests/` Node ESM files.
 
-## [0.4.2] - 2026-07-16
+## [0.4.2] (2026-07-16)
 
 ### Changed
 
 - Synced `AGENTS.md` (and its fanned-out copies) with the `abuzucom/agents` 1.1.0 upstream conventions, adapted to this repo's TypeScript/ESLint idioms: added a "No suppressing checks" workflow rule (no `eslint-disable`/`@ts-ignore`/`@ts-expect-error` or CI weakening), added a "History safety" rule against rewriting pushed history without consent, merged the run-on-sentence prohibition into the em/en-dash style rule, renamed "No extended ASCII" to "No non-ASCII characters" with tightened wording, and expanded the incomplete-work-marker rule beyond TODO/FIXME to XXX, HACK, stubs, and bare placeholders.
 - Extended the `no-warning-comments` ESLint rule terms to `xxx` and `hack` (alongside `todo`/`fixme`) to back the expanded incomplete-work-marker convention. No new dependency.
 
-## [0.4.1] - 2026-07-13
+## [0.4.1] (2026-07-13)
 
 ### Changed
 
 - `security-headers.yml` now always prints the local `wrangler dev` server's own log (including any unhandled SSR exception stack trace) as a collapsed CI group, so an intermittent 500 on the header-check probes surfaces the actual error instead of just "HTTP 500". Diagnostic only; does not change app behavior or the check's pass/fail outcome.
 
-## [0.4.0] - 2026-07-13
+## [0.4.0] (2026-07-13)
 
 ### Added
 
@@ -76,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pinned every remaining mutable-tag `uses:` reference across `.github/workflows/*.yml` (13 lines, 6 workflows) to a commit SHA with a version comment, matching the convention already used for `zaproxy/action-baseline` and `oven-sh/setup-bun`. Includes adopting `actions/checkout` v7.0.0 and `actions/github-script` v9.0.0 (superseding PRs #2 and #3).
 
-## [0.3.3] - 2026-07-12
+## [0.3.3] (2026-07-12)
 
 ### Changed
 
@@ -84,7 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Defaulted saved provider state to the remaining providers when obsolete IDs are filtered out.
 - Updated the provider tests and user-facing copy to reflect the narrower network-time set.
 
-## [0.3.2] - 2026-07-12
+## [0.3.2] (2026-07-12)
 
 ### Fixed
 
@@ -93,14 +155,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow fixed HTTPS providers to follow redirects and accept valid JSON responses without a content-type gate.
 - Keep drift status neutral when no network reference is available.
 
-## [0.3.1] - 2026-07-12
+## [0.3.1] (2026-07-12)
 
 ### Fixed
 
 - Hardened provider selection against stale persisted IDs and update races.
 - Synced immediately against the newly selected provider list.
 
-## [0.3.0] - 2026-07-12
+## [0.3.0] (2026-07-12)
 
 ### Changed
 
@@ -108,7 +170,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed Stratum-1, NTS, and provider-provenance claims from the application UI.
 - Added educational guidance about authoritative Stratum-1 timekeeping and NTS.
 
-## [0.2.6] - 2026-07-12
+## [0.2.6] (2026-07-12)
 
 ### Changed
 
@@ -118,7 +180,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Styled the Support the developers link consistently with the FAQ link.
 - Added explicit agent guidance for SemVer and theme-aware UI changes.
 
-## [0.2.5] - 2026-07-12
+## [0.2.5] (2026-07-12)
 
 ### Changed
 
@@ -128,7 +190,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   beyond the version-string echo in the workspace declaration - no
   package's resolved version shifted.
 
-## [0.2.4] - 2026-07-12
+## [0.2.4] (2026-07-12)
 
 ### Fixed
 
@@ -145,7 +207,7 @@ Retrospective `AGENTS.md` conformance pass, part 3 of 3:
   matching `.claudeignore`'s existing convention (defense in depth; no
   `.env` file is tracked).
 
-## [0.2.3] - 2026-07-12
+## [0.2.3] (2026-07-12)
 
 ### Fixed
 
@@ -156,7 +218,7 @@ Retrospective `AGENTS.md` conformance pass, part 2 of 3:
   `scripts/report-fuzz-failure.mjs` into a shared
   `scripts/lib/verify-https-redirect.mjs` module.
 
-## [0.2.2] - 2026-07-12
+## [0.2.2] (2026-07-12)
 
 ### Fixed
 
@@ -172,7 +234,7 @@ parallel codebase reviews; full findings in the originating PR's description):
   and `scripts/update-zap-report.mjs` (the last one surfaced by the new
   `.mjs` lint coverage above).
 
-## [0.2.1] - 2026-07-12
+## [0.2.1] (2026-07-12)
 
 ### Fixed
 
@@ -188,14 +250,14 @@ parallel codebase reviews; full findings in the originating PR's description):
 - `b40fcc0` Removed all remaining Lovable scaffold traces (`.lovable/`,
   doc mentions, code comments) with no functional behavior change.
 
-## [0.2.0] - 2026-07-11
+## [0.2.0] (2026-07-11)
 
 ### Added
 
 - Version marker in the Settings drawer, reading `package.json`'s `version`
   via a Vite build-time define (`__APP_VERSION__`).
 
-## [0.1.0] - 2026-07-11
+## [0.1.0] (2026-07-11)
 
 Baseline release: retroactively covers every commit on `main` up to and
 including this entry, newest first.
