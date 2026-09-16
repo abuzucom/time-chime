@@ -56,6 +56,21 @@ class ChangelogCheckerTest(unittest.TestCase):
             base, head, ["README.md", "CHANGELOG.md"])
         self.assertEqual(findings, [])
 
+    def test_range_accepts_legacy_base_headings(self):
+        base = "## [0.5.0] - 2026-08-20\n\n### Added\n- Old.\n"
+        head = (
+            "## [0.6.0] (2026-09-16)\n\n### Added\n- New.\n\n"
+            "## [0.5.0] (2026-08-20)\n\n### Added\n- Old.\n"
+        )
+        findings = checker.find_range_violations(
+            base, head, ["README.md", "CHANGELOG.md"])
+        self.assertEqual(findings, [])
+
+    def test_current_file_still_requires_parenthesized_headings(self):
+        text = "# Changelog\n\n## [0.5.0] - 2026-08-20\n\n### Added\n- Old.\n"
+        findings = checker.find_violations(text)
+        self.assertTrue(findings)
+
     def test_revision_arguments_reject_options(self):
         self.assertFalse(checker.valid_revision("-s:CHANGELOG.md"))
         self.assertTrue(checker.valid_revision("HEAD~1"))

@@ -36,3 +36,9 @@ This file holds the adopting-repository side for `time-chime`.
 6. CI workflows are expected to differ. The vendored `sync-check.yml`,
    `agents-compliance.yml`, `agents-md-compliance.yml`, and
    `immutable-conflict-check.yml` sit beside repository workflows.
+
+7. `scripts/check_changelog.py` accepts the legacy spaced-hyphen heading
+   form during range-check version extraction. This repository migrated its
+   CHANGELOG headings to the parenthesized form in 0.6.0, and range checks
+   compare across the migration. Current-file validation still requires the
+   parenthesized form. Candidate for upstreaming.

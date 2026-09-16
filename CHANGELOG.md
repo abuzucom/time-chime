@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.6.2] (2026-09-16)
+
+### Fixed
+
+- `scripts/check_changelog.py` accepts the legacy spaced-hyphen heading form
+  during range-check version extraction. The 0.6.0 heading migration left
+  base revisions unparseable, so every pull request failed the version
+  advance check. Current-file validation still requires the parenthesized
+  form. Recorded in `docs/template-drift.md`.
+- `security-headers.yml` resolves and caches wrangler outside the server
+  startup window and extends the wait loop to 60 seconds. Cold CI runners
+  exhausted the 20-second loop on bunx downloads; the check had been red on
+  `main` since 2026-07-16.
+
 ## [0.6.1] (2026-09-16)
 
 ### Fixed
