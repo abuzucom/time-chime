@@ -34,7 +34,6 @@ import {
 export { PROVIDER_CATALOG, PROVIDER_IDS };
 export type { ProviderId };
 
-
 const inputSchema = z.object({
   providers: z
     .array(z.enum(PROVIDER_IDS as [ProviderId, ...ProviderId[]]))

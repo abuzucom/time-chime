@@ -111,7 +111,9 @@ function detectClientScheme(request: Request): Scheme | null {
   if (cfVisitor) {
     try {
       const parsed = JSON.parse(cfVisitor) as { scheme?: unknown };
-      const scheme = asScheme(typeof parsed.scheme === "string" ? parsed.scheme.toLowerCase() : null);
+      const scheme = asScheme(
+        typeof parsed.scheme === "string" ? parsed.scheme.toLowerCase() : null,
+      );
       if (scheme) return scheme;
     } catch {
       // Ignore malformed CF-Visitor payloads; fall through to unknown.
@@ -154,8 +156,11 @@ export function isSafeHost(host: string | null | undefined): host is string {
   // 2. CRLF / NUL / any C0 / DEL / tab / raw whitespace. A single \r or \n
   //    is the entire header-injection primitive — reject on sight, before
   //    any parser gets a chance to normalise it away.
-  //    (\u0000-\u001f covers CR, LF, TAB, VT, FF, NUL, etc.)
-  if (/[\u0000-\u001f\u007f ]/.test(host)) return false;
+  //    (0x00-0x1f covers CR, LF, TAB, VT, FF, NUL, etc.)
+  //    Code-unit comparison instead of a control-character regex: identical
+  //    behavior, and eslint's no-control-regex stays clean.
+  const hasControlOrSpace = [...host].some((ch) => ch <= "\u001f" || ch === "\u007f" || ch === " ");
+  if (hasControlOrSpace) return false;
 
   // 3. Structural delimiters that would let the value escape the authority
   //    slot: `/` `\` `?` `#` `@` (`@` = userinfo separator), and any
@@ -305,14 +310,23 @@ function guardHeaders(extra: Record<string, string> = {}): HeadersInit {
  */
 function isLoopbackRequest(request: Request): boolean {
   let host: string;
-  try { host = new URL(request.url).hostname; } catch { return false; }
+  try {
+    host = new URL(request.url).hostname;
+  } catch {
+    return false;
+  }
   if (!host) return false;
   const hostLower = host.toLowerCase();
-  if (hostLower === "localhost" || hostLower === "127.0.0.1" || hostLower === "::1" || hostLower === "[::1]") return true;
+  if (
+    hostLower === "localhost" ||
+    hostLower === "127.0.0.1" ||
+    hostLower === "::1" ||
+    hostLower === "[::1]"
+  )
+    return true;
   if (hostLower.startsWith("127.")) return true;
   return false;
 }
-
 
 /**
  * Public entry point: returns a Response when the request must be blocked or
@@ -346,11 +360,8 @@ export function enforceHttps(request: Request): Response | null {
 
   // Unsafe method over plaintext — the body (and any Authorization header)
   // has already been transmitted in the clear. Refuse; do not redirect.
-  return new Response(
-    "HTTPS required. Retry this request over https://.",
-    {
-      status: 403,
-      headers: guardHeaders({ "Content-Type": "text/plain; charset=utf-8" }),
-    },
-  );
+  return new Response("HTTPS required. Retry this request over https://.", {
+    status: 403,
+    headers: guardHeaders({ "Content-Type": "text/plain; charset=utf-8" }),
+  });
 }

@@ -100,7 +100,18 @@ export type TransposeOption = {
 };
 
 const KEY_NAMES: readonly string[] = [
-  "E", "F", "F♯", "G", "A♭", "A", "B♭", "B", "C", "D♭", "D", "E♭",
+  "E",
+  "F",
+  "F♯",
+  "G",
+  "A♭",
+  "A",
+  "B♭",
+  "B",
+  "C",
+  "D♭",
+  "D",
+  "E♭",
 ];
 
 export const TRANSPOSE_OPTIONS: readonly TransposeOption[] = (() => {
@@ -133,11 +144,12 @@ export type SoundSetId = "bell" | "train" | "midi";
  *   strikeLen  — length of one hour-bell strike, in seconds
  *   strikeGap  — gap between successive hour strikes (strike-to-strike), in seconds
  */
-const SOUND_SET_TIMING: Record<SoundSetId, { beat: number; strikeLen: number; strikeGap: number }> = {
-  bell:  { beat: 1.0,     strikeLen: 2.375, strikeGap: 2.625  },
-  train: { beat: 0.34375, strikeLen: 1.0,   strikeGap: 0.875  },
-  midi:  { beat: 0.46875, strikeLen: 0.75,  strikeGap: 0.6875 },
-};
+const SOUND_SET_TIMING: Record<SoundSetId, { beat: number; strikeLen: number; strikeGap: number }> =
+  {
+    bell: { beat: 1.0, strikeLen: 2.375, strikeGap: 2.625 },
+    train: { beat: 0.34375, strikeLen: 1.0, strikeGap: 0.875 },
+    midi: { beat: 0.46875, strikeLen: 0.75, strikeGap: 0.6875 },
+  };
 
 /**
  * Length of one crotchet (quarter-note beat) in seconds for the given

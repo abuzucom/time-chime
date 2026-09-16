@@ -63,7 +63,6 @@ jobs:
           BASE_URL: ${{ steps.resolve.outputs.url }}
         run: node scripts/check-route-headers.mjs "$BASE_URL" | tee routes.log
 
-
       - name: Report drift (open or update tracking issue)
         if: failure() || steps.routes.outcome == 'failure'
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

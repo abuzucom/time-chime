@@ -41,7 +41,7 @@ hierarchies.
 - **`src/lib/time.functions.ts`** — server-only `createServerFn`s. Owns
   `probeProvider`, which issues an HTTPS request to a single stratum-1
   source from a fixed **allow-list** (`PROVIDER_CATALOG`) — user input
-  selects *which* provider, never *what URL* (SSRF-safe by design).
+  selects _which_ provider, never _what URL_ (SSRF-safe by design).
   Cloudflare is the preferred anchor; leap-smeared sources
   (Google Public NTP) are intentionally excluded. Records send/receive
   timestamps and returns a sample
@@ -74,7 +74,6 @@ hierarchies.
 - **`src/hooks/useSweepAngle.ts`** — `requestAnimationFrame`-driven hook
   that produces a continuous linear angle for the Mid-Century face's
   vintage synchronous-electric sweep.
-
 
 ### Presentation (composition, not inheritance)
 
@@ -159,6 +158,5 @@ hierarchies.
   into `setTimeout` or the Web Audio graph.
 - **Deny-by-default at the transport edge.** Every capability
   (Permissions-Policy directive, CSP source, outbound provider URL) is
-  opted *in* from an empty baseline, not opted *out* from a permissive
+  opted _in_ from an empty baseline, not opted _out_ from a permissive
   one.
-
