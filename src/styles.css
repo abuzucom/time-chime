@@ -131,7 +131,6 @@
   --sound-fg: oklch(0.15 0.02 60);
 }
 
-
 /* -------------------------------------------------------------------------
  * Dark theme — moonlit study
  * ---------------------------------------------------------------------- */
@@ -196,7 +195,6 @@
   --drift-ok-text: var(--drift-ok);
   --drift-warn-text: var(--drift-warn);
   --drift-bad-text: var(--drift-bad);
-
 
   --sound-normal: oklch(0.78 0.13 78);
   --sound-quiet: oklch(0.72 0.11 220);
@@ -264,7 +262,6 @@
   --drift-warn-text: oklch(0.42 0.21 72);
   --drift-bad-text: oklch(0.42 0.26 27);
 
-
   --sound-normal: oklch(0.6 0.13 62);
   --sound-quiet: oklch(0.58 0.09 220);
   --sound-mute: oklch(0.45 0.03 60);
@@ -295,11 +292,15 @@
   box-shadow: 0 1px 3px oklch(0 0 0 / 45%);
 }
 
-
-
-[data-digital-hue="amber"] { --digital-fg: var(--digital-hue-amber); }
-[data-digital-hue="green"] { --digital-fg: var(--digital-hue-green); }
-[data-digital-hue="white"] { --digital-fg: var(--digital-hue-white); }
+[data-digital-hue="amber"] {
+  --digital-fg: var(--digital-hue-amber);
+}
+[data-digital-hue="green"] {
+  --digital-fg: var(--digital-hue-green);
+}
+[data-digital-hue="white"] {
+  --digital-fg: var(--digital-hue-white);
+}
 
 /* Editorial small-caps label used throughout the shell */
 @utility label-eyebrow {
@@ -322,10 +323,10 @@
     border-color: var(--color-border);
   }
 
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
   }
 }
-

@@ -1,3 +1,20 @@
+# Local merge of upstream .gitignore with Python tooling additions.
+
+# Byte-compiled / optimized Python files (vendored abuzucom/agents tooling)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Coverage and test caches from the policy test suite
+.coverage
+.coverage.*
+.pytest_cache/
+htmlcov/
+
+# Virtual environments
+.venv
+venv/
+
 # Logs
 logs
 *.log

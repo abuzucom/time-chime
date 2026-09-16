@@ -63,8 +63,7 @@ function SitemapPage() {
           </div>
           <h1 className="mt-4 font-serif text-3xl tracking-tight sm:text-4xl">Sitemap</h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            A short index of the legal and reference pages that accompany the
-            clock.
+            A short index of the legal and reference pages that accompany the clock.
           </p>
         </div>
 
@@ -76,12 +75,8 @@ function SitemapPage() {
               className="flex items-center justify-between gap-3 rounded-lg border bg-card p-4 transition-colors hover:border-[color:var(--face-brass)]/50 hover:bg-accent/40"
             >
               <span className="min-w-0">
-                <span className="block text-sm font-medium text-foreground">
-                  {link.label}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {link.description}
-                </span>
+                <span className="block text-sm font-medium text-foreground">{link.label}</span>
+                <span className="block text-xs text-muted-foreground">{link.description}</span>
               </span>
               <span aria-hidden className="text-muted-foreground">
                 →

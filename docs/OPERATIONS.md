@@ -18,11 +18,11 @@ bottom lists like-for-like controls on Netlify, Fastly, and NGINX.
 
 The only origin-hittable surfaces are:
 
-| Surface | Path | Cost per call | Abuse risk |
-|---|---|---|---|
-| `syncTime` server function | `POST /_serverFn/syncTime` | parallel outbound HTTPS fetches to selected JSON time references | An attacker can turn our Worker into a **reflector** against a time-reference provider, getting us banned from the upstream. |
-| SSR HTML shell | `GET /`, `/support`, `/obs` | 1 render | Cheap; only DoS-relevant at very high RPS. |
-| Static assets | `GET /assets/*` | Served from Cloudflare cache | Not a concern — cache eats the load. |
+| Surface                    | Path                        | Cost per call                                                    | Abuse risk                                                                                                                   |
+| -------------------------- | --------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `syncTime` server function | `POST /_serverFn/syncTime`  | parallel outbound HTTPS fetches to selected JSON time references | An attacker can turn our Worker into a **reflector** against a time-reference provider, getting us banned from the upstream. |
+| SSR HTML shell             | `GET /`, `/support`, `/obs` | 1 render                                                         | Cheap; only DoS-relevant at very high RPS.                                                                                   |
+| Static assets              | `GET /assets/*`             | Served from Cloudflare cache                                     | Not a concern — cache eats the load.                                                                                         |
 
 **Primary goal:** protect the upstream time providers from being rate-limited
 because of our traffic. **Secondary goal:** keep Worker cost predictable.
@@ -38,16 +38,16 @@ Worker invocation.
 1. Cloudflare dashboard → **Security → WAF → Rate limiting rules → Create rule**.
 2. Fill in as follows (adjust the domain to your zone):
 
-   | Field | Value |
-   |---|---|
-   | **Rule name** | `syncTime — per-IP burst` |
-   | **If incoming requests match** | `(http.request.uri.path contains "/_serverFn/syncTime")` |
-   | **When rate exceeds** | `10` requests |
-   | **Period** | `1 minute` |
-   | **With the same characteristics** | `IP` |
-   | **Then take action** | `Block` |
-   | **Duration** | `1 minute` |
-   | **Response type** | `Default Cloudflare response` (returns HTTP 429) |
+   | Field                             | Value                                                    |
+   | --------------------------------- | -------------------------------------------------------- |
+   | **Rule name**                     | `syncTime — per-IP burst`                                |
+   | **If incoming requests match**    | `(http.request.uri.path contains "/_serverFn/syncTime")` |
+   | **When rate exceeds**             | `10` requests                                            |
+   | **Period**                        | `1 minute`                                               |
+   | **With the same characteristics** | `IP`                                                     |
+   | **Then take action**              | `Block`                                                  |
+   | **Duration**                      | `1 minute`                                               |
+   | **Response type**                 | `Default Cloudflare response` (returns HTTP 429)         |
 
 3. Save & deploy. The client-side circuit breaker already handles 429s
    gracefully (it backs off and surfaces a toast via `sonner`), so no
@@ -157,10 +157,10 @@ const form = new URLSearchParams({
   secret: process.env.TURNSTILE_SECRET_KEY!,
   response: data.turnstileToken,
 });
-const verify = await fetch(
-  "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-  { method: "POST", body: form },
-);
+const verify = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+  method: "POST",
+  body: form,
+});
 const { success } = (await verify.json()) as { success: boolean };
 if (!success) throw new Response("Turnstile failed", { status: 401 });
 ```
@@ -208,12 +208,12 @@ For Turnstile, load the app in an incognito window and confirm:
 
 ## 5. Equivalents on other hosts
 
-| Host | Rate limit | Bot challenge |
-|---|---|---|
-| **Netlify** | Edge Functions + `netlify.toml` `[[edge_functions]]` with a KV-backed token bucket (Netlify has no built-in RL). | hCaptcha or Turnstile via the same siteverify flow above. |
-| **Fastly** | VCL `if (req.rate.10s > N) { error 429; }` on the `syncTime` path. | Fastly Bot Management (paid) or Turnstile. |
-| **NGINX / self-hosted** | `limit_req_zone $binary_remote_addr zone=synctime:10m rate=10r/m;` on the location block. | Turnstile via siteverify — the widget doesn't care what host serves the page. |
-| **AWS CloudFront** | AWS WAF rate-based rule scoped to `URI path contains /_serverFn/syncTime`. | AWS WAF CAPTCHA action or Turnstile. |
+| Host                    | Rate limit                                                                                                       | Bot challenge                                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Netlify**             | Edge Functions + `netlify.toml` `[[edge_functions]]` with a KV-backed token bucket (Netlify has no built-in RL). | hCaptcha or Turnstile via the same siteverify flow above.                     |
+| **Fastly**              | VCL `if (req.rate.10s > N) { error 429; }` on the `syncTime` path.                                               | Fastly Bot Management (paid) or Turnstile.                                    |
+| **NGINX / self-hosted** | `limit_req_zone $binary_remote_addr zone=synctime:10m rate=10r/m;` on the location block.                        | Turnstile via siteverify — the widget doesn't care what host serves the page. |
+| **AWS CloudFront**      | AWS WAF rate-based rule scoped to `URI path contains /_serverFn/syncTime`.                                       | AWS WAF CAPTCHA action or Turnstile.                                          |
 
 Whichever host you pick, keep the two properties above intact: rate limits
 before the Worker/function invocation, and CAPTCHAs verified server-side
