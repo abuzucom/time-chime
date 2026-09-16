@@ -98,7 +98,6 @@ jobs:
           BASE_URL: ${{ github.event.inputs.base_url }}
         run: node scripts/check-route-headers.mjs "$BASE_URL"
 
-
       # The Worker's own console.error output (including the stack trace for
       # any unhandled SSR exception - see src/server.ts's catch block) lands
       # in wrangler.log, not in this step's own output, since the server runs

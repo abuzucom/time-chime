@@ -20,7 +20,7 @@ import { isSafeHost } from "../src/lib/http/https-guard.ts";
 const VALID = [
   "example.com",
   "sub.example.com",
-  "EXAMPLE.com",               // case-insensitive DNS
+  "EXAMPLE.com", // case-insensitive DNS
   "example.com:443",
   "example.com:8080",
   "localhost",
@@ -31,7 +31,7 @@ const VALID = [
   "[::1]:8080",
   "[2001:db8::1]",
   "[2001:db8::1]:443",
-  "xn--nxasmq6b.example",      // punycode IDN
+  "xn--nxasmq6b.example", // punycode IDN
   "a".repeat(63) + ".example.com",
 ];
 
@@ -58,18 +58,14 @@ const CRLF_INJECTION = [
   "\r\nexample.com",
   "example.com\r",
   "example.com\n",
-  " example.com",              // raw space
+  " example.com", // raw space
   "example.com ",
   "example .com",
 ];
 
 for (const host of CRLF_INJECTION) {
   test(`rejects CRLF/control injection: ${JSON.stringify(host)}`, () => {
-    assert.equal(
-      isSafeHost(host),
-      false,
-      `expected ${JSON.stringify(host)} to be rejected`,
-    );
+    assert.equal(isSafeHost(host), false, `expected ${JSON.stringify(host)} to be rejected`);
   });
 }
 
@@ -78,44 +74,40 @@ for (const host of CRLF_INJECTION) {
 // ---------------------------------------------------------------------------
 
 const AUTHORITY_ABUSE = [
-  "user:pass@evil.com",        // userinfo → redirects to evil.com
-  "evil.com@example.com",      // reversed userinfo trick
-  "example.com/path",          // path smuggled into host
-  "example.com?query=1",       // query smuggled
-  "example.com#fragment",      // fragment smuggled
-  "example.com\\evil.com",     // backslash (IE-style scheme confusion)
-  "//example.com",             // protocol-relative
-  "example.com%00",            // percent-encoded NUL
-  "example.com%0d%0aX: y",     // percent-encoded CRLF
-  "example%2ecom",             // percent-encoded dot
-  "example.com:",              // dangling port separator
-  "example.com:99999",         // port > 65535
-  "example.com:0",             // port zero
+  "user:pass@evil.com", // userinfo → redirects to evil.com
+  "evil.com@example.com", // reversed userinfo trick
+  "example.com/path", // path smuggled into host
+  "example.com?query=1", // query smuggled
+  "example.com#fragment", // fragment smuggled
+  "example.com\\evil.com", // backslash (IE-style scheme confusion)
+  "//example.com", // protocol-relative
+  "example.com%00", // percent-encoded NUL
+  "example.com%0d%0aX: y", // percent-encoded CRLF
+  "example%2ecom", // percent-encoded dot
+  "example.com:", // dangling port separator
+  "example.com:99999", // port > 65535
+  "example.com:0", // port zero
   "example.com:-1",
-  "example.com:abc",           // non-numeric port
-  "example.com:80:80",         // double port
-  ":8080",                     // bare port
-  ".example.com",              // leading dot
-  "example.com.",              // trailing dot
-  "example..com",              // empty label
-  "[::1",                      // unbalanced bracket
+  "example.com:abc", // non-numeric port
+  "example.com:80:80", // double port
+  ":8080", // bare port
+  ".example.com", // leading dot
+  "example.com.", // trailing dot
+  "example..com", // empty label
+  "[::1", // unbalanced bracket
   "::1]",
-  "[::1][::2]",                // multiple bracket groups
+  "[::1][::2]", // multiple bracket groups
   "[not:an:ipv6:literal:xyz]", // bracket allowlist violation
-  "[example.com]",             // brackets around DNS name
-  "exämple.com",               // raw unicode (only punycode allowed)
-  "example\u200b.com",         // zero-width space homograph
+  "[example.com]", // brackets around DNS name
+  "exämple.com", // raw unicode (only punycode allowed)
+  "example\u200b.com", // zero-width space homograph
   "",
   " ",
 ];
 
 for (const host of AUTHORITY_ABUSE) {
   test(`rejects authority abuse: ${JSON.stringify(host)}`, () => {
-    assert.equal(
-      isSafeHost(host),
-      false,
-      `expected ${JSON.stringify(host)} to be rejected`,
-    );
+    assert.equal(isSafeHost(host), false, `expected ${JSON.stringify(host)} to be rejected`);
   });
 }
 

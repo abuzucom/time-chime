@@ -78,9 +78,7 @@ function NumeralPreviewButton({
       aria-pressed={active}
       className={cn(
         "flex flex-col items-center gap-1.5 rounded-md border p-2 transition-colors",
-        active
-          ? "border-primary ring-2 ring-primary/40"
-          : "border-border hover:border-primary/60",
+        active ? "border-primary ring-2 ring-primary/40" : "border-border hover:border-primary/60",
       )}
     >
       <div className="aspect-square w-full">{preview}</div>
@@ -90,7 +88,6 @@ function NumeralPreviewButton({
 }
 
 type LiveSource = ProviderSample;
-
 
 /** Build the shareable OBS browser-source URL for the current face. */
 function buildObsUrl(face: FaceId): string {
@@ -164,7 +161,6 @@ function ProviderRow({
   );
 }
 
-
 /** Settings drawer for clock preferences and selectable network references. */
 export function SettingsDrawer() {
   const settings = useSettings();
@@ -178,7 +174,6 @@ export function SettingsDrawer() {
       settings.update({ grandfatherNumerals: "roman" });
     }
   }, [settings.grandfatherNumerals, settings.update, settings]);
-
 
   const preview = async () => {
     await unlockAudio();
@@ -219,7 +214,10 @@ export function SettingsDrawer() {
 
           <Section title="Appearance">
             <Row label="Theme">
-              <Select value={settings.theme} onValueChange={(v) => settings.update({ theme: v as Theme })}>
+              <Select
+                value={settings.theme}
+                onValueChange={(v) => settings.update({ theme: v as Theme })}
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
@@ -262,7 +260,10 @@ export function SettingsDrawer() {
 
           <Section title="Clock face">
             <Row label="Face style">
-              <Select value={settings.face} onValueChange={(v) => settings.update({ face: v as FaceId })}>
+              <Select
+                value={settings.face}
+                onValueChange={(v) => settings.update({ face: v as FaceId })}
+              >
                 <SelectTrigger className="w-56">
                   <SelectValue />
                 </SelectTrigger>
@@ -315,7 +316,10 @@ export function SettingsDrawer() {
               </div>
             )}
             <Row label="24-hour time">
-              <Switch checked={settings.hour24} onCheckedChange={(v) => settings.update({ hour24: v })} />
+              <Switch
+                checked={settings.hour24}
+                onCheckedChange={(v) => settings.update({ hour24: v })}
+              />
             </Row>
             <Row label="Show seconds">
               <Switch
@@ -441,8 +445,7 @@ export function SettingsDrawer() {
                     const measured = measureAudioLatencyMs();
                     if (measured === null) {
                       toast.error("Couldn't measure audio latency", {
-                        description:
-                          "Play a preview chime once, then try calibrating again.",
+                        description: "Play a preview chime once, then try calibrating again.",
                       });
                       return;
                     }
@@ -505,14 +508,13 @@ export function SettingsDrawer() {
                 />
               ))}
             </ul>
-
           </Section>
 
           <Section title="Streaming (OBS)">
             <div className="text-xs text-muted-foreground">
-              A chromeless, transparent render of the current face for OBS / Twitch Studio
-              browser sources. Add a Browser Source pointing at the URL below (560×560 works
-              well) — chimes still play from the main app.
+              A chromeless, transparent render of the current face for OBS / Twitch Studio browser
+              sources. Add a Browser Source pointing at the URL below (560×560 works well) — chimes
+              still play from the main app.
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <code className="max-w-full truncate rounded bg-muted px-2 py-1 text-[11px]">
@@ -522,7 +524,11 @@ export function SettingsDrawer() {
                 Copy URL
               </Button>
               <Button size="sm" variant="ghost" asChild>
-                <a href={`/obs?face=${settings.face}&transparent=1&size=520`} target="_blank" rel="noreferrer">
+                <a
+                  href={`/obs?face=${settings.face}&transparent=1&size=520`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Open preview
                 </a>
               </Button>
@@ -550,7 +556,6 @@ export function SettingsDrawer() {
               <Button size="sm" variant="outline" onClick={clearAllLocalDataAndReload}>
                 Delete all my data
               </Button>
-
             </div>
             <div className="text-xs">
               <a href="/privacy" className="underline">

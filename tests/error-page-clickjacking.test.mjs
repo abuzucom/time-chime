@@ -70,17 +70,11 @@ function loadErrorSurfaces() {
   const surfaces = [];
 
   // 1. Standalone 500 fallback served by src/server.ts.
-  const errorPage = readFileSync(
-    resolve(repoRoot, "src/lib/error-page.ts"),
-    "utf8",
-  );
+  const errorPage = readFileSync(resolve(repoRoot, "src/lib/error-page.ts"), "utf8");
   surfaces.push({ label: "src/lib/error-page.ts (500 fallback)", body: errorPage });
 
   // 2 & 3. In-shell 404 and error-boundary React components in __root.tsx.
-  const rootSrc = readFileSync(
-    resolve(repoRoot, "src/routes/__root.tsx"),
-    "utf8",
-  );
+  const rootSrc = readFileSync(resolve(repoRoot, "src/routes/__root.tsx"), "utf8");
   for (const name of ["NotFoundComponent", "ErrorComponent"]) {
     const body = extractFunctionBody(rootSrc, name);
     assert.ok(
@@ -100,32 +94,21 @@ const SURFACES = loadErrorSurfaces();
 // ---------------------------------------------------------------------------
 
 test("error surfaces enumeration is non-empty (guard against silent skip)", () => {
-  assert.ok(
-    SURFACES.length >= 3,
-    `expected >=3 error surfaces, got ${SURFACES.length}`,
-  );
+  assert.ok(SURFACES.length >= 3, `expected >=3 error surfaces, got ${SURFACES.length}`);
 });
 
 for (const { label, body } of SURFACES) {
   test(`${label} — no inline <meta http-equiv="Content-Security-Policy">`, () => {
     // Any per-page CSP meta will merge with (and in most browsers override)
     // the root shell's policy for that page. Not allowed on error routes.
-    const match = body.match(
-      /<meta[^>]+http-equiv\s*=\s*["']Content-Security-Policy["'][^>]*>/i,
-    );
-    assert.equal(
-      match,
-      null,
-      `${label} declares its own CSP meta: ${match?.[0]}`,
-    );
+    const match = body.match(/<meta[^>]+http-equiv\s*=\s*["']Content-Security-Policy["'][^>]*>/i);
+    assert.equal(match, null, `${label} declares its own CSP meta: ${match?.[0]}`);
   });
 
   test(`${label} — no inline <meta http-equiv="X-Frame-Options">`, () => {
     // XFO in a meta tag is spec-invalid; any value there can only weaken
     // the response header, never strengthen it. Ban outright.
-    const match = body.match(
-      /<meta[^>]+http-equiv\s*=\s*["']X-Frame-Options["'][^>]*>/i,
-    );
+    const match = body.match(/<meta[^>]+http-equiv\s*=\s*["']X-Frame-Options["'][^>]*>/i);
     assert.equal(
       match,
       null,
@@ -150,9 +133,7 @@ for (const { label, body } of SURFACES) {
   test(`${label} — every literal "X-Frame-Options" value is "DENY"`, () => {
     // Look for the header name in any string / object literal context and
     // confirm the paired value (delimited by :, =, or ,) is DENY.
-    const occurrences = [
-      ...body.matchAll(/["']X-Frame-Options["']\s*[,:=]\s*["']([^"']+)["']/gi),
-    ];
+    const occurrences = [...body.matchAll(/["']X-Frame-Options["']\s*[,:=]\s*["']([^"']+)["']/gi)];
     for (const occ of occurrences) {
       assert.equal(
         occ[1].trim().toUpperCase(),
@@ -185,9 +166,7 @@ test("no error surface emits any Content-Security-Policy* response header", () =
   // Headers({...})` in a rendered code path), that header would race with
   // — and often override — the middleware-stamped one.
   for (const { label, body } of SURFACES) {
-    const match = body.match(
-      /["']Content-Security-Policy(?:-Report-Only)?["']\s*[,:]/i,
-    );
+    const match = body.match(/["']Content-Security-Policy(?:-Report-Only)?["']\s*[,:]/i);
     assert.equal(
       match,
       null,

@@ -18,14 +18,14 @@ to the repo — you do not need to regenerate them.
 
 ## Prerequisites
 
-| Tool | Version |
-| ---- | ------- |
-| Node | 20 LTS+ |
-| Bun  | 1.1+ (recommended package manager) |
-| Xcode | 15+ (iOS build; macOS only) |
-| Android Studio | Hedgehog / Iguana or newer |
-| JDK | 17 (bundled with Android Studio) |
-| CocoaPods | 1.15+ (`sudo gem install cocoapods`) |
+| Tool           | Version                              |
+| -------------- | ------------------------------------ |
+| Node           | 20 LTS+                              |
+| Bun            | 1.1+ (recommended package manager)   |
+| Xcode          | 15+ (iOS build; macOS only)          |
+| Android Studio | Hedgehog / Iguana or newer           |
+| JDK            | 17 (bundled with Android Studio)     |
+| CocoaPods      | 1.15+ (`sudo gem install cocoapods`) |
 
 ---
 
@@ -116,7 +116,7 @@ before every store submission.
 
 Key rules encoded in the state machine:
 
-- The in-app **consent sheet** shows *before* the OS prompt. Skipping it
+- The in-app **consent sheet** shows _before_ the OS prompt. Skipping it
   and calling the OS directly is a regression.
 - Choosing "Just while the app is open" MUST NOT trigger the OS prompt.
 - If the user swipes the sheet away, the state falls back to
@@ -129,12 +129,12 @@ Key rules encoded in the state machine:
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
-| ------- | ----- | --- |
-| Chime fires the moment the app is backgrounded, then never again | You built for the Simulator | Rebuild for a real device |
-| Chime drifts by 30 – 90 s | Android Battery Optimization set to "Optimized" on an aggressive OEM (Xiaomi, Huawei) | Add the app to the battery-optimization allow-list; note the OEM in release notes |
-| iOS shows the notification but no sound plays | Focus mode / Silent switch is on, or the custom sound file is missing from the bundle | Verify Focus mode; re-run `npx cap sync ios` |
-| Double-fire (in-app audio + notification) | Foreground / background handshake in `src/lib/chimes/scheduler.ts` failed to cancel the pending strike | File an issue; add a covering test to `consent.test.ts` |
+| Symptom                                                          | Cause                                                                                                  | Fix                                                                               |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Chime fires the moment the app is backgrounded, then never again | You built for the Simulator                                                                            | Rebuild for a real device                                                         |
+| Chime drifts by 30 – 90 s                                        | Android Battery Optimization set to "Optimized" on an aggressive OEM (Xiaomi, Huawei)                  | Add the app to the battery-optimization allow-list; note the OEM in release notes |
+| iOS shows the notification but no sound plays                    | Focus mode / Silent switch is on, or the custom sound file is missing from the bundle                  | Verify Focus mode; re-run `npx cap sync ios`                                      |
+| Double-fire (in-app audio + notification)                        | Foreground / background handshake in `src/lib/chimes/scheduler.ts` failed to cancel the pending strike | File an issue; add a covering test to `consent.test.ts`                           |
 
 ---
 

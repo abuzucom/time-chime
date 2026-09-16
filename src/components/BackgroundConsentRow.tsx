@@ -184,8 +184,7 @@ export function BackgroundConsentRow() {
     if (previous === null || previous === snapshot.state) return;
     // Only re-focus if focus is currently inside this panel — otherwise the
     // user is somewhere else in the app and we'd yank them back rudely.
-    const activeInside =
-      toolbarRef.current && toolbarRef.current.contains(document.activeElement);
+    const activeInside = toolbarRef.current && toolbarRef.current.contains(document.activeElement);
     if (!activeInside) return;
     const [firstButton] = collectToolbarButtons(toolbarRef.current);
     firstButton?.focus();
@@ -205,7 +204,8 @@ export function BackgroundConsentRow() {
     let nextIndex = currentIndex;
     if (key === "Home") nextIndex = 0;
     else if (key === "End") nextIndex = buttons.length - 1;
-    else if (key === "ArrowRight") nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % buttons.length;
+    else if (key === "ArrowRight")
+      nextIndex = currentIndex < 0 ? 0 : (currentIndex + 1) % buttons.length;
     else if (key === "ArrowLeft") {
       nextIndex = currentIndex <= 0 ? buttons.length - 1 : currentIndex - 1;
     }
@@ -227,7 +227,10 @@ export function BackgroundConsentRow() {
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           {snapshot.state === "granted" ? (
-            <Bell className="mt-0.5 size-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <Bell
+              className="mt-0.5 size-4 text-emerald-600 dark:text-emerald-400"
+              aria-hidden="true"
+            />
           ) : (
             <BellOff className="mt-0.5 size-4 text-muted-foreground" aria-hidden="true" />
           )}
@@ -348,12 +351,14 @@ export function BackgroundConsentRow() {
           variant="outline"
           disabled={busy || snapshot.state === "unavailable"}
           aria-label="Re-read the current operating system permission and refresh this panel"
-          onClick={() => void runAction("reconcile", async () => { await controller.reconcileWithOs(); })}
+          onClick={() =>
+            void runAction("reconcile", async () => {
+              await controller.reconcileWithOs();
+            })
+          }
         >
           <RefreshCw
-            className={
-              "mr-1.5 size-3.5 " + (pendingAction === "reconcile" ? "animate-spin" : "")
-            }
+            className={"mr-1.5 size-3.5 " + (pendingAction === "reconcile" ? "animate-spin" : "")}
             aria-label={pendingAction === "reconcile" ? "Reconciling" : undefined}
             aria-hidden={pendingAction === "reconcile" ? undefined : "true"}
           />
@@ -373,8 +378,8 @@ export function BackgroundConsentRow() {
 
         {snapshot.state === "unavailable" && platform === "web" && (
           <p className="basis-full text-xs text-muted-foreground">
-            Web browsers can't schedule chimes in the background. Install the
-            iOS or Android app for background support.
+            Web browsers can't schedule chimes in the background. Install the iOS or Android app for
+            background support.
           </p>
         )}
       </div>

@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.6.1] (2026-09-16)
+
+### Fixed
+
+- `src/lib/http/https-guard.ts` replaces the control-character regex with an
+  equivalent code-unit comparison, clearing the latent `no-control-regex`
+  eslint error. Header validation behavior is unchanged.
+- `tests/clickjacking-defences.test.mjs` normalizes route paths to forward
+  slashes and accepts the current `head(options)` signature. The suite now
+  passes on Windows.
+- `.prettierignore` now excludes generated policy copies and vendored
+  `abuzucom/agents` content so `bun run format` cannot desynchronize them.
+- `bun run format` applied across drifted repo-owned files. `bun run lint`
+  now exits clean (warnings remain).
+- Superseded Node checkers (`check-banned-agents.mjs`,
+  `check-branch-name.mjs`, `check-persist-credentials.mjs`,
+  `sync-agent-docs.mjs`) and their tests removed for real. A revert pass in
+  the 0.6.0 branch had restored them before the adoption commit.
+
 ## [0.6.0] (2026-09-16)
 
 ### Added

@@ -31,7 +31,6 @@ async function playWithRetry(
   }
 }
 
-
 /**
  * Watches authoritative time and triggers Westminster chimes at the quarter
  * boundaries. Runs continuously while the app is in the foreground. Background
@@ -135,7 +134,11 @@ export function useChimeScheduler() {
      * decide which of the quarter melody and hour bell should play under
      * the user's chime settings, then hand them to the audio engine.
      */
-    const dispatchQuarter = (nowDate: Date, minute: number, soundMode: "normal" | "quiet"): void => {
+    const dispatchQuarter = (
+      nowDate: Date,
+      minute: number,
+      soundMode: "normal" | "quiet",
+    ): void => {
       const phrase: Phrase =
         minute === 15 ? "q1" : minute === 30 ? "q2" : minute === 45 ? "q3" : "q4";
       // Two independent decisions: whether the quarter melody plays and
@@ -149,7 +152,12 @@ export function useChimeScheduler() {
       if (playQuarter) {
         void playWithRetry(
           phrase,
-          { setId: settings.soundSet, volume: params.vol, speed: params.speed, transpose: params.transpose },
+          {
+            setId: settings.soundSet,
+            volume: params.vol,
+            speed: params.speed,
+            transpose: params.transpose,
+          },
           notifyDegraded,
         );
       }
@@ -193,8 +201,6 @@ export function useChimeScheduler() {
         const mode = effectiveSoundMode(settings, now);
         if (mode !== "mute") dispatchQuarter(nowDate, minute, mode);
       }
-
-
 
       handle = window.setTimeout(tick, 250);
     };
