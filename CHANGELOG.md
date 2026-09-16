@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.6.3] (2026-09-16)
+
+### Fixed
+
+- `security-headers.yml` upgrades the pinned wrangler from 4.110.0 to
+  4.132.0. Nitro generates `compatibility_date` 2026-09-13, and 4.110.0's
+  workerd supports dates only up to 2026-07-15, so the header-check server
+  could never start. The check had been red on `main` since 2026-07-16.
+- README prose and one legacy CHANGELOG line rewritten in ASCII without
+  em/en dashes or spaced-hyphen substitutes, satisfying the vendored
+  `check_ascii.py` blocking check.
+
 ## [0.6.2] (2026-09-16)
 
 ### Fixed
@@ -220,7 +232,7 @@ arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
 - Pinned all 76 `^`-range `package.json` dependencies/devDependencies to
   their currently-resolved exact versions from `bun.lock` (AGENTS.md rule
   9: "pin versions"). Verified `bun install` produces no lockfile changes
-  beyond the version-string echo in the workspace declaration - no
+  beyond the version-string echo in the workspace declaration. No
   package's resolved version shifted.
 
 ## [0.2.4] (2026-07-12)
