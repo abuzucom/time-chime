@@ -6,3 +6,33 @@ pnpm-lock.yaml
 package-lock.json
 bun.lock
 routeTree.gen.ts
+
+# Generated policy copies and vendored abuzucom/agents content stay
+# byte-comparable with their sources. Regenerate copies with
+# `python scripts/sync.py`; never format them.
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+CONVENTIONS.md
+.cursorrules
+.clinerules
+.windsurfrules
+.copilot-instructions
+.github/copilot-instructions.md
+docs/agent-policy/
+docs/gate-threat-model.md
+DRIFT.md
+CONTRIBUTING.md.example
+SECURITY.md.example
+plan/HANDOFF.md.example
+shared-files.json
+hook-coverage-baseline.json
+.pre-commit-config.yaml
+.claude/settings.json
+.codex/
+.gemini/
+.agents/
+.github/workflows/sync-check.yml
+.github/workflows/agents-compliance.yml
+.github/workflows/agents-md-compliance.yml
+.github/workflows/immutable-conflict-check.yml

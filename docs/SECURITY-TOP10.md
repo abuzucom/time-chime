@@ -66,16 +66,16 @@ operators on other hosts should verify their configuration against
 
 Baseline headers set on every SSR response (`src/lib/http/security-headers.ts`) and re-asserted on static assets (`public/_headers`), with `scripts/check-route-headers.mjs` in CI diffing the two so they can never drift:
 
-| Header | Value |
-| ------ | ----- |
-| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
-| `Content-Security-Policy` | Strict, nonce-based, `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, no `unsafe-inline`, no `unsafe-eval` |
-| `X-Frame-Options` | `DENY` |
-| `X-Content-Type-Options` | `nosniff` |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Cross-Origin-Opener-Policy` | `same-origin` |
-| `Cross-Origin-Resource-Policy` | `same-origin` |
-| `Permissions-Policy` | 23 directives denied, alphabetised (`security-headers.ts` `PERMISSIONS_POLICY_VALUE`) |
+| Header                         | Value                                                                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Strict-Transport-Security`    | `max-age=63072000; includeSubDomains; preload`                                                                                                    |
+| `Content-Security-Policy`      | Strict, nonce-based, `frame-ancestors 'none'`, `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, no `unsafe-inline`, no `unsafe-eval` |
+| `X-Frame-Options`              | `DENY`                                                                                                                                            |
+| `X-Content-Type-Options`       | `nosniff`                                                                                                                                         |
+| `Referrer-Policy`              | `strict-origin-when-cross-origin`                                                                                                                 |
+| `Cross-Origin-Opener-Policy`   | `same-origin`                                                                                                                                     |
+| `Cross-Origin-Resource-Policy` | `same-origin`                                                                                                                                     |
+| `Permissions-Policy`           | 23 directives denied, alphabetised (`security-headers.ts` `PERMISSIONS_POLICY_VALUE`)                                                             |
 
 Verifying tests: `tests/check-headers.test.mjs`, `tests/clickjacking-defences.test.mjs`, `tests/pre-hydration-hash.test.mjs`, `tests/security-headers-e2e.test.mjs`.
 

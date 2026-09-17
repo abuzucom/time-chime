@@ -16,20 +16,20 @@ subtly different ways:
 
 - **iOS** — the OS permission prompt is **one-shot per install**. If we
   fire it before the user understands what we're asking for and they tap
-  *Don't Allow*, background chimes are lost forever unless the user
+  _Don't Allow_, background chimes are lost forever unless the user
   manually walks into `Settings.app`. Apple's HIG explicitly recommends a
   soft in-app pre-prompt.
 - **Android 12+** — notification permission (`POST_NOTIFICATIONS`, since
   API 33) and the `SCHEDULE_EXACT_ALARM` capability are **two separate
   gestures on two separate settings screens**. Users need a mental
-  model of *why* we're asking for both before we send them into the
+  model of _why_ we're asking for both before we send them into the
   system UI.
 - **Any platform** — the user can revoke permission **after** granting
   it, from outside the app. We need to detect that on resume and update
   our UI so we don't lie about the current state.
 
 A boolean `hasPermission` cannot express "user declined our pre-prompt",
-"OS returned denied", or "OS *previously* granted, now revoked". Those
+"OS returned denied", or "OS _previously_ granted, now revoked". Those
 distinctions drive different in-app copy, so we model them explicitly.
 
 ## The state machine
@@ -51,15 +51,15 @@ Defined in `src/lib/native/consent.ts`:
     <any state> ── adapter reports "unavailable" ──► unavailable
 ```
 
-| State | Meaning | UI copy |
-| ----- | ------- | ------- |
-| `not_asked` | Fresh install, sheet never shown | "Enable background chimes" CTA |
-| `asking` | Sheet is open, waiting on user tap | Sheet visible |
-| `declined_by_user` | User dismissed the sheet without granting | Soft re-prompt available; we don't nag |
-| `granted` | Sheet Allow + OS granted | Background chimes on |
-| `denied_by_os` | Sheet Allow + OS denied (or iOS second-ask) | "Open Settings" deep-link CTA |
-| `revoked` | We previously had `granted`, OS no longer allows it | "You previously allowed this…" CTA — different copy from `denied_by_os` |
-| `unavailable` | No notifications API at all (SSR, opted-out browser, plugin missing) | Hide the toggle entirely |
+| State              | Meaning                                                              | UI copy                                                                 |
+| ------------------ | -------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `not_asked`        | Fresh install, sheet never shown                                     | "Enable background chimes" CTA                                          |
+| `asking`           | Sheet is open, waiting on user tap                                   | Sheet visible                                                           |
+| `declined_by_user` | User dismissed the sheet without granting                            | Soft re-prompt available; we don't nag                                  |
+| `granted`          | Sheet Allow + OS granted                                             | Background chimes on                                                    |
+| `denied_by_os`     | Sheet Allow + OS denied (or iOS second-ask)                          | "Open Settings" deep-link CTA                                           |
+| `revoked`          | We previously had `granted`, OS no longer allows it                  | "You previously allowed this…" CTA — different copy from `denied_by_os` |
+| `unavailable`      | No notifications API at all (SSR, opted-out browser, plugin missing) | Hide the toggle entirely                                                |
 
 `granted → revoked` and `denied_by_os / revoked → granted` are the two
 transitions triggered by **`reconcileWithOs()`**, which runs every
@@ -99,7 +99,7 @@ on unmount and lose the persisted snapshot mid-render.
 
 `@capacitor/app`'s `appStateChange` event fires when the OS moves our
 app between foreground and background. We use it to trigger
-`reconcileWithOs()` the moment the user comes back — that is the *only*
+`reconcileWithOs()` the moment the user comes back — that is the _only_
 opportunity to detect that they revoked our permission from
 `Settings.app` while we were suspended.
 
@@ -131,7 +131,9 @@ useEffect(() => {
         void handle.remove();
         return;
       }
-      removeNative = () => { void handle.remove(); };
+      removeNative = () => {
+        void handle.remove();
+      };
     }
   }
 

@@ -81,7 +81,11 @@ const DEFAULTS: Settings = {
 
 const KEY = "westminster.settings.v1";
 
-type Ctx = Settings & { ready: boolean; update: (patch: Partial<Settings>) => void; reset: () => void };
+type Ctx = Settings & {
+  ready: boolean;
+  update: (patch: Partial<Settings>) => void;
+  reset: () => void;
+};
 const SettingsContext = createContext<Ctx | null>(null);
 
 /**
@@ -101,7 +105,7 @@ const LEGACY_NUMERAL_ALIASES: Record<string, GrandfatherNumerals> = {
   "hindu-arabic": "arabic",
   numeric: "arabic",
   numbers: "arabic",
-  "eastern_arabic": "eastern-arabic",
+  eastern_arabic: "eastern-arabic",
   "eastern arabic": "eastern-arabic",
   arabic_indic: "eastern-arabic",
   "arabic-indic": "eastern-arabic",
@@ -200,7 +204,6 @@ function persistSettingsWithFeedback(
   }
 }
 
-
 /**
  * React context provider for user settings.
  *
@@ -236,15 +239,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     persistSettingsWithFeedback(state, persistFailed);
   }, [state, ready]);
 
-
   // Apply theme class to <html>
   useEffect(() => {
     if (!ready || typeof window === "undefined") return;
     const root = document.documentElement;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const applyResolvedTheme = (): void => {
-      const resolved =
-        state.theme === "system" ? (media.matches ? "dark" : "light") : state.theme;
+      const resolved = state.theme === "system" ? (media.matches ? "dark" : "light") : state.theme;
       root.classList.remove("dark", "grey");
       if (resolved === "dark") root.classList.add("dark");
       else if (resolved === "grey") root.classList.add("grey");

@@ -87,7 +87,6 @@ export function GrandfatherFace({ showSeconds = true, numerals = "roman" }: Prop
     { cooldownMs: 8000 },
   );
 
-
   const numeralLabels = useMemo(() => {
     const key: GrandfatherNumerals = NUMERAL_SETS[numerals] ? numerals : "roman";
     const labels = NUMERAL_SETS[key];
@@ -120,8 +119,7 @@ export function GrandfatherFace({ showSeconds = true, numerals = "roman" }: Prop
 
   const smoothDate = new Date(smooth);
   const fractionalMinutes =
-    smoothDate.getMinutes() +
-    (smoothDate.getSeconds() + smoothDate.getMilliseconds() / 1000) / 60;
+    smoothDate.getMinutes() + (smoothDate.getSeconds() + smoothDate.getMilliseconds() / 1000) / 60;
   const fractionalHours = (smoothDate.getHours() % 12) + fractionalMinutes / 60;
 
   const secAngle = new Date(secondTick).getSeconds() * 6;

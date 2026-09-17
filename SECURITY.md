@@ -12,18 +12,18 @@ We take security seriously and welcome coordinated disclosure.
 
 ## Supported versions
 
-| Version           | Supported |
-| ----------------- | :-------: |
-| `main` branch     |     ✅    |
-| Latest tagged release | ✅   |
-| Older releases    |     ❌    |
+| Version               | Supported |
+| --------------------- | :-------: |
+| `main` branch         |    ✅     |
+| Latest tagged release |    ✅     |
+| Older releases        |    ❌     |
 
 ## Reporting a vulnerability
 
 Please report suspected vulnerabilities **privately**, not via public issues:
 
 - Email: `security@<your-domain>` (PGP key on request), **or**
-- GitHub → Security → *"Report a vulnerability"* (private advisory), **or**
+- GitHub → Security → _"Report a vulnerability"_ (private advisory), **or**
 - The equivalent private issue on GitLab.
 
 Include:
@@ -81,7 +81,7 @@ and do not imply audit outcomes under any framework.
 
 ## Third-party dependency vulnerabilities
 
-Reports about *dependencies* (advisories in packages we consume) are
+Reports about _dependencies_ (advisories in packages we consume) are
 handled through the automated pipeline described in
 [`docs/COMPLIANCE.md` → Dependency remediation SLA](docs/COMPLIANCE.md#dependency-remediation-sla),
 not this coordinated-disclosure inbox. If a public advisory is not yet

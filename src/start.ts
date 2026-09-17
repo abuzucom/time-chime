@@ -38,7 +38,9 @@ const securityHeadersMiddleware = createMiddleware().server(async ({ next }) => 
   };
 });
 
-async function rebuildHtmlResponseWithMatchingSecurityHeaders(response: Response): Promise<Response> {
+async function rebuildHtmlResponseWithMatchingSecurityHeaders(
+  response: Response,
+): Promise<Response> {
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().includes("text/html")) return withSecurityHeaders(response);
 

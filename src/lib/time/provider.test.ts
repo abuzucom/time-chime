@@ -46,13 +46,23 @@ test("prefers Time.now, then chooses the lowest RTT", () => {
     { id: "timeNow" as const, rttMs: 30 },
   ];
   assert.equal(selectBestProvider(samples)?.id, "timeNow");
-  assert.equal(selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id, "clockNow");
+  assert.equal(
+    selectBestProvider(samples.filter((sample) => sample.id !== "timeNow"))?.id,
+    "clockNow",
+  );
   assert.equal(selectBestProvider([]), null);
 });
 
 test("normalizes obsolete, duplicate, and malformed provider IDs", () => {
   assert.deepEqual(
-    normalizeProviderIds(["cloudflare", "worldtime", "timeapiWorld", "worldtime", null, "clockNow"]),
+    normalizeProviderIds([
+      "cloudflare",
+      "worldtime",
+      "timeapiWorld",
+      "worldtime",
+      null,
+      "clockNow",
+    ]),
     ["clockNow"],
   );
 });

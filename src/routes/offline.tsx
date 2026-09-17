@@ -95,9 +95,7 @@ function OfflinePage() {
         <div
           className={
             "inline-flex size-14 items-center justify-center rounded-full " +
-            (online
-              ? "bg-emerald-500/15 text-emerald-500"
-              : "bg-muted text-muted-foreground")
+            (online ? "bg-emerald-500/15 text-emerald-500" : "bg-muted text-muted-foreground")
           }
           aria-hidden="true"
         >
@@ -157,16 +155,16 @@ function OfflinePage() {
           </div>
           <ul className="mt-2 space-y-1.5 text-sm text-muted-foreground">
             <li>
-              <span className="text-foreground">Clock face:</span> renders from
-              the last-known network-reference offset — drift may grow until the next sync.
+              <span className="text-foreground">Clock face:</span> renders from the last-known
+              network-reference offset — drift may grow until the next sync.
             </li>
             <li>
-              <span className="text-foreground">Chimes:</span> scheduled
-              locally, so quarter-hour strikes continue on time.
+              <span className="text-foreground">Chimes:</span> scheduled locally, so quarter-hour
+              strikes continue on time.
             </li>
             <li>
-              <span className="text-foreground">Settings:</span> persist to
-              local storage; no network required.
+              <span className="text-foreground">Settings:</span> persist to local storage; no
+              network required.
             </li>
           </ul>
         </div>
