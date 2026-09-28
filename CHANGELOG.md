@@ -10,8 +10,8 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 
 ### Changed
 
-- Consolidate dependency updates from pull requests 11, 13, 65, 77, 80, 81, and 84 into a single release.
-- Update `@eslint/js` to 10.0.1 and `eslint-plugin-react-hooks` to 7.1.1.
+- Consolidate dependency updates from pull requests 13, 65, 77, 80, 81, and 84 into a single release.
+- Update `eslint-plugin-react-hooks` to 7.1.1.
 - Update npm package dependencies and devDependencies across 57 packages.
 - Update GitHub Actions workflow action pins:
   - `actions/checkout` to `3d3c42e5aac5ba805825da76410c181273ba90b1` (v7.0.1).
