@@ -128,6 +128,27 @@ class TrustedRunnerSafetyTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "\ufffd")
 
+    def test_run_requested_command_handles_stdout_encoding_error(self):
+        class FaultyWriter(io.StringIO):
+            def write(self, s):
+                if any(ord(c) > 127 for c in s):
+                    raise UnicodeEncodeError("charmap", s, 0, 1, "character maps to <undefined>")
+                return super().write(s)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            buffer = io.BytesIO()
+            faulty = FaultyWriter()
+            faulty.buffer = buffer
+            completed = subprocess.CompletedProcess(["gh", "pr", "view"], 0, "arrow: \u2192", "")
+            with patch.object(trusted_gh, "resolve_gh", return_value=sys.executable):
+                with patch.object(trusted_gh.subprocess, "run", return_value=completed):
+                    with patch("sys.stdout", faulty):
+                        code = trusted_gh._run_requested_command(str(root), ["pr", "view"])
+
+            self.assertEqual(code, 0)
+            self.assertIn(b"arrow: ", buffer.getvalue())
+
 
 class RepositoryContextTest(unittest.TestCase):
     """Repository-bound commands receive safe explicit context."""

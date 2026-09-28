@@ -92,6 +92,7 @@ export default defineConfig(({ command }) => ({
           nitro({
             preset: "cloudflare-module",
             output: { dir: "dist", serverDir: "dist/server", publicDir: "dist/client" },
+            compatibilityDate: "2026-09-13",
             cloudflare: { nodeCompat: true, deployConfig: true },
           }),
         ]

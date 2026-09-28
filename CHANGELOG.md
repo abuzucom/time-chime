@@ -19,6 +19,11 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
   - `google/osv-scanner-action/osv-scanner-action` to `6e4298ebc4db23e847df9b2e2de2939d6f066c67` (v2.5.1).
   - `github/codeql-action/upload-sarif` to `b96794f015dfd88f77b49b1c93e0fa7110f94c63` (v4.38.0).
 
+### Fixed
+
+- Pin Nitro `compatibilityDate` to `2026-09-13` in `vite.config.ts`. Nitro defaults to the current build date when unspecified, exceeding the newest date supported by `wrangler@4.132.0` in `security-headers.yml`.
+- Fall back to binary buffer writes on `UnicodeEncodeError` in `scripts/trusted_gh.py` to prevent Windows cp1252 output encoding crashes.
+
 ## [0.7.0] (2026-09-28)
 
 ### Added
