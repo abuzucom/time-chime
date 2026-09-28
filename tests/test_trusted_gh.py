@@ -137,6 +137,13 @@ class TrustedRunnerSafetyTest(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
+            git_dir = root / ".git"
+            git_dir.mkdir()
+            (git_dir / "HEAD").write_text("ref: refs/heads/feature/test\n", encoding="utf-8")
+            (git_dir / "config").write_text(
+                '[remote "origin"]\n\turl = https://github.com/owner/repo.git\n',
+                encoding="utf-8",
+            )
             buffer = io.BytesIO()
             faulty = FaultyWriter()
             faulty.buffer = buffer
