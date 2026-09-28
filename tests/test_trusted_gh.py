@@ -148,8 +148,8 @@ class TrustedRunnerSafetyTest(unittest.TestCase):
             faulty = FaultyWriter()
             faulty.buffer = buffer
             completed = subprocess.CompletedProcess(["gh", "pr", "view"], 0, "arrow: \u2192", "")
-            with patch.object(trusted_gh, "resolve_gh", return_value=sys.executable):
-                with patch.object(trusted_gh.subprocess, "run", return_value=completed):
+            with patch.object(trusted_gh, "authenticated_account", return_value={"id": 1, "login": "user"}):
+                with patch.object(trusted_gh, "run_gh", return_value=completed):
                     with patch("sys.stdout", faulty):
                         code = trusted_gh._run_requested_command(str(root), ["pr", "view"])
 
