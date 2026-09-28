@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.0] (2026-09-28)
+
+### Changed
+
+- Consolidate dependency updates from pull requests 13, 65, 77, 80, 81, and 84 into a single release.
+- Update `eslint-plugin-react-hooks` to 7.1.1.
+- Update npm package dependencies and devDependencies across 57 packages.
+- Update GitHub Actions workflow action pins:
+  - `actions/checkout` to `3d3c42e5aac5ba805825da76410c181273ba90b1` (v7.0.1).
+  - `actions/setup-python` to `5fda3b95a4ea91299a34e894583c3862153e4b97` (v7.0.0).
+  - `google/osv-scanner-action/osv-scanner-action` to `6e4298ebc4db23e847df9b2e2de2939d6f066c67` (v2.5.1).
+  - `github/codeql-action/upload-sarif` to `b96794f015dfd88f77b49b1c93e0fa7110f94c63` (v4.38.0).
+
+### Fixed
+
+- Pin Nitro `compatibilityDate` to `2026-09-13` in `vite.config.ts`. Nitro defaults to the current build date when unspecified, exceeding the newest date supported by `wrangler@4.132.0` in `security-headers.yml`.
+- Fall back to binary buffer writes on `UnicodeEncodeError` in `scripts/trusted_gh.py` to prevent Windows cp1252 output encoding crashes.
+
 ## [0.7.0] (2026-09-28)
 
 ### Added

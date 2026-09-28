@@ -128,6 +128,34 @@ class TrustedRunnerSafetyTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "\ufffd")
 
+    def test_run_requested_command_handles_stdout_encoding_error(self):
+        class FaultyWriter(io.StringIO):
+            def write(self, s):
+                if any(ord(c) > 127 for c in s):
+                    raise UnicodeEncodeError("charmap", s, 0, 1, "character maps to <undefined>")
+                return super().write(s)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            git_dir = root / ".git"
+            git_dir.mkdir()
+            (git_dir / "HEAD").write_text("ref: refs/heads/feature/test\n", encoding="utf-8")
+            (git_dir / "config").write_text(
+                '[remote "origin"]\n\turl = https://github.com/owner/repo.git\n',
+                encoding="utf-8",
+            )
+            buffer = io.BytesIO()
+            faulty = FaultyWriter()
+            faulty.buffer = buffer
+            completed = subprocess.CompletedProcess(["gh", "pr", "view"], 0, "arrow: \u2192", "")
+            with patch.object(trusted_gh, "authenticated_account", return_value={"id": 1, "login": "user"}):
+                with patch.object(trusted_gh, "run_gh", return_value=completed):
+                    with patch("sys.stdout", faulty):
+                        code = trusted_gh._run_requested_command(str(root), ["pr", "view"])
+
+            self.assertEqual(code, 0)
+            self.assertIn(b"arrow: ", buffer.getvalue())
+
 
 class RepositoryContextTest(unittest.TestCase):
     """Repository-bound commands receive safe explicit context."""

@@ -397,8 +397,14 @@ def _run_requested_command(repo_root, arguments: list[str]) -> int:
         print("error: GitHub CLI execution failed; inspect connectivity and repository context",
               file=sys.stderr)
         return 1
-    sys.stdout.write(result.stdout[:COMMAND_OUTPUT_LIMIT])
-    sys.stderr.write(result.stderr[:COMMAND_OUTPUT_LIMIT])
+    try:
+        sys.stdout.write(result.stdout[:COMMAND_OUTPUT_LIMIT])
+    except UnicodeEncodeError:
+        sys.stdout.buffer.write(result.stdout[:COMMAND_OUTPUT_LIMIT].encode("utf-8", errors="replace"))
+    try:
+        sys.stderr.write(result.stderr[:COMMAND_OUTPUT_LIMIT])
+    except UnicodeEncodeError:
+        sys.stderr.buffer.write(result.stderr[:COMMAND_OUTPUT_LIMIT].encode("utf-8", errors="replace"))
     return result.returncode
 
 
