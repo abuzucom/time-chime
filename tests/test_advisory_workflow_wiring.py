@@ -50,6 +50,12 @@ class AdvisoryWorkflowTest(unittest.TestCase):
                 text.count("persist-credentials: false"),
             )
 
+    def test_coverage_workflow_disables_persisted_credentials(self):
+        coverage_workflow = ROOT / '.github' / 'workflows' / 'github-coverage.yml'
+        if coverage_workflow.exists():
+            text = coverage_workflow.read_text(encoding='utf-8')
+            self.assertIn('persist-credentials: false', text)
+
     def test_changelog_range_jobs_fetch_full_history(self):
         workflow_jobs = (
             (SYNC_WORKFLOW, "check-sync"),
