@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """Test workflow permissions and report sanitization security properties."""
-import re
 import unittest
 from pathlib import Path
 
