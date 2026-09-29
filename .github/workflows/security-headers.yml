@@ -29,6 +29,9 @@ on:
         description: "Optional URL to validate instead of a local preview build (e.g. https://example.com)"
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   headers:
     name: Validate response headers
