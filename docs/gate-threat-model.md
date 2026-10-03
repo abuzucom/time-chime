@@ -280,25 +280,18 @@ reason.
 - `su_target_verdict` retains malformed option sequences, unsupported option
   operands, and direct-caller token shapes. Corpus rows cover missing, root,
   fixed non-root, dynamic, and command-payload targets.
-- `_cmd_parser` functions retain empty-segment, terminal-caret, unmatched
-  expansion, size-bound, and malformed direct-caller arms. Synthetic CMD rows
+- `_cmd_parser` functions retain unmatched dynamic expansion arms. Synthetic CMD rows
   cover complete, dynamic, malformed, empty, and bounded command parsing.
-- `_platform_policy` functions retain alternate endpoint syntax and uncommon
-  macOS or Linux program-family arms. Cross-host tests cover every verdict and
-  representative programs without invoking native platform tools.
-- `block_destructive_cmd` classifiers retain missing operands, alternate curl
-  flags, service query forms, and direct-caller parse states. Synthetic payloads
-  cover destructive, persistence, discovery, transfer, and interpreter paths.
-- The PowerShell `_interpreter_verdict` retains an uncommon parser state after
-  a recognized interpreter. Shared corpus rows cover fixed scripts, command
-  payloads, dynamic targets, and plain shell transitions.
+- The PowerShell policy and CMD destructive classifiers now have no unreached
+  statements in `block_destructive_cmd.py`, `block_destructive_powershell.py`,
+  or `_platform_policy.py`.
 - Branch enforcement retains malformed lifecycle payloads and uncommon Git target positions in
   `alias_names_prohibited_branch`, `command_names_prohibited_branch`,
   `command_names_prohibited_metadata`, `handle_context_event`, and `main`.
   Hook tests cover every lifecycle event and client consent response.
   Tests also cover exact recovery, aliases, metadata, and branch publication.
-- `read_payload`, `resolved_under`, and `sanitize` retain defensive exceptions
-  and direct-caller bounds. Hook entry points reject those states earlier.
+- `read_payload` retains defensive exceptions for unparseable input. Hook entry
+  points reject those states earlier.
 - `_branch_from_git_directory` retains the post-resolution containment check for a replaced
   or linked `.git/HEAD`. A portable test cannot create that filesystem race.
 - `load_policy` retains the post-read size check for policy growth after

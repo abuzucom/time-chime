@@ -101,6 +101,8 @@ jobs:
         run: python scripts/check_changelog.py --base "$PR_BASE_SHA" --head "$PR_HEAD_SHA"
       - name: Check canonical policy size
         run: python scripts/check_policy_size.py
+      - name: Check hook test coverage
+        run: python scripts/check_hook_coverage.py
       - name: Check persist-credentials on checkout steps
         run: python scripts/check_persist_credentials.py .github/workflows/*.yml
       - name: Check for unjustified MD5/SHA-1

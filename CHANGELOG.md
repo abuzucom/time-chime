@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.2] (2026-10-02)
+
+### Added
+
+- Add comprehensive hook statement coverage tests in `tests/test_hook_statement_coverage.py`.
+- Add `python scripts/check_hook_coverage.py` to the static checks job in `.github/workflows/agents-compliance.yml`.
+- Add additional JavaScript unit tests to `.github/workflows/github-coverage.yml`.
+
+### Changed
+
+- Reduce unreached hook functions in `hook-coverage-baseline.json` from 84 functions down to 60 functions.
+- Add `test_branch_validation_contexts.py::BranchContextTest` to `PRIORITY_TEST_SHARDS` in `scripts/check_hook_coverage.py`.
+- Update `docs/gate-threat-model.md` with newly covered hook functions and verified boundary limits.
+
+## [0.8.1] (2026-09-28)
+
+### Fixed
+
+- Add explicit `contents: read` permissions block to `security-headers.yml`, resolving CodeQL alert #2 (`actions/missing-workflow-permissions`).
+- Escape backslash characters before table pipe characters in `scripts/update-zap-report.mjs`, resolving CodeQL alert #3 (`js/incomplete-sanitization`).
+
 ## [0.8.0] (2026-09-28)
 
 ### Changed

@@ -54,6 +54,8 @@ PRIORITY_TEST_SHARDS = (
     "test_enforce_git_identity.py::CommitRangeTest",
     "test_check_conflict_markers.py::SecurityHardeningTest",
     "test_check_conflict_markers.py::SparseCheckoutTest",
+    "test_branch_review_regressions.py::BranchReviewTest",
+    "test_branch_validation_contexts.py::BranchContextTest",
 )
 RESOURCE_HEAVY_TEST_SHARDS = frozenset(PRIORITY_TEST_SHARDS)
 EXCLUSIVE_TEST_SHARDS = RESOURCE_HEAVY_TEST_SHARDS
