@@ -37,9 +37,13 @@ jobs:
             src/lib/native/consent.test.ts \
             src/lib/time/provider.test.ts \
             tests/https-guard-host-validation.test.mjs \
+            tests/https-guard-fuzz.test.mjs \
             tests/check-headers.test.mjs \
             tests/pre-hydration-hash.test.mjs \
-            tests/error-page-clickjacking.test.mjs
+            tests/error-page-clickjacking.test.mjs \
+            tests/clickjacking-defences.test.mjs \
+            tests/trusted-gh.test.mjs \
+            tests/security-headers-e2e.test.mjs
 
       - name: Convert LCOV to Cobertura
         shell: bash
