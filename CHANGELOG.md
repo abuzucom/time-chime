@@ -8,6 +8,10 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 
 ## [0.8.4] (2026-10-07)
 
+### Added
+
+- Add workflow action pin tests in `tests/test_workflow_security.py`.
+
 ### Changed
 
 - Bump `actions/upload-code-coverage` from 1.4.1 to 1.4.4 in
