@@ -34,5 +34,39 @@ class ZapReportEscapingTest(unittest.TestCase):
         )
 
 
+class ActionPinTest(unittest.TestCase):
+    """Workflow action references must be pinned to full commit SHAs."""
+
+    def test_github_coverage_uses_expected_action_pins(self):
+        """Verify github-coverage.yml pins the bumped actions."""
+        workflow_path = ROOT / ".github" / "workflows" / "github-coverage.yml"
+        text = workflow_path.read_text(encoding="utf-8")
+        self.assertIn(
+            "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+            text,
+        )
+        self.assertIn(
+            "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c",
+            text,
+        )
+        self.assertIn(
+            "actions/upload-code-coverage@2b21a77928be8d5168c2b9581a67f2adbebacc52",
+            text,
+        )
+
+    def test_dependency_audit_uses_expected_action_pins(self):
+        """Verify dependency-audit.yml pins the bumped actions."""
+        workflow_path = ROOT / ".github" / "workflows" / "dependency-audit.yml"
+        text = workflow_path.read_text(encoding="utf-8")
+        self.assertIn(
+            "github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2",
+            text,
+        )
+        self.assertIn(
+            "google/osv-scanner-action/osv-scanner-action@a345acffa64b0eaede81a3d9aae6141214d9c8fc",
+            text,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
