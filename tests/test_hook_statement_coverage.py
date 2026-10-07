@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 """Exercise remaining unreached hook functions, error arms, and CLI entrypoints."""
-import base64
 import io
 import json
-import os
 import sys
 import tempfile
 import unittest
@@ -19,7 +17,6 @@ import _bash_parser as bash_parser
 import _cmd_parser as cmd_parser
 import _gate_core as gate_core
 import _platform_policy as platform_policy
-import block_destructive_bash as block_bash
 import block_destructive_cmd as block_cmd
 import block_destructive_powershell as block_ps
 import block_infrastructure_access as block_infra
