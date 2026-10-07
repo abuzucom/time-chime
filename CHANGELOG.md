@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.4] (2026-10-07)
+
+### Changed
+
+- Bump `actions/upload-code-coverage` from 1.4.1 to 1.4.4 in
+  `.github/workflows/github-coverage.yml`.
+- Bump `actions/download-artifact` from 4.3.0 to 8.0.1 in
+  `.github/workflows/github-coverage.yml`.
+- Bump `actions/upload-artifact` from 4.6.2 to 7.0.1 in
+  `.github/workflows/github-coverage.yml`.
+- Bump `github/codeql-action/upload-sarif` from 4.38.0 to 4.38.2 in
+  `.github/workflows/dependency-audit.yml`.
+- Bump `google/osv-scanner-action/osv-scanner-action` from 2.5.1 to 2.6.0 in
+  `.github/workflows/dependency-audit.yml`.
+
+### Fixed
+
+- Align `package.json` version with `CHANGELOG.md`.
+
 ## [0.8.3] (2026-10-07)
 
 ### Fixed
