@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.3] (2026-10-07)
+
+### Fixed
+
+- Remove unused `base64`, `os`, and `block_destructive_bash` imports from
+  `tests/test_hook_statement_coverage.py` to resolve github-code-quality findings.
+
 ## [0.8.2] (2026-10-02)
 
 ### Added
