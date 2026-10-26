@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.5] (2026-10-26)
+
+### Added
+
+- Add `tests/test_dependency_audit_node.py` to check the audit Node major.
+
+### Fixed
+
+- Run the npm audit job in `.github/workflows/dependency-audit.yml` on
+  Node 22. The `@tanstack/react-start` packages require Node 22.12.0 or
+  later. The Node 20 job fails with an npm `edgesOut` error.
+
 ## [0.8.4] (2026-10-07)
 
 ### Added
