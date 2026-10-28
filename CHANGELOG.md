@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.6] (2026-10-28)
+
+### Added
+
+- Add `tests/test_dependency_security_floors.py` to keep advisory-affected
+  pins at or above their patched versions.
+
+### Security
+
+- Bump `@tanstack/react-start` from 1.168.53 to 1.168.60 for
+  GHSA-qx66-fv34-fjm8 (critical reflected XSS in server-function
+  responses).
+- Bump `@tanstack/react-router` from 1.170.36 to 1.170.41 and
+  `@tanstack/router-plugin` from 1.168.38 to 1.168.42 to match the
+  versions that `@tanstack/react-start` 1.168.60 pins.
+- Bump `vite` from 8.3.0 to 8.3.3 for GHSA-9jrq-w75r-8gcw,
+  GHSA-rq7h-c2jc-7f22, and GHSA-vfpm-58rq-9qcg.
+- Bump `zod` from 4.6.5 to 4.6.6 for GHSA-mrhx-c7xc-m3w5.
+
 ## [0.8.5] (2026-10-26)
 
 ### Added
