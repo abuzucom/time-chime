@@ -12,6 +12,14 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 
 - Add `tests/test_dependency_security_floors.py` to keep advisory-affected
   pins at or above their patched versions.
+- Add `tests/test_bun_lockfile_workflow_consent.py` to check the bun
+  lockfile consent route.
+
+### Changed
+
+- Route the exact `bun install --lockfile-only` command in
+  `hooks/enforce_branch_name.py` to active-human consent. Every other `bun`
+  command stays denied.
 
 ### Security
 

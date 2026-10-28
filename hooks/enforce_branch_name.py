@@ -726,6 +726,8 @@ def _workflow_needs_consent(command: str, project_dir: str) -> bool:
     if any(core.is_ambiguous(token) or token in (";", "&", "&&", "|", "||", "(", ")")
            or any(character in token for character in "<>%!^\0") for token in tokens):
         return False
+    if tokens == ["bun", "install", "--lockfile-only"]:
+        return True
     if tokens[0] in ("python", "python3", "python.exe", "python3.exe"):
         return _python_workflow(tokens, project_dir)
     if tokens[0] == "make":
