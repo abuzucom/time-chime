@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.8.7] (2026-10-29)
+
+### Changed
+
+- Bump `actions/setup-node` from 7.0.0 to 7.1.0 in
+  `.github/workflows/dependency-audit.yml`.
+- Bump `actions/upload-artifact` from 7.0.1 to 7.0.2 in
+  `.github/workflows/dependency-audit.yml`,
+  `.github/workflows/fuzz-https-guard.yml`, and
+  `.github/workflows/github-coverage.yml`.
+- Bump `actions/download-artifact` from 8.0.1 to 8.0.2 in
+  `.github/workflows/github-coverage.yml`.
+- Bump `github/codeql-action/upload-sarif` from 4.38.2 to 4.39.0 in
+  `.github/workflows/dependency-audit.yml`.
+- Bump `google/osv-scanner-action/osv-scanner-action` from 2.6.0 to 2.7.0 in
+  `.github/workflows/dependency-audit.yml`.
+- Update expected action pins in `tests/test_workflow_security.py`.
+
+### Fixed
+
+- Correct the `actions/upload-artifact` version comment in
+  `.github/workflows/fuzz-https-guard.yml`.
+
 ## [0.8.6] (2026-10-28)
 
 ### Added
