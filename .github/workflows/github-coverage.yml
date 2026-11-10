@@ -36,6 +36,8 @@ jobs:
             --experimental-strip-types \
             src/lib/native/consent.test.ts \
             src/lib/time/provider.test.ts \
+            src/lib/settings-store.test.ts \
+            src/lib/settings-store-initialization.test.ts \
             tests/https-guard-host-validation.test.mjs \
             tests/https-guard-fuzz.test.mjs \
             tests/check-headers.test.mjs \

@@ -38,6 +38,10 @@ CHECKOUT_ACTION = "actions/checkout@11d5960a326750d5838078e36cf38b85af677262"
 SETUP_PYTHON_ACTION = (
     "actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065"
 )
+APPROVED_SETUP_PYTHON_ACTIONS = frozenset({
+    SETUP_PYTHON_ACTION,
+    "actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0",
+})
 TRUSTED_ENVIRONMENT = {
     "PR_BASE_REPOSITORY": "${{ github.event.pull_request.base.repo.full_name }}",
     "PR_BASE_SHA": "${{ github.event.pull_request.base.sha }}",
@@ -515,6 +519,13 @@ def _pull_target_violations(document: dict, text: str, path: str) -> list[str]:
         candidate_steps = candidate_job.get("steps")
         if isinstance(candidate_steps, list) and len(candidate_steps) == 5:
             python_step = candidate_steps[2]
+            action = python_step.get("uses") if isinstance(python_step, dict) else None
+            if isinstance(action, str) and action in APPROVED_SETUP_PYTHON_ACTIONS:
+                candidate_steps = list(candidate_steps)
+                python_step = dict(python_step)
+                python_step["uses"] = SETUP_PYTHON_ACTION
+                candidate_steps[2] = python_step
+                candidate_job["steps"] = candidate_steps
             version = (python_step.get("with", {}).get("python-version")
                        if isinstance(python_step, dict)
                        else None)

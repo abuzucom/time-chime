@@ -57,7 +57,7 @@ export const Route = createFileRoute("/permissions")({
  */
 function PermissionsPage() {
   const { snapshot, controller } = useBackgroundConsent();
-  const platform = useMemo(currentPlatform, []);
+  const platform = useMemo(() => currentPlatform(), []);
   const native = isNativePlatform();
 
   async function handleGrant() {

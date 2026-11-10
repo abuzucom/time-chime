@@ -1,6 +1,6 @@
 {
   "name": "tanstack_start_ts",
-  "version": "0.8.7",
+  "version": "0.11.1",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -27,12 +27,14 @@
     "test:error-page-clickjacking": "node --test tests/error-page-clickjacking.test.mjs",
     "test:csp-hash": "node --test tests/pre-hydration-hash.test.mjs",
     "test:consent": "node --test --experimental-strip-types src/lib/native/consent.test.ts",
+    "test:settings-store": "node --test --experimental-strip-types src/lib/settings-store.test.ts",
+    "test:settings-store-initialization": "node --test --experimental-strip-types src/lib/settings-store-initialization.test.ts",
     "test:https-guard-host": "node --test --experimental-strip-types tests/https-guard-host-validation.test.mjs",
     "test:https-guard-fuzz": "node --test --experimental-strip-types tests/https-guard-fuzz.test.mjs",
     "fuzz:replay": "node --experimental-strip-types scripts/replay-fuzz-failure.mjs",
     "fuzz:report": "node --experimental-strip-types scripts/report-fuzz-failure.mjs",
     "test:security-headers-e2e": "node --test tests/security-headers-e2e.test.mjs",
-    "test": "npm run test:headers && npm run test:clickjacking && npm run test:error-page-clickjacking && npm run test:csp-hash && npm run test:consent && npm run test:https-guard-host && npm run test:https-guard-fuzz && npm run test:security-headers-e2e && npm run test:time-provider && npm run test:trusted-gh && npm run test:policy",
+    "test": "npm run test:headers && npm run test:clickjacking && npm run test:error-page-clickjacking && npm run test:csp-hash && npm run test:consent && npm run test:settings-store && npm run test:settings-store-initialization && npm run test:https-guard-host && npm run test:https-guard-fuzz && npm run test:security-headers-e2e && npm run test:time-provider && npm run test:trusted-gh && npm run test:policy",
     "test:time-provider": "node --experimental-strip-types src/lib/time/provider.test.ts"
   },
   "dependencies": {

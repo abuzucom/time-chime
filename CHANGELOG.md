@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.11.1] (2026-11-10)
+
+### Fixed
+
+- Run the settings-store tests in the CI coverage workflow.
+- Restore the final newline in the trusted Python pin test file.
+- Correct the settings loader docstring after the store migration.
+
+## [0.11.0] (2026-11-09)
+
+### Changed
+
+- Use a subscribed settings store for initialization and updates.
+
+### Fixed
+
+- Preserve persisted settings during initialization.
+
+## [0.10.0] (2026-11-09)
+
+### Changed
+
+- Update React hooks to satisfy lint checks for render purity and state.
+
+## [0.9.0] (2026-11-09)
+
+### Changed
+
+- Accept the approved setup-python 7.1.0 pin in the immutable checker.
+
 ## [0.8.7] (2026-10-29)
 
 ### Changed
