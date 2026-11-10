@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
+import { createSettingsStore } from "./settings-store";
 
 export type FaceId = "grandfather" | "midcentury" | "digital-local" | "digital-utc";
 export type SoundMode = "normal" | "quiet" | "mute";
@@ -204,6 +205,22 @@ function persistSettingsWithFeedback(
   }
 }
 
+function loadInitialSettings(): Settings {
+  const { settings, loadError } = loadPersistedSettings();
+  const loaded = { ...settings };
+  if (loaded.donationFirstLaunch === null) loaded.donationFirstLaunch = Date.now();
+  if (loadError) {
+    toast.error("Saved settings were unreadable", {
+      description: "Falling back to defaults. Your changes will still save going forward.",
+    });
+  }
+  return loaded;
+}
+
+function makeDefaultSettings(): Settings {
+  return { ...DEFAULTS, donationFirstLaunch: Date.now() };
+}
+
 /**
  * React context provider for user settings.
  *
@@ -214,25 +231,16 @@ function persistSettingsWithFeedback(
  * first-launch timestamp used by the once-a-year donation nudge.
  */
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<Settings>(DEFAULTS);
-  const [ready, setReady] = useState(false);
-
+  const store = useMemo(
+    () => createSettingsStore(DEFAULTS, loadInitialSettings, makeDefaultSettings),
+    [],
+  );
+  const { settings: state, ready } = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getServerSnapshot,
+  );
   const persistFailed = useRef(false);
-
-  useEffect(() => {
-    const { settings: loaded, loadError } = loadPersistedSettings();
-    // Stamp first-launch time for the once-a-year donation nudge
-    if (loaded.donationFirstLaunch === null) {
-      loaded.donationFirstLaunch = Date.now();
-    }
-    setState(loaded);
-    setReady(true);
-    if (loadError) {
-      toast.error("Saved settings were unreadable", {
-        description: "Falling back to defaults. Your changes will still save going forward.",
-      });
-    }
-  }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -260,10 +268,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       ready,
-      update: (patch) => setState((s) => ({ ...s, ...patch })),
-      reset: () => setState({ ...DEFAULTS, donationFirstLaunch: Date.now() }),
+      update: store.update,
+      reset: store.reset,
     }),
-    [state, ready],
+    [state, ready, store],
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;
