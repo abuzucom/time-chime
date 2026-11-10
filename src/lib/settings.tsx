@@ -153,9 +153,9 @@ function migratePersistedSettings(raw: StoredShape): StoredShape {
  * Read the persisted settings blob from `localStorage`, migrate it forward
  * to the current schema version, and layer it over {@link DEFAULTS}.
  *
- * Runs synchronously so the `SettingsProvider` can seed its `useState`
- * lazily without a hydration flicker. Returns {@link DEFAULTS} during SSR
- * (no `window`) and on every failure path — a corrupt or hand-edited
+ * Runs synchronously. The settings store calls this function during
+ * subscription or an early update. It returns {@link DEFAULTS} during SSR
+ * (no `window`) and on every failure path. A corrupt or hand-edited
  * payload should never crash the app.
  *
  * @returns The resolved settings plus a `loadError` flag the provider uses
