@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 /**
  * The canonical Konami cheat code: ↑ ↑ ↓ ↓ ← → ← → B A.
@@ -47,8 +47,7 @@ export function useKonamiCode(
   // `activeRef` mirrors `active` so the keydown listener (captured once)
   // can gate re-entry without re-subscribing on every state change.
   const activeRef = useRef(false);
-  const onActivateRef = useRef(onActivate);
-  onActivateRef.current = onActivate;
+  const activate = useEffectEvent(onActivate);
 
   const [active, setActive] = useState(false);
 
@@ -72,7 +71,7 @@ export function useKonamiCode(
       if (activeRef.current) return;
       activeRef.current = true;
       setActive(true);
-      onActivateRef.current();
+      activate();
       window.setTimeout(function endCooldown() {
         activeRef.current = false;
         setActive(false);

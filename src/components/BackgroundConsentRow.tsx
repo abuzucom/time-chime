@@ -31,7 +31,7 @@
  *     Authoring Practices toolbar pattern. Tab still moves out of the
  *     toolbar as a single stop.
  */
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import { Bell, BellOff, ExternalLink, RefreshCw, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -111,8 +111,11 @@ export function BackgroundConsentRow() {
   const { snapshot, controller } = useBackgroundConsent();
   const platform = currentPlatform();
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  // Freeze "now" per render so all relative timestamps in one paint agree.
-  const nowMs = useMemo(() => Date.now(), [snapshot.updatedAt]);
+  const [nowMs, setNowMs] = useState(snapshot.updatedAt);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setNowMs(Date.now()), 0);
+    return () => window.clearTimeout(timer);
+  }, [snapshot.updatedAt]);
 
   // Stable ids so aria-labelledby / aria-describedby stay unique when the
   // panel is rendered more than once in the same drawer.

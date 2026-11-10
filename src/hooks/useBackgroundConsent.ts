@@ -53,7 +53,7 @@ export function useBackgroundConsent(): {
   snapshot: ConsentSnapshot;
   controller: ConsentController;
 } {
-  const controller = useMemo(getController, []);
+  const controller = useMemo(() => getController(), []);
 
   const snapshot = useSyncExternalStore(
     (listener) => controller.subscribe(listener),
