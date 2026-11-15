@@ -116,6 +116,18 @@ Apply the secret first. Without it every review fails before a verdict.
 Each pull request costs up to two model calls. A report that breaks the
 response contract costs one retry.
 
+## Code scanning
+
+The Actions analysis reports untrusted checkout findings for the two vendored
+workflow files. The findings cover ref expressions that resolve to a trusted
+base commit or to a pinned policy commit. The file
+`.github/codeql/codeql-config.yml` excludes the two vendored files from the
+analysis.
+
+The exclusion matches the dismissal the repository already applied to the same
+rule in `.github/workflows/immutable-conflict-check.yml`. An upgrade that
+changes the vendored files can raise the findings again.
+
 ## Upgrade path
 
 1. Pick a new foucault or euler release commit.
