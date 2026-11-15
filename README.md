@@ -413,6 +413,9 @@ public/
   (2021) self-review with per-item file/test evidence.
 - [`docs/COMPLIANCE-MAPPING.md`](./docs/COMPLIANCE-MAPPING.md): SOC 2
   Trust Services Criteria and ISO/IEC 27001:2022 Annex A control tables.
+- [`docs/review-automation.md`](./docs/review-automation.md): pull request
+  security review from `abuzucom/foucault` and code quality review from
+  `abuzucom/euler`.
 
 These are **self-authored control descriptions, not certifications**.
 

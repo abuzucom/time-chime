@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.12.0] (2026-11-10)
+
+### Added
+
+- Adopt the pull request security review from `abuzucom/foucault` and the
+  pull request quality review from `abuzucom/euler`. The vendored reusable
+  workflows and the adapter scripts are pinned to foucault 3.7.6 and euler
+  0.7.1.
+- Document the review automation in `docs/review-automation.md`.
+
 ## [0.11.1] (2026-11-10)
 
 ### Fixed
