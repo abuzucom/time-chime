@@ -92,7 +92,7 @@ jobs:
     steps: &security_review_steps
       - name: Resolve pull request metadata
         id: resolve
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           INPUT_PR_NUMBER: ${{ inputs.pr_number }}
           INPUT_AUDIT_REF: ${{ inputs.audit_ref }}
@@ -438,7 +438,7 @@ jobs:
 
       - name: Post PR comment
         if: ${{ inputs.pr_comment }}
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           PR_NUMBER: ${{ steps.resolve.outputs.pr_number }}
           BASE_SHA: ${{ steps.resolve.outputs.base_sha }}
@@ -500,7 +500,7 @@ jobs:
       - name: Publish check run
         if: ${{ always() }}
         timeout-minutes: 1
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           HEAD_SHA: ${{ steps.resolve.outputs.head_sha }}
           JOB_STATUS: ${{ job.status }}
