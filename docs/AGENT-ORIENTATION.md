@@ -32,6 +32,8 @@ scripts/check-action-pins.mjs --fix` resolves and rewrites violations;
 - Policy test suite: `python scripts/run_tests.py`
 - GitHub operations: `python scripts/trusted_gh.py run <gh arguments>`
 - Bounded Git state: `python scripts/read_git_state.py all`
+- Immutable compliance scan: `python scripts/check_compliance_tree.py
+  --repo PATH --tree OID`
 
 Python 3 supplies the policy tooling. The app itself uses only bun and
 Node. Install checker dependencies with
@@ -70,6 +72,10 @@ ground for make users.
 - `bun.lock` regenerates through `bun install` after an authorized
   `package.json` change.
 - `.claudeignore` excludes `.env*` while allowing `.env.example`.
+- `.compliance-tree-exemptions.json` names the pull request target callers
+  that the base branch reviews. The trusted scan reads the manifest from the
+  base branch alone. Change the manifest and the checker together. A caller
+  that the manifest does not name keeps the closed schema.
 - Security-hardening is the central concern: CSP, security headers,
   clickjacking defenses, ZAP baseline scanning. Read the matching workflow
   in `.github/workflows/` (`security-headers.yml`, `zap-baseline.yml`,

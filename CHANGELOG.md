@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.13.0] (2026-11-26)
+
+### Added
+
+- Add `.compliance-tree-exemptions.json`. The manifest declares the pull
+  request target callers that the base branch reviews. It pins each caller
+  content by SHA-256, the secret names that the caller may reference, the
+  reusable workflow commits that the caller may call, and the write scopes
+  that the caller jobs may request.
+- Add reviewed pull request target rules to
+  `scripts/check_compliance_tree.py`. A caller named in the base manifest
+  passes a documented rule set. Every other pull request target workflow
+  keeps the closed schema that only the immutable compliance job satisfies.
+- Add `tests/test_compliance_tree_exemptions.py`. The suite covers the
+  manifest parser, the reviewed rule set, the content digest pin, and one
+  trusted base scan of a candidate tree.
+
 ## [0.12.0] (2026-11-10)
 
 ### Added
