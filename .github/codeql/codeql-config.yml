@@ -1,13 +1,8 @@
 # CodeQL configuration for this repository.
 #
-# The two review workflow files are verbatim copies of the upstream
-# abuzucom/foucault and abuzucom/euler implementations. The copies keep the
-# upstream checkout steps, so the Actions analysis reports untrusted checkout
-# findings for ref expressions that resolve to a trusted base commit or to a
-# pinned policy commit. The exclusion matches the dismissal the repository
-# already applied to the same rule in
-# .github/workflows/immutable-conflict-check.yml.
+# The review workflows call the abuzucom/agents-personas wrappers from a
+# pinned commit. The repository holds no vendored review workflow file, so
+# no path needs an exclusion. The dismissal for the untrusted checkout rule
+# stays in .github/workflows/immutable-conflict-check.yml.
 name: "CodeQL config"
-paths-ignore:
-  - ".github/workflows/security-review.yml"
-  - ".github/workflows/quality-review.yml"
+paths-ignore: []

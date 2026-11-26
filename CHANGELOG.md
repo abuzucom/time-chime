@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
+## [0.14.0] (2026-11-26)
+
+### Changed
+
+- Replace the vendored `abuzucom/foucault` and `abuzucom/euler` review
+  implementation with the `abuzucom/agents-personas` engine at commit
+  `1649e5c9710fd85d6cca12006e344af27a5404a6` (1.0.0). The check run names
+  change to `foucault / security` and `euler / quality`. A maintainer
+  updates the required status checks before the change merges.
+- Add the generay time review caller. The time review runs on every pull
+  request because this repository is a clock.
+- Add the adorno and havel label caller. A maintainer requests the user
+  interface review or the privacy review with the matching scan label.
+- Withhold the provider key from fork pull requests. The engine publishes a
+  skipped check for a fork pull request and makes no model call.
+
+### Removed
+
+- Remove the vendored review workflows `.github/workflows/security-review.yml`
+  and `.github/workflows/quality-review.yml`.
+- Remove the vendored adapter files under `ci/` and the response checker
+  `scripts/check_pr_review_response.py`.
+- Remove the vendored review artifact tests.
+
 ## [0.13.0] (2026-11-26)
 
 ### Added
