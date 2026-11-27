@@ -16,9 +16,8 @@ An agent runs the application commands through the Makefile instead. A person
 may run the bun commands directly.
 
 - Agent test route: `make test` runs the policy suite and the application
-  suites. `make app-test` runs the application suites alone.
-- Agent lint route: `make lint` runs the policy lint and the application
-  lint. `make app-lint` runs the application lint alone.
+  suites.
+- Agent lint route: `make lint` runs the policy lint and the application lint.
 - Install: `bun install`
 - Dev server: `bun run dev`
 - Build: `bun run build` (`bun run build:dev` for development mode)
@@ -46,8 +45,8 @@ scripts/check-action-pins.mjs --fix` resolves and rewrites violations;
 Python 3 supplies the policy tooling. The app itself uses only bun and
 Node. Install checker dependencies with
 `python -m pip install -r requirements-checkers.txt`. Makefile targets
-`sync`, `check`, `changelog`, `lint`, `test`, `app-test`, `app-lint`, and
-`identity` cover the same ground for make users.
+`sync`, `check`, `changelog`, `lint`, `test`, and `identity` cover the same
+ground for make users.
 
 ## Architecture
 

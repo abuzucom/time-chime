@@ -26,6 +26,7 @@ class MergeSafetyFixture:
         (self.root / "tracked.txt").write_text("seed\n", encoding="utf-8")
         self._git("add", "tracked.txt")
         self._git("commit", "--quiet", "-m", "chore: seed fixture")
+        self._git("branch", "main")
 
     def _git(self, *args: str) -> str:
         """Run one Git command in the fixture repository."""
@@ -46,7 +47,7 @@ class MergeSafetyFixture:
         """Return the fixture repository administration directory."""
         return Path(self._git("rev-parse", "--absolute-git-dir").strip())
 
-    def _verify(self, target: str = "origin/main", **kwargs):
+    def _verify(self, target: str = "main", **kwargs):
         """Verify preconditions against the fixture repository."""
         return checker.verify_merge_safety(
             target, repo_root=self.root, scripts_dir=REPO_ROOT / "scripts", **kwargs
@@ -66,6 +67,13 @@ class TargetSelectionTest(MergeSafetyFixture, unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertTrue(
             any("cannot merge branch into itself" in error for error in errors)
+        )
+
+    def test_unresolvable_target_fails(self) -> None:
+        code, errors = self._verify("no-such-ref")
+        self.assertEqual(code, 1)
+        self.assertTrue(
+            any("does not resolve to a commit" in error for error in errors)
         )
 
 

@@ -6,7 +6,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
-## [0.15.0] (2026-11-27)
+## [0.16.0] (2026-11-27)
 
 ### Added
 
@@ -19,6 +19,19 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
   options.
 - Add the local path gate with an empty `.local-path-allowlist` and
   `hooks/trusted-owners.txt` naming `abuzucom`.
+
+### Fixed
+
+- Remove the `app-test` and `app-lint` Makefile targets. The shared command
+  gate recognizes only `sync`, `check`, `lint`, `test`, and `identity`. The two
+  removed targets met a denial for an uninspectable program. `make test` and
+  `make lint` cover both suites.
+- Regenerate `docs/template-drift.md` against the adopted 2.51.0 policy. The
+  record described a rule decline and a renumbering that the adopted policy
+  no longer carries.
+- Resolve the merge target in `scripts/check_merge_safety.py` before the
+  comparison. The template compares the target string with the current branch
+  without a resolution step.
 
 ### Changed
 

@@ -176,6 +176,18 @@ def _test_suite(root: Path, scripts: Path) -> tuple[bool, str]:
     return code == 0, diagnostic
 
 
+def _resolve_target(root: Path, target: str) -> tuple[bool, str]:
+    """Return whether the merge target names one resolvable commit."""
+    code, output = _git_output(
+        root, "rev-parse", "--verify", "--quiet", "--end-of-options",
+        f"{target}^{{commit}}")
+    if code != 0:
+        return False, f"merge target does not resolve to a commit: {target}"
+    if not output.strip():
+        return False, f"merge target does not resolve to a commit: {target}"
+    return True, ""
+
+
 def verify_merge_safety(
     target_ref: str,
     repo_root: Path | None = None,
@@ -188,6 +200,9 @@ def verify_merge_safety(
     target = (target_ref or "").strip()
     if not target:
         return 1, ["target reference is empty"]
+    resolved, diagnostic = _resolve_target(root, target)
+    if not resolved:
+        return 1, [diagnostic]
     branch = _current_branch(root)
     if branch and target == branch:
         return 1, [f"cannot merge branch into itself: {target}"]

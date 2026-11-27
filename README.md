@@ -137,8 +137,8 @@ python scripts/sync.py --check       # policy copies in sync
 python scripts/check_gate_adoption.py
 ```
 
-The `Makefile` targets `sync`, `check`, `lint`, `test`, `app-test`,
-`app-lint`, `identity`, and `changelog` cover the same ground for make users.
+The `Makefile` targets `sync`, `check`, `lint`, `test`, `identity`, and
+`changelog` cover the same ground for make users.
 The repository orientation lives in [`docs/orientation.md`](./docs/orientation.md).
 
 ### Handoffs
