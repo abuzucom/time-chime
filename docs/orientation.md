@@ -77,8 +77,8 @@ Node. Install checker dependencies with
   `.github/copilot-instructions.md`). Regenerate copies with
   `python scripts/sync.py`.
 - `shared-files.json` regenerates only through
-  `python scripts/sync.py --write-shared` during a coordinated shared-file
-  change.
+  `python scripts/sync.py --write-shared` during a coordinated change of the
+  shared files.
 - `bun.lock` regenerates through `bun install` after an authorized
   `package.json` change.
 - `.claudeignore` excludes `.env*` while allowing `.env.example`.
@@ -93,11 +93,11 @@ Node. Install checker dependencies with
   before touching headers, CSP, or time-sync logic. The app has no database
   and does no server-side rendering of user content
   (`docs/SECURITY-TOP10.md`).
-- Async discipline: cancel superseded work with `AbortController`, clear an
+- Async work must cancel superseded work with `AbortController`, clear an
   existing `setInterval` or `setTimeout` before starting a replacement, and
   let a request ID or timestamp decide between two writers. See
   `src/lib/time/TimeSyncContext.tsx`.
-- Logging: `src/routes/api/public/csp-report.tsx` treats every incoming
+- The log sink `src/routes/api/public/csp-report.tsx` treats every incoming
   field as untrusted and truncates before logging. Mirror that pattern for
   future user-supplied values.
 - Read `docs/` and `SECURITY.md` before touching architecture or security
@@ -106,9 +106,9 @@ Node. Install checker dependencies with
 
 ## Version and theme change checklist
 
-- Bump `package.json` per SemVer with every change: patch for compatible
-  fixes and UI changes, minor for compatible features. Major changes need
-  explicit approval and an `AGENTS.md` Rule 6 stop.
+- Bump `package.json` per SemVer with every change. Use a patch for
+  compatible fixes and UI changes, and a minor for compatible features.
+  Major changes need explicit approval and an `AGENTS.md` Rule 6 stop.
 - Treat `package.json` as the sole application version source. Use
   `__APP_VERSION__` for UI displays. Never hard-code a second version
   value. Verify the displayed version equals `package.json`.

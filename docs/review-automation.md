@@ -93,8 +93,8 @@ Apply the secret first. Without it every review fails before a verdict.
 
 ## Trust boundary
 
-- A pull request never runs as code. The review reads pull request content
-  as data.
+- A pull request stays data. It never executes as code. The review reads
+  pull request content as data.
 - The reviewer code runs from the default branch. A pull request branch
   cannot change it.
 - The provider receives the policy and the review envelope. The provider

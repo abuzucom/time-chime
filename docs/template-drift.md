@@ -12,22 +12,23 @@ The adopted template revision is upstream commit
 1. The canonical policy file is the upstream `AGENTS.md` at 2.51.0. The
    repository facts live in `docs/orientation.md`. The short orientation that
    the synchronized copies carry lives in `docs/project-orientation.md`. The
-   assembled policy holds a 64 KiB limit, so the upstream policy documents
+   assembled policy holds a 64 KiB limit. The upstream policy documents
    leave 651 bytes for the adopter orientation.
 
-2. Upstream rule 12 (non-root containers) is declined. This repository ships
-   no Dockerfile, Compose file, or Kubernetes manifest. `AGENTS.md` rule 12
-   names the decline and decodes the renumbering of upstream rules 13 through
+2. The repository declines upstream rule 12 (non-root containers). This
+   repository ships no Dockerfile, Compose file, or Kubernetes manifest.
+   `AGENTS.md` rule 12 names the decline and decodes the renumbering of
+   upstream rules 13 through
    20 into local rules 12 through 19. `scripts/check_dockerfile_root.py`
    remains vendored for gate-adoption completeness and activates only when a
    matching container file appears.
 
-3. Upstream rule 15 (cloud and infrastructure access) is scoped. `wrangler`
-   non-destructive operations run without a prompt. Destructive and
-   state-changing operations route to consent. Detail lives in `AGENTS.md`
-   rule 14 and `docs/agent-policy/security.md`.
+3. The repository scopes upstream rule 15 (cloud and infrastructure
+   access). `wrangler` non-destructive operations run without a prompt.
+   Destructive and write operations route to consent. Detail lives in
+   `AGENTS.md` rule 14 and `docs/agent-policy/security.md`.
 
-4. `scripts/trusted-gh.mjs` is maintained as a Node port of
+4. The repository maintains `scripts/trusted-gh.mjs` as a Node port of
    `scripts/trusted_gh.py`. The Python wrapper remains the canonical gated
    path. The Node port covers contexts without Python. Every upstream fix to
    the Python wrapper requires a backport on the Node port.
@@ -38,7 +39,7 @@ The adopted template revision is upstream commit
    `replay-fuzz-failure.mjs` and `report-fuzz-failure.mjs` fuzz tooling.
    Vendored `scripts/check_action_pins.py` stays for policy parity.
 
-6. CI workflows are expected to differ. The vendored `sync-check.yml`,
+6. The CI workflows differ by design. The vendored `sync-check.yml`,
    `agents-compliance.yml`, `agents-md-compliance.yml`,
    `immutable-conflict-check.yml`, `gate-integrity.yml`, and
    `policy-size-report.yml` sit beside repository workflows.
@@ -60,17 +61,17 @@ The adopted template revision is upstream commit
    upstream release tooling stay in the source repository.
 
 10. The local path gate carries an empty `.local-path-allowlist`. The
-    template upgrade replaced the repository test that held the only finding,
-    so the gate reports no finding.
+    template upgrade replaced the repository test that held the only
+    finding. The gate reports no finding.
 
-11. `hooks/trusted-owners.txt` names `abuzucom`. The origin owner of this
-    repository runs the test runners without a prompt.
+11. `hooks/trusted-owners.txt` names `abuzucom`. The repository owner runs
+    the test runners without a prompt.
 
 12. `hooks/workflow-scripts.local.txt` holds no entry. The repository runs
     the shared policy tooling and the application commands through the
     `Makefile`.
 
-13. The upstream source-repository files stay in the source repository:
+13. The upstream source repository keeps its own files. The list covers
     `scripts/release.py`, `.github/workflows/release.yml`, the release tests,
     `docs/agent-policy/source-orientation.md`, `policy-digests.json`, and the
     upstream self-review callers.
@@ -83,8 +84,8 @@ The adopted template revision is upstream commit
     contract.
 
 15. The prose file list names the repository own documents. The template
-    list names `docs/pr-security-review.md` and `adopters/*.md`, which belong
-    to the source repository. `scripts/check_agent_prose_gate.py`,
+    list names `docs/pr-security-review.md` and `adopters/*.md`. Those files
+    belong to the source repository. `scripts/check_agent_prose_gate.py`,
     `.github/workflows/sync-check.yml`, and the `Makefile` carry the
     repository list.
 
