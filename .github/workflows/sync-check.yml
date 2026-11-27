@@ -27,7 +27,7 @@ jobs:
       - name: Probe configured hook launchers
         run: python scripts/check_hook_launchers.py
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v6.3.0
         with:
           python-version: '3.14'
       - name: Install checker dependencies
@@ -46,7 +46,7 @@ jobs:
       - name: Probe configured hook launchers
         run: python3 scripts/check_hook_launchers.py
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v6.3.0
         with:
           python-version: '3.14'
       - name: Install checker dependencies
@@ -66,7 +66,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v6.3.0
         with:
           python-version: '3.14'
       - name: Check commit messages for external references
@@ -86,7 +86,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - name: Set up Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v6.3.0
         with:
           python-version: '3.14'
       - name: Install checker dependencies
@@ -126,13 +126,13 @@ jobs:
       - name: Check no untested statement entered the hooks
         run: python scripts/check_hook_coverage.py
       - name: Check American spelling (warning only)
-        run: python scripts/check_us_spelling.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/pr-security-review.md adopters/1a2n-web-visualizer.md adopters/prolink-go.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
+        run: python scripts/check_us_spelling.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/review-automation.md docs/orientation.md docs/project-orientation.md docs/template-drift.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
       - name: Check English only (warning only)
-        run: python scripts/check_english_only.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/pr-security-review.md adopters/1a2n-web-visualizer.md adopters/prolink-go.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
+        run: python scripts/check_english_only.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/review-automation.md docs/orientation.md docs/project-orientation.md docs/template-drift.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
       - name: Check prose policy (warning only)
-        run: python scripts/check_hedging.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/pr-security-review.md adopters/1a2n-web-visualizer.md adopters/prolink-go.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
+        run: python scripts/check_hedging.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/review-automation.md docs/orientation.md docs/project-orientation.md docs/template-drift.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
       - name: Check delegated recovery commands
-        run: python scripts/check_anti_delegation.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/pr-security-review.md adopters/1a2n-web-visualizer.md adopters/prolink-go.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
+        run: python scripts/check_anti_delegation.py AGENTS.md README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/review-automation.md docs/orientation.md docs/project-orientation.md docs/template-drift.md plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
       - name: Check pull request prose (warning only)
         if: github.event_name == 'pull_request'
         run: python scripts/check_pull_request_message.py
@@ -142,7 +142,7 @@ jobs:
       - name: Check dashes and ASCII in template files
         run: python scripts/check_ascii.py plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example .github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
       - name: Check dashes and ASCII in this repo's own prose
-        run: python scripts/check_ascii.py README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/pr-security-review.md adopters/1a2n-web-visualizer.md adopters/prolink-go.md
+        run: python scripts/check_ascii.py README.md CHANGELOG.md DRIFT.md docs/gate-threat-model.md docs/review-automation.md docs/orientation.md docs/project-orientation.md docs/template-drift.md
       - name: AgentLint (advisory)
         uses: 0xmariowu/AgentLint@6cf433c4092ee10a3162c2f4ddd68ff13b5d4aff
         with:

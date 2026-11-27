@@ -8,7 +8,9 @@ PYTHON ?= python3
 BUN ?= bun
 
 PROSE_FILES = AGENTS.md README.md CHANGELOG.md DRIFT.md \
-	docs/gate-threat-model.md \
+	docs/gate-threat-model.md docs/review-automation.md \
+	docs/orientation.md docs/project-orientation.md \
+	docs/template-drift.md \
 	plan/HANDOFF.md.example SECURITY.md.example CONTRIBUTING.md.example \
 	.github/PULL_REQUEST_TEMPLATE.md .github/ISSUE_TEMPLATE.md
 

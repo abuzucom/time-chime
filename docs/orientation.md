@@ -51,20 +51,22 @@ Node. Install checker dependencies with
 
 ## Architecture
 
-- `src/routes` — file-based routes. `src/routes/api/public/*` is the only
-  externally callable contract; treat its request and response shapes as
+- `src/routes` holds the file-based routes. `src/routes/api/public/*` is the
+  only externally callable contract. Treat its request and response shapes as
   versioned under `AGENTS.md` Rule 6.
-- `src/components` — UI components, including clock `faces`
-- `src/lib` — domain logic: `chimes`, `time`, `native`, `browser`, `http`,
-  `pwa`
-- `scripts/` — Node `.mjs` app tooling (headers, action pins, fuzz)
-  alongside the vendored Python policy toolchain adopted from
-  `abuzucom/agents`
-- `hooks/` — vendored Python gate hooks registered in
-  `.claude/settings.json`, `.codex/`, `.gemini/`, and `.agents/`
-- `tests/` — Node test runner app suites alongside Python policy suites
-- `docs/` — architecture, compliance, security, operations;
-  `docs/agent-policy/` holds the vendored supporting policy documents
+- `src/components` holds the UI components, including the clock `faces`.
+- `src/lib` holds the domain logic for `chimes`, `time`, `native`, `browser`,
+  `http`, and `pwa`.
+- `scripts/` holds the Node `.mjs` app tooling for headers, action pins, and
+  fuzz. It sits alongside the vendored Python policy toolchain adopted from
+  `abuzucom/agents`.
+- `hooks/` holds the vendored Python gate hooks registered in
+  `.claude/settings.json`, `.codex/`, `.gemini/`, and `.agents/`.
+- `tests/` holds the Node test runner app suites alongside the Python policy
+  suites.
+- `docs/` holds the architecture, compliance, security, and operations
+  documents. `docs/agent-policy/` holds the vendored supporting policy
+  documents.
 
 ## Guardrails
 

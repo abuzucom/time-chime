@@ -33,6 +33,10 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
   entry text.
 - Replace the client registrations for Claude Code, Codex, Gemini, and
   Antigravity with the upstream ones.
+- Keep the repository setup-python pin at `6d4fd22b` (6.3.0) in the policy
+  workflows. The checker approves that revision and the template revision.
+- Name the repository own documents in the prose file list. The template
+  list names files that belong to the source repository.
 
 ### Removed
 

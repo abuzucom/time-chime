@@ -75,6 +75,19 @@ The adopted template revision is upstream commit
     `docs/agent-policy/source-orientation.md`, `policy-digests.json`, and the
     upstream self-review callers.
 
+14. The policy workflows pin `actions/setup-python@6d4fd22b` (6.3.0). The
+    template pins `actions/setup-python@a26af69be` (5.6.0), a release from
+    2025-04-24 that targets Node 20. The repository moved to the newer
+    release in pull request 106. `scripts/check_compliance_tree.py` approves
+    both revisions, and `tests/test_trusted_python_pin.py` states that
+    contract.
+
+15. The prose file list names the repository own documents. The template
+    list names `docs/pr-security-review.md` and `adopters/*.md`, which belong
+    to the source repository. `scripts/check_agent_prose_gate.py`,
+    `.github/workflows/sync-check.yml`, and the `Makefile` carry the
+    repository list.
+
 ## Known environment limits
 
 Five upstream tests create a symbolic link in a temporary directory. A
