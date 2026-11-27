@@ -1,0 +1,58 @@
+name: persona-review-labels
+
+# Runs the abuzucom/agents-personas adorno and havel reviews on request. A
+# maintainer adds the matching scan label to a pull request. The label starts
+# the review. A new push to a labeled pull request reviews again. Removing
+# the stop-requested label reviews the pull request once and then stops.
+# Removing any other label starts nothing.
+#
+# pull_request_target runs this file from the base branch, so a pull request
+# cannot edit the reviewer. The engine reads the pull request head as git
+# objects and never executes it. A fork pull request receives a skipped check
+# and no provider secret.
+#
+# The agents-personas wrappers are pinned to one commit. Every uses: pin and
+# every personas_ref on this file names that commit.
+
+on:
+  pull_request_target:
+    types: [labeled, synchronize, unlabeled]
+
+concurrency:
+  group: persona-review-labels-${{ github.event.pull_request.number }}-${{ github.event.label.name || 'push' }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  adorno:
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'adorno-scan-requested') &&
+      (github.event.action != 'unlabeled' || github.event.label.name == 'stop-requested')
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    uses: abuzucom/agents-personas/.github/workflows/adorno-ui-review.yml@1649e5c9710fd85d6cca12006e344af27a5404a6
+    with:
+      personas_ref: "1649e5c9710fd85d6cca12006e344af27a5404a6"
+    secrets:
+      MODEL_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+
+  havel:
+    if: >-
+      contains(github.event.pull_request.labels.*.name, 'havel-scan-requested') &&
+      (github.event.action != 'unlabeled' || github.event.label.name == 'stop-requested')
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    uses: abuzucom/agents-personas/.github/workflows/havel-privacy-review.yml@1649e5c9710fd85d6cca12006e344af27a5404a6
+    with:
+      personas_ref: "1649e5c9710fd85d6cca12006e344af27a5404a6"
+      # An empty value reviews the baseline classes alone and notes the
+      # unchecked regimes in the review summary.
+      regimes: ""
+    secrets:
+      MODEL_API_KEY: ${{ secrets.OLLAMA_API_KEY }}

@@ -1,42 +1,36 @@
 name: security-review-pr
 
-# Runs the abuzucom/foucault security review on this repository's pull
-# requests. The reusable workflow lives in this repository at
-# .github/workflows/security-review.yml and carries the pinned review
-# implementation. The caller resolves the pull request, gates both execution
-# paths, and maps the provider secret.
+# Runs the abuzucom/agents-personas foucault security review on this
+# repository's pull requests. The wrapper loads the engine, the foucault
+# policy, and the model adapter from the pinned agents-personas commit, so
+# this repository supplies no adapter files.
 #
-# The workflow_run trigger keeps this caller on default-branch code. A pull
-# request cannot edit the reviewer. A same-repository pull request runs the
-# review job. A fork pull request needs the safe-to-review label and manual
-# approval in the fork-review environment.
-#
-# Upgrade: set the audit pin to a new full commit SHA, update the version
-# comment, and diff the vendored reusable workflow against the new upstream
-# file.
+# The workflow_run trigger keeps this caller on default branch code. A pull
+# request cannot edit the reviewer. The engine publishes a skipped
+# "foucault / security" check for a fork pull request and withholds the
+# provider key from it.
 on:
   workflow_run:
     workflows: [Immutable Compliance]
     types: [completed]
 
 concurrency:
-  group: security-review-${{ github.event.workflow_run.head_sha }}${{ github.event.pull_request.head.sha }}
+  group: security-review-${{ github.event.workflow_run.head_sha }}
   cancel-in-progress: true
 
 permissions:
-  actions: read
-  checks: write
   contents: read
-  pull-requests: write
 
 jobs:
   resolve-pr:
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      pull-requests: read
     outputs:
-      same_repository: ${{ steps.resolve.outputs.same_repository }}
       already_reviewed: ${{ steps.resolve.outputs.already_reviewed }}
-      fork_review_approved: ${{ steps.resolve.outputs.fork_review_approved }}
-      compliance_passed: ${{ steps.resolve.outputs.compliance_passed }}
       pr_number: ${{ steps.resolve.outputs.pr_number }}
       base_sha: ${{ steps.resolve.outputs.base_sha }}
       head_sha: ${{ steps.resolve.outputs.head_sha }}
@@ -51,16 +45,10 @@ jobs:
             const workflowRun = context.payload.workflow_run;
             const headSha = workflowRun?.head_sha;
             if (!/^[0-9a-f]{40}$/.test(headSha || "")) {
-              core.setFailed("review head SHA is invalid");
+              core.setFailed("workflow run head SHA is invalid");
               return;
             }
 
-            const baseRepository = `${context.repo.owner}/${context.repo.repo}`;
-            // The merge itself, a later description edit, a new label, or a
-            // re-run of the compliance workflow still emits a workflow_run
-            // event after a pull request merges. An open pull request is the
-            // only review subject, so a closed or merged head fails
-            // resolution and every review job skips.
             const pullRequests = await github.paginate(
               github.rest.repos.listPullRequestsAssociatedWithCommit,
               {
@@ -70,139 +58,71 @@ jobs:
                 per_page: 100,
               },
             );
-            const candidates = pullRequests.filter((candidate) =>
-              candidate.base?.repo?.full_name?.toLowerCase() ===
-              baseRepository.toLowerCase() &&
-              candidate.head?.sha?.toLowerCase() === headSha.toLowerCase() &&
-              candidate.state === "open"
+            const baseRepository = `${context.repo.owner}/${context.repo.repo}`;
+            const candidates = pullRequests.filter((pullRequest) =>
+              pullRequest.base?.repo?.full_name?.toLowerCase() ===
+                baseRepository.toLowerCase() &&
+              pullRequest.head?.sha?.toLowerCase() === headSha.toLowerCase() &&
+              pullRequest.state === "open"
             );
             if (candidates.length !== 1) {
               core.setFailed(
-                `expected one open pull request for review head, found ${candidates.length}`,
+                `expected one open pull request for workflow run head, found ${candidates.length}`,
               );
               return;
             }
 
-            let pullRequest = candidates[0];
-            const candidateHeadRepository = pullRequest.head?.repo;
-            if (!candidateHeadRepository?.full_name) {
-              core.setFailed("pull request head repository metadata is unavailable");
-              return;
-            }
-            const sameRepository =
-              candidateHeadRepository.full_name.toLowerCase() ===
-              baseRepository.toLowerCase();
-            if (!sameRepository) {
-              const currentPullRequest = await github.rest.pulls.get({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pullRequest.number,
-              });
-              pullRequest = currentPullRequest.data;
-            }
+            const pullRequest = candidates[0];
             const headRepository = pullRequest.head?.repo;
             if (!headRepository?.full_name || !headRepository.clone_url) {
               core.setFailed("pull request head repository metadata is unavailable");
               return;
             }
-            if (pullRequest.state !== "open") {
-              core.setFailed("the review pull request is not open");
-              return;
-            }
-            if (
-              pullRequest.base?.repo?.full_name?.toLowerCase() !==
-              baseRepository.toLowerCase() ||
-              pullRequest.head?.sha?.toLowerCase() !== headSha.toLowerCase()
-            ) {
-              core.setFailed("pull request changed while resolving review metadata");
-              return;
-            }
 
-            const forkReviewApproved = !sameRepository &&
-              (pullRequest.labels || []).some((label) =>
-                label.name === "safe-to-review"
-              );
-            const compliancePassed = workflowRun?.name === "Immutable Compliance" &&
-              workflowRun?.head_sha?.toLowerCase() === headSha.toLowerCase() &&
-              workflowRun?.conclusion === "success";
-
-            // One model call per head revision. A check run name and summary
-            // are writable by any workflow token holding checks: write,
-            // including one in a workflow a pull request branch adds. The
-            // check run is therefore only a prefilter. The proof is the
-            // verdict artifact, accepted only from a workflow_run of this
-            // workflow file on the default branch. GitHub runs workflow_run
-            // workflows from the default branch alone, so a pull request
-            // branch cannot produce one. A failed run uploads no record, so
-            // a flaky review still retries.
-            const getRun = async (runId) => {
-              const { data } = await github.rest.actions.getWorkflowRun({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: runId,
-              });
-              return data;
-            };
-            const hasTrustedVerdictRecord = async (sha) => {
-              const name = `security-review-verdict-${sha}`;
-              const artifacts = await github.paginate(
-                github.rest.actions.listArtifactsForRepo,
-                {
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  name,
-                  per_page: 100,
-                },
-              );
-              const records = artifacts.filter((artifact) =>
-                artifact.name === name &&
-                !artifact.expired &&
-                artifact.workflow_run?.id
-              );
-              if (records.length === 0) {
-                return false;
-              }
-              const trustedPath = (await getRun(context.runId)).path;
-              const defaultBranch = context.payload.repository?.default_branch;
-              for (const record of records) {
-                const producer = await getRun(record.workflow_run.id);
-                if (
-                  producer.event === "workflow_run" &&
-                  producer.path === trustedPath &&
-                  Boolean(defaultBranch) &&
-                  producer.head_branch === defaultBranch
-                ) {
-                  return true;
-                }
-              }
-              return false;
-            };
-
+            // One model call per head revision. The engine reruns a passing
+            // review. The caller therefore skips a head with an Actions check
+            // that already carries a verdict title. A run that ends before a
+            // verdict uses another title. A flaky review then retries.
             const checkRuns = await github.paginate(
               github.rest.checks.listForRef,
               {
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: headSha,
-                check_name: "security-review",
+                check_name: "foucault / security",
                 per_page: 100,
               },
             );
-            const hasVerdictCheck = checkRuns.some((run) =>
+            const verdictChecks = checkRuns.filter((run) =>
+              run.app?.slug === "github-actions" &&
               run.status === "completed" &&
-              /VERDICT: (APPROVE|BLOCK|NEEDS-HUMAN)\b/.test(
-                run.output?.summary || ""
+              /^VERDICT: (APPROVE|BLOCK|NEEDS-HUMAN)$/.test(
+                run.output?.title || ""
               )
             );
-            const alreadyReviewed = hasVerdictCheck &&
-              await hasTrustedVerdictRecord(headSha);
+
+            // Any workflow with checks: write can publish a verdict title.
+            // Only a check suite from this caller's own workflow_run
+            // execution runs default branch code. A pull request workflow
+            // runs with another event, so its check never marks the head.
+            const callerPath = ".github/workflows/security-review-pr.yml";
+            const fromCaller = async (check) => {
+              const suiteId = check.check_suite?.id;
+              if (!suiteId) {
+                return false;
+              }
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                check_suite_id: suiteId,
+                per_page: 100,
+              });
+              return data.workflow_runs.some((run) =>
+                run.event === "workflow_run" && run.path === callerPath);
+            };
+            const callerVerdicts = await Promise.all(verdictChecks.map(fromCaller));
+            const alreadyReviewed = callerVerdicts.includes(true);
             core.setOutput("already_reviewed", alreadyReviewed ? "true" : "false");
-            core.setOutput("fork_review_approved", forkReviewApproved ? "true" : "false");
-            core.setOutput("compliance_passed", compliancePassed ? "true" : "false");
-            core.setOutput(
-              "same_repository",
-              sameRepository ? "true" : "false",
-            );
             core.setOutput("pr_number", String(pullRequest.number));
             core.setOutput("base_sha", pullRequest.base.sha);
             core.setOutput("head_sha", pullRequest.head.sha);
@@ -211,48 +131,24 @@ jobs:
 
   review:
     needs: resolve-pr
-    if: needs.resolve-pr.result == 'success' && needs.resolve-pr.outputs.same_repository == 'true' && needs.resolve-pr.outputs.already_reviewed != 'true'
-    uses: ./.github/workflows/security-review.yml
+    if: needs.resolve-pr.result == 'success' && needs.resolve-pr.outputs.already_reviewed != 'true'
+    # The wrapper posts a pull request comment and publishes a check run.
+    permissions:
+      checks: write
+      contents: read
+      pull-requests: write
+    # agents-personas 1.0.0. Keep the uses: pin and personas_ref on the same
+    # commit.
+    uses: abuzucom/agents-personas/.github/workflows/foucault-security-review.yml@1649e5c9710fd85d6cca12006e344af27a5404a6
     with:
-      # Foucault 3.7.6 policy revision.
-      audit_ref: "6ca2829208e718afdd2402255c501c4a94b45b4f"
-      model_call_command: "python3 ci/call_model.py"
+      personas_ref: "1649e5c9710fd85d6cca12006e344af27a5404a6"
       pr_comment: true
       fail_on_block: true
+      fork_review: false
       pr_number: ${{ needs.resolve-pr.outputs.pr_number }}
       base_sha: ${{ needs.resolve-pr.outputs.base_sha }}
       head_sha: ${{ needs.resolve-pr.outputs.head_sha }}
       head_repo_url: ${{ needs.resolve-pr.outputs.head_repo_url }}
       head_repo_full_name: ${{ needs.resolve-pr.outputs.head_repo_full_name }}
-      fork_review: false
     secrets:
       MODEL_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
-
-  fork-review:
-    needs: resolve-pr
-    if: needs.resolve-pr.result == 'success' && needs.resolve-pr.outputs.same_repository == 'false' && needs.resolve-pr.outputs.fork_review_approved == 'true' && needs.resolve-pr.outputs.compliance_passed == 'true' && needs.resolve-pr.outputs.already_reviewed != 'true'
-    uses: ./.github/workflows/security-review.yml
-    with:
-      # Foucault 3.7.6 policy revision.
-      audit_ref: "6ca2829208e718afdd2402255c501c4a94b45b4f"
-      model_call_command: "python3 ci/call_model.py"
-      pr_comment: true
-      fail_on_block: true
-      pr_number: ${{ needs.resolve-pr.outputs.pr_number }}
-      base_sha: ${{ needs.resolve-pr.outputs.base_sha }}
-      head_sha: ${{ needs.resolve-pr.outputs.head_sha }}
-      head_repo_url: ${{ needs.resolve-pr.outputs.head_repo_url }}
-      head_repo_full_name: ${{ needs.resolve-pr.outputs.head_repo_full_name }}
-      fork_review: true
-
-  fork-review-skipped:
-    needs: resolve-pr
-    if: needs.resolve-pr.result == 'success' && needs.resolve-pr.outputs.same_repository == 'false' && (needs.resolve-pr.outputs.fork_review_approved != 'true' || needs.resolve-pr.outputs.compliance_passed != 'true')
-    runs-on: ubuntu-latest
-    permissions: {}
-    steps:
-      - name: Explain skipped review
-        run: >-
-          echo "Fork review is waiting for the safe-to-review label and a
-          successful Immutable Compliance run. Approved reviews also require
-          manual approval in the fork-review environment."

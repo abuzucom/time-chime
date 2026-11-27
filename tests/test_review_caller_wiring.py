@@ -13,18 +13,31 @@ import check_persist_credentials
 
 WORKFLOW_ROOT = ROOT / ".github" / "workflows"
 SECURITY_CALLER = WORKFLOW_ROOT / "security-review-pr.yml"
-SECURITY_REUSABLE = WORKFLOW_ROOT / "security-review.yml"
 QUALITY_CALLER = WORKFLOW_ROOT / "quality-review-pr.yml"
-QUALITY_REUSABLE = WORKFLOW_ROOT / "quality-review.yml"
+GENERAY_CALLER = WORKFLOW_ROOT / "generay-time-review-pr.yml"
+LABEL_CALLER = WORKFLOW_ROOT / "persona-review-labels.yml"
 REVIEW_WORKFLOWS = (
     SECURITY_CALLER,
-    SECURITY_REUSABLE,
     QUALITY_CALLER,
-    QUALITY_REUSABLE,
+    GENERAY_CALLER,
+    LABEL_CALLER,
 )
 
-FOUCAULT_REF = "6ca2829208e718afdd2402255c501c4a94b45b4f"
-EULER_REF = "eb97d1fe7bfbfec97997a30846f78a57a6f2f2e3"
+PERSONAS_COMMIT = "1649e5c9710fd85d6cca12006e344af27a5404a6"
+PERSONAS_TARGETS = {
+    "foucault": "abuzucom/agents-personas/.github/workflows/foucault-security-review.yml",
+    "euler": "abuzucom/agents-personas/.github/workflows/euler-quality-review.yml",
+    "generay": "abuzucom/agents-personas/.github/workflows/generay-time-review.yml",
+    "adorno": "abuzucom/agents-personas/.github/workflows/adorno-ui-review.yml",
+    "havel": "abuzucom/agents-personas/.github/workflows/havel-privacy-review.yml",
+}
+CHECK_NAMES = {
+    "foucault": "foucault / security",
+    "euler": "euler / quality",
+    "generay": "generay / time",
+    "adorno": "adorno / ui",
+    "havel": "havel / privacy",
+}
 
 
 def load_workflow(path):
@@ -49,8 +62,39 @@ def reusable_jobs(path):
     }
 
 
+class PersonaPinTest(unittest.TestCase):
+    """Every caller pins one agents-personas commit."""
+
+    def test_callers_use_the_pinned_personas_workflows(self):
+        """Verify that each caller names the pinned wrapper commit."""
+        expected = {
+            SECURITY_CALLER: ["foucault"],
+            QUALITY_CALLER: ["euler"],
+            GENERAY_CALLER: ["generay"],
+            LABEL_CALLER: ["adorno", "havel"],
+        }
+        for path, personas in expected.items():
+            with self.subTest(path=path.name):
+                jobs = reusable_jobs(path)
+                self.assertEqual(len(jobs), len(personas))
+                for name, spec in jobs.items():
+                    persona = name if name in personas else personas[0]
+                    self.assertEqual(
+                        spec["uses"],
+                        f"{PERSONAS_TARGETS[persona]}@{PERSONAS_COMMIT}",
+                    )
+                    self.assertEqual(spec["with"]["personas_ref"], PERSONAS_COMMIT)
+
+    def test_no_caller_holds_a_vendored_review_artifact(self):
+        """Verify that the repository holds no review adapter files."""
+        self.assertFalse((ROOT / "ci").exists())
+        self.assertFalse((ROOT / "scripts" / "check_pr_review_response.py").exists())
+        self.assertFalse((WORKFLOW_ROOT / "security-review.yml").exists())
+        self.assertFalse((WORKFLOW_ROOT / "quality-review.yml").exists())
+
+
 class SecurityCallerTest(unittest.TestCase):
-    """The security review caller wires the pinned foucault review."""
+    """The security review caller wires the foucault review."""
 
     def test_caller_triggers_on_immutable_compliance(self):
         """Verify that the caller starts after the compliance scan."""
@@ -59,45 +103,32 @@ class SecurityCallerTest(unittest.TestCase):
             ["Immutable Compliance"],
         )
 
-    def test_review_jobs_use_the_local_reusable_workflow(self):
-        """Verify that both review jobs call the vendored workflow."""
-        jobs = reusable_jobs(SECURITY_CALLER)
-        self.assertEqual(sorted(jobs), ["fork-review", "review"])
-        for name, spec in jobs.items():
-            with self.subTest(job=name):
-                self.assertEqual(
-                    spec["uses"],
-                    "./.github/workflows/security-review.yml",
-                )
-
-    def test_review_jobs_pin_the_policy_revision(self):
-        """Verify that both review jobs load the pinned AUDIT.md."""
-        for name, spec in reusable_jobs(SECURITY_CALLER).items():
-            with self.subTest(job=name):
-                self.assertEqual(spec["with"]["audit_ref"], FOUCAULT_REF)
-                self.assertEqual(
-                    spec["with"]["model_call_command"],
-                    "python3 ci/call_model.py",
-                )
-
     def test_review_job_maps_the_provider_secret(self):
-        """Verify that the same-repository job receives the provider key."""
-        spec = load_workflow(SECURITY_CALLER)["jobs"]["review"]
+        """Verify that the review job receives the provider key."""
+        spec = reusable_jobs(SECURITY_CALLER)["review"]
         self.assertEqual(
             spec["secrets"]["MODEL_API_KEY"],
             "${{ secrets.OLLAMA_API_KEY }}",
         )
+
+    def test_review_job_fails_on_a_blocking_verdict(self):
+        """Verify that a blocking verdict fails the check run."""
+        spec = reusable_jobs(SECURITY_CALLER)["review"]
         self.assertTrue(spec["with"]["fail_on_block"])
 
-    def test_fork_job_relies_on_the_environment_secret(self):
-        """Verify that the fork job passes no repository secret."""
-        spec = load_workflow(SECURITY_CALLER)["jobs"]["fork-review"]
-        self.assertNotIn("secrets", spec)
-        self.assertTrue(spec["with"]["fork_review"])
+    def test_review_job_withholds_fork_reviews(self):
+        """Verify that a fork pull request receives no provider key."""
+        spec = reusable_jobs(SECURITY_CALLER)["review"]
+        self.assertFalse(spec["with"]["fork_review"])
+
+    def test_resolver_requires_an_open_pull_request(self):
+        """Verify that a merged head starts no review."""
+        text = SECURITY_CALLER.read_text(encoding="utf-8")
+        self.assertIn('pullRequest.state === "open"', text)
 
 
 class QualityCallerTest(unittest.TestCase):
-    """The quality review caller wires the pinned euler review."""
+    """The quality review caller wires the euler review."""
 
     def test_caller_triggers_on_both_gates(self):
         """Verify that the caller waits for the test run and the scan."""
@@ -112,46 +143,82 @@ class QualityCallerTest(unittest.TestCase):
         self.assertIn("latestRun('Convention Sync Check', 'pull_request')", text)
         self.assertIn("'Immutable Compliance', 'pull_request_target'", text)
 
-    def test_review_jobs_use_the_local_reusable_workflow(self):
-        """Verify that both review jobs call the vendored workflow."""
-        jobs = reusable_jobs(QUALITY_CALLER)
-        self.assertEqual(sorted(jobs), ["fork-review", "review"])
-        for name, spec in jobs.items():
-            with self.subTest(job=name):
-                self.assertEqual(
-                    spec["uses"],
-                    "./.github/workflows/quality-review.yml",
-                )
-
-    def test_review_jobs_pin_the_policy_revision(self):
-        """Verify that both review jobs load the pinned QUALITY.md."""
-        for name, spec in reusable_jobs(QUALITY_CALLER).items():
-            with self.subTest(job=name):
-                self.assertEqual(spec["with"]["quality_ref"], EULER_REF)
-                self.assertTrue(spec["with"]["fail_on_block"])
-
-    def test_review_jobs_exclude_the_test_and_scratch_paths(self):
-        """Verify that the deterministic prescan skips local test paths."""
-        for name, spec in reusable_jobs(QUALITY_CALLER).items():
-            with self.subTest(job=name):
-                self.assertEqual(
-                    spec["with"]["exclude_paths"],
-                    "tests/** .test-temp/**",
-                )
+    def test_review_job_excludes_the_test_paths(self):
+        """Verify that the review skips the local test paths."""
+        spec = reusable_jobs(QUALITY_CALLER)["review"]
+        self.assertEqual(spec["with"]["exclude_paths"], "tests/**")
 
     def test_review_job_maps_the_provider_secret(self):
-        """Verify that the same-repository job receives the provider key."""
-        spec = load_workflow(QUALITY_CALLER)["jobs"]["review"]
+        """Verify that the review job receives the provider key."""
+        spec = reusable_jobs(QUALITY_CALLER)["review"]
         self.assertEqual(
             spec["secrets"]["MODEL_API_KEY"],
             "${{ secrets.OLLAMA_API_KEY }}",
         )
+        self.assertTrue(spec["with"]["fail_on_block"])
 
-    def test_fork_job_relies_on_the_environment_secret(self):
-        """Verify that the fork job passes no repository secret."""
-        spec = load_workflow(QUALITY_CALLER)["jobs"]["fork-review"]
-        self.assertNotIn("secrets", spec)
-        self.assertTrue(spec["with"]["fork_review"])
+
+class GenerayCallerTest(unittest.TestCase):
+    """The time review caller wires the generay review."""
+
+    def test_caller_triggers_on_both_gates(self):
+        """Verify that the caller waits for the test run and the scan."""
+        self.assertEqual(
+            trigger_workflows(GENERAY_CALLER),
+            ["Convention Sync Check", "Immutable Compliance"],
+        )
+
+    def test_review_job_reviews_the_whole_diff(self):
+        """Verify that the review covers every changed file."""
+        spec = reusable_jobs(GENERAY_CALLER)["review"]
+        self.assertNotIn("paths", spec["with"])
+        self.assertNotIn("exclude_paths", spec["with"])
+
+    def test_review_job_maps_the_provider_secret(self):
+        """Verify that the review job receives the provider key."""
+        spec = reusable_jobs(GENERAY_CALLER)["review"]
+        self.assertEqual(
+            spec["secrets"]["MODEL_API_KEY"],
+            "${{ secrets.OLLAMA_API_KEY }}",
+        )
+        self.assertTrue(spec["with"]["fail_on_block"])
+        self.assertFalse(spec["with"]["fork_review"])
+
+
+class LabelCallerTest(unittest.TestCase):
+    """The label caller wires the adorno and havel reviews."""
+
+    def test_caller_runs_on_label_events(self):
+        """Verify that the caller reacts to the scan labels."""
+        document = load_workflow(LABEL_CALLER)
+        trigger = document.get("on", document.get(True))
+        self.assertEqual(
+            sorted(trigger["pull_request_target"]["types"]),
+            ["labeled", "synchronize", "unlabeled"],
+        )
+
+    def test_each_persona_waits_for_its_own_label(self):
+        """Verify that each job names its own scan label."""
+        document = load_workflow(LABEL_CALLER)
+        for persona, job in (("adorno", "adorno"), ("havel", "havel")):
+            with self.subTest(persona=persona):
+                condition = document["jobs"][job]["if"]
+                self.assertIn(f"{persona}-scan-requested", condition)
+                self.assertIn("stop-requested", condition)
+
+    def test_havel_reviews_the_baseline_classes(self):
+        """Verify that the privacy review declares no regime scope."""
+        spec = reusable_jobs(LABEL_CALLER)["havel"]
+        self.assertEqual(spec["with"]["regimes"], "")
+
+    def test_review_jobs_map_the_provider_secret(self):
+        """Verify that each review job receives the provider key."""
+        for name, spec in reusable_jobs(LABEL_CALLER).items():
+            with self.subTest(job=name):
+                self.assertEqual(
+                    spec["secrets"]["MODEL_API_KEY"],
+                    "${{ secrets.OLLAMA_API_KEY }}",
+                )
 
 
 class ReviewWorkflowPolicyTest(unittest.TestCase):
@@ -175,8 +242,8 @@ class ReviewWorkflowPolicyTest(unittest.TestCase):
                 )
                 self.assertEqual(violations, [])
 
-    def test_resolver_requires_an_open_pull_request(self):
-        """Verify that a merged head starts no review."""
-        text = SECURITY_CALLER.read_text(encoding="utf-8")
-        self.assertIn('candidate.state === "open"', text)
-        self.assertIn('pullRequest.state !== "open"', text)
+    def test_no_caller_checks_out_the_pull_request_head(self):
+        """Verify that no caller runs pull request code."""
+        for path in REVIEW_WORKFLOWS:
+            with self.subTest(path=path.name):
+                self.assertNotIn("actions/checkout", path.read_text(encoding="utf-8"))
