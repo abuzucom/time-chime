@@ -32,6 +32,14 @@ TRUSTED_REQUIREMENTS_COMMAND = (
     "python -m pip install --requirement "
     "trusted-base/requirements-checkers.txt"
 )
+# The template upgrade installs the checker dependencies as wheels only. The
+# base branch checker accepts that form so the upgrade pull request passes
+# the scan that reads this checker from the base branch.
+TRUSTED_WHEEL_COMMAND = TRUSTED_REQUIREMENTS_COMMAND + " --only-binary :all:"
+TRUSTED_REQUIREMENTS_COMMANDS = (
+    TRUSTED_REQUIREMENTS_COMMAND,
+    TRUSTED_WHEEL_COMMAND,
+)
 TRUSTED_SCAN_COMMAND = (
     'python "$TRUSTED_CHECKER" --repo "$PR_REPO" --tree "$PR_HEAD_SHA" '
     '--base "$PR_BASE_SHA" --branch "$PR_HEAD_BRANCH" '
@@ -703,8 +711,27 @@ def _checkout_step(base: bool) -> dict:
     }
 
 
-def _trusted_steps() -> list[dict]:
-    """Return the exact privileged step sequence allowed for promotion."""
+def _candidate_install_command(candidate_job) -> str:
+    """Return the candidate's install command when it is an accepted form.
+
+    Any other command falls back to the plain form, so the exact schema
+    comparison still rejects it.
+    """
+    steps = candidate_job.get("steps") if isinstance(candidate_job, dict) else None
+    if not isinstance(steps, list) or len(steps) != 5:
+        return TRUSTED_REQUIREMENTS_COMMAND
+    install_step = steps[3]
+    command = install_step.get("run") if isinstance(install_step, dict) else None
+    if command in TRUSTED_REQUIREMENTS_COMMANDS:
+        return command
+    return TRUSTED_REQUIREMENTS_COMMAND
+
+
+def _trusted_steps(install_command: str = TRUSTED_REQUIREMENTS_COMMAND) -> list[dict]:
+    """Return the exact privileged step sequence allowed for promotion.
+
+    `install_command` must be one of TRUSTED_REQUIREMENTS_COMMANDS.
+    """
     return [
         _checkout_step(True),
         _checkout_step(False),
@@ -715,7 +742,7 @@ def _trusted_steps() -> list[dict]:
         },
         {
             "name": "Install trusted checker dependencies",
-            "run": TRUSTED_REQUIREMENTS_COMMAND,
+            "run": install_command,
         },
         {
             "name": "Scan immutable pull request objects with the trusted checker",
@@ -898,6 +925,7 @@ def _pull_target_violations(
         candidate_job = dict(candidate_job)
         candidate_steps = candidate_job.get("steps")
         if isinstance(candidate_steps, list) and len(candidate_steps) == 5:
+            install_command = _candidate_install_command(candidate_job)
             python_step = candidate_steps[2]
             action = python_step.get("uses") if isinstance(python_step, dict) else None
             if isinstance(action, str) and action in APPROVED_SETUP_PYTHON_ACTIONS:
@@ -916,7 +944,7 @@ def _pull_target_violations(
                 python_step["with"] = {"python-version": version_text}
                 candidate_steps[2] = python_step
                 candidate_job["steps"] = candidate_steps
-                trusted_steps = _trusted_steps()
+                trusted_steps = _trusted_steps(install_command)
                 trusted_steps[2] = dict(trusted_steps[2])
                 trusted_steps[2]["with"] = {"python-version": version_text}
                 trusted_job["steps"] = trusted_steps
