@@ -8,6 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HOOK_PATH = ROOT / "hooks" / "reinject_agents_policy.py"
+OVERFLOW_CANONICAL_POLICY_BYTES = 20000
+OVERFLOW_SUPPORTING_FILE_BYTES = 10000
 
 
 def load_hook():
@@ -33,7 +35,21 @@ class SupportingPolicyTests(unittest.TestCase):
         self.assertTrue(policy.startswith("canonical\n"))
         self.assertIn("supporting\n", policy)
 
-    def test_load_policy_rejects_non_regular_supporting_file(self):
+    def test_load_source_only_file(self):
+        hook = load_hook()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "AGENTS.md").write_text("canonical\n", encoding="utf-8")
+            for relative_name in hook.SUPPORTING_POLICY_FILES:
+                path = root / relative_name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("detail\n", encoding="utf-8")
+            source_only = root / hook.SOURCE_ONLY_POLICY_FILES[0]
+            source_only.write_text("source detail\n", encoding="utf-8")
+            policy, _digest = hook.load_policy(root)
+        self.assertIn("source detail\n", policy)
+
+    def test_load_rejects_irregular_supporting(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -44,7 +60,7 @@ class SupportingPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "regular file"):
                 hook.load_policy(root)
 
-    def test_load_policy_rejects_missing_supporting_file(self):
+    def test_load_rejects_missing_supporting(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -53,7 +69,7 @@ class SupportingPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "missing"):
                 hook.load_policy(root)
 
-    def test_load_policy_rejects_missing_supporting_directory(self):
+    def test_load_rejects_missing_directory(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -61,7 +77,7 @@ class SupportingPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "missing"):
                 hook.load_policy(root)
 
-    def test_load_policy_rejects_non_ascii_supporting_file(self):
+    def test_load_rejects_non_ascii_supporting(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -75,7 +91,7 @@ class SupportingPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "non-ASCII"):
                 hook.load_policy(root)
 
-    def test_load_policy_rejects_oversized_supporting_file(self):
+    def test_load_rejects_oversized_supporting(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -89,7 +105,7 @@ class SupportingPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "exceeds the policy size limit"):
                 hook.load_policy(root)
 
-    def test_load_policy_rejects_oversized_canonical_file(self):
+    def test_load_rejects_oversized_canonical(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -98,7 +114,7 @@ class SupportingPolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "bounded regular file"):
                 hook.load_policy(root)
 
-    def test_load_policy_rejects_non_regular_canonical_file(self):
+    def test_load_rejects_irregular_canonical(self):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -132,11 +148,11 @@ class SupportingPolicyTests(unittest.TestCase):
         hook = load_hook()
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "AGENTS.md").write_bytes(b"x" * 20000)
+            (root / "AGENTS.md").write_bytes(b"x" * OVERFLOW_CANONICAL_POLICY_BYTES)
             for relative_name in hook.SUPPORTING_POLICY_FILES:
                 path = root / relative_name
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b"x" * 10000)
+                path.write_bytes(b"x" * OVERFLOW_SUPPORTING_FILE_BYTES)
             result = subprocess.run(
                 [sys.executable, "-c", (
                     "import importlib.util, pathlib, sys; "

@@ -7,12 +7,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SYNC_WORKFLOW = ROOT / ".github" / "workflows" / "sync-check.yml"
 REUSABLE_WORKFLOW = ROOT / ".github" / "workflows" / "agents-compliance.yml"
+INTEGRITY_WORKFLOW = ROOT / ".github" / "workflows" / "gate-integrity.yml"
 
 
 class AdvisoryWorkflowTest(unittest.TestCase):
     """Workflow source keeps untrusted metadata outside shell text."""
 
-    def test_sync_workflow_runs_pull_request_checker(self):
+    def test_sync_workflow_pr_checker(self):
         text = SYNC_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("python scripts/check_pull_request_message.py", text)
         self.assertIn("if: github.event_name == 'pull_request'", text)
@@ -20,13 +21,11 @@ class AdvisoryWorkflowTest(unittest.TestCase):
         self.assertNotIn("github.event.pull_request.body", text)
 
     def test_sync_workflow_runs_authorship_checkers(self):
-        # The reusable workflow's pr-checks job is skipped on every event
-        # this repository fires, so these checkers need a live home here.
+        # The reusable pr-checks job runs the banned-agent, identity, and
+        # attribution checkers on drafts too. This workflow keeps the
+        # commit-range external reference check.
         text = SYNC_WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("python scripts/check_banned_agents.py", text)
-        self.assertIn("python scripts/check_git_identity.py", text)
-        self.assertIn("python scripts/check_commit_attribution.py", text)
-        self.assertIn("GH_TOKEN", text)
+        self.assertIn("python scripts/check_external_pr_refs.py", text)
         self.assertIn("fetch-depth: 0", text)
         self.assertIn("PR_BASE_SHA", text)
         self.assertIn("PR_HEAD_SHA", text)
@@ -50,13 +49,7 @@ class AdvisoryWorkflowTest(unittest.TestCase):
                 text.count("persist-credentials: false"),
             )
 
-    def test_coverage_workflow_disables_persisted_credentials(self):
-        coverage_workflow = ROOT / '.github' / 'workflows' / 'github-coverage.yml'
-        if coverage_workflow.exists():
-            text = coverage_workflow.read_text(encoding='utf-8')
-            self.assertIn('persist-credentials: false', text)
-
-    def test_changelog_range_jobs_fetch_full_history(self):
+    def test_changelog_jobs_full_history(self):
         workflow_jobs = (
             (SYNC_WORKFLOW, "check-sync"),
             (REUSABLE_WORKFLOW, "static-checks"),
@@ -66,6 +59,20 @@ class AdvisoryWorkflowTest(unittest.TestCase):
             section = text.split(f"  {job}:", 1)[1]
             self.assertIn("fetch-depth: 0", section)
             self.assertIn("python scripts/check_changelog.py --base", section)
+
+    def test_workflows_enforce_complete_gate_adoption(self):
+        for workflow in (SYNC_WORKFLOW, REUSABLE_WORKFLOW):
+            text = workflow.read_text(encoding="utf-8")
+            self.assertIn("python scripts/check_gate_adoption.py", text)
+            self.assertIn("python scripts/check_hook_launchers.py", text)
+
+    def test_integrity_workflow_base_code(self):
+        text = INTEGRITY_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("pull_request", text)
+        self.assertNotIn("pull_request_target", text)
+        self.assertIn("github.event.pull_request.base.sha", text)
+        self.assertIn("python scripts/check_gate_pr_integrity.py", text)
+        self.assertIn("persist-credentials: false", text)
 
 
 if __name__ == "__main__":

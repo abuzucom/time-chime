@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 class WorkflowPermissionsTest(unittest.TestCase):
     """Workflow files must specify explicit permissions."""
 
-    def test_security_headers_defines_contents_read_permissions(self):
+    def test_security_headers_defines_permissions(self):
         """Verify security-headers.yml limits default token permissions."""
         workflow_path = ROOT / ".github" / "workflows" / "security-headers.yml"
         text = workflow_path.read_text(encoding="utf-8")
@@ -19,7 +19,7 @@ class WorkflowPermissionsTest(unittest.TestCase):
 class ZapReportEscapingTest(unittest.TestCase):
     """ZAP report updater must sanitize backslashes before table pipes."""
 
-    def test_escape_cell_sanitizes_backslashes_and_pipes(self):
+    def test_escape_cell_sanitizes_pipes(self):
         """Verify escapeCell replaces backslashes before table pipes."""
         script_path = ROOT / "scripts" / "update-zap-report.mjs"
         text = script_path.read_text(encoding="utf-8")
@@ -37,7 +37,7 @@ class ZapReportEscapingTest(unittest.TestCase):
 class ActionPinTest(unittest.TestCase):
     """Workflow action references must be pinned to full commit SHAs."""
 
-    def test_github_coverage_uses_expected_action_pins(self):
+    def test_github_coverage_uses_action_pins(self):
         """Verify github-coverage.yml pins the bumped actions."""
         workflow_path = ROOT / ".github" / "workflows" / "github-coverage.yml"
         text = workflow_path.read_text(encoding="utf-8")
@@ -54,7 +54,7 @@ class ActionPinTest(unittest.TestCase):
             text,
         )
 
-    def test_dependency_audit_uses_expected_action_pins(self):
+    def test_dependency_audit_uses_action_pins(self):
         """Verify dependency-audit.yml pins the bumped actions."""
         workflow_path = ROOT / ".github" / "workflows" / "dependency-audit.yml"
         text = workflow_path.read_text(encoding="utf-8")

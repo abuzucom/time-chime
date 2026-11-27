@@ -1,8 +1,11 @@
-.PHONY: sync check lint test identity changelog
+.PHONY: sync check lint test identity changelog app-test app-lint
 
 # Overridable so a platform without this name can supply its own:
 #   make test PYTHON=py
 PYTHON ?= python3
+# The application commands run under bun. The command execution gate denies
+# every bun invocation, so the Makefile is the route that an agent uses.
+BUN ?= bun
 
 PROSE_FILES = AGENTS.md README.md CHANGELOG.md DRIFT.md \
 	docs/gate-threat-model.md \
@@ -24,9 +27,17 @@ lint:
 	$(PYTHON) scripts/check_english_only.py $(PROSE_FILES)
 	$(PYTHON) scripts/check_hedging.py $(PROSE_FILES)
 	$(PYTHON) scripts/check_conflict_markers.py
+	$(BUN) run lint
+
+app-lint:
+	$(BUN) run lint
+
+app-test:
+	$(BUN) run test:app
 
 test:
 	$(PYTHON) scripts/run_tests.py
+	$(BUN) run test:app
 
 identity:
 	$(PYTHON) scripts/check_git_identity.py --advise

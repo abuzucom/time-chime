@@ -15,11 +15,23 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import read_git_state
 import trusted_git
 
+CONTROL_TEXT_LIMIT = 64
+LONG_VALUE_LENGTH = 20
+SHORT_TEXT_LIMIT = 8
+
 
 class TrustedGitRunnerTest(unittest.TestCase):
     """Git subprocess output uses resilient UTF-8 decoding."""
 
-    def test_runner_decodes_malformed_output_with_utf8_replacement(self):
+    def test_workspace_root_from_nested_directory(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / ".git").mkdir()
+            nested = root / "packages" / "app"
+            nested.mkdir(parents=True)
+            self.assertEqual(trusted_git._workspace_root(nested), root.resolve())
+
+    def test_runner_malformed_output(self):
         def runner(_command, **kwargs):
             return subprocess.run(
                 [sys.executable, "-c",
@@ -36,16 +48,73 @@ class TrustedGitRunnerTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "\ufffd")
 
+    def test_transport_clone_bounds(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            self.assertEqual(
+                trusted_git._transport_arguments(
+                    workspace,
+                    ["clone", "https://github.com/OWNER/REPO.git", "copy"]),
+                ["clone", "--", "https://github.com/OWNER/REPO.git",
+                 str(workspace / "copy")],
+            )
+            (workspace / "copy").mkdir()
+            self.assertIsNone(
+                trusted_git._transport_arguments(
+                    workspace,
+                    ["clone", "https://github.com/OWNER/REPO.git", "copy"])
+            )
+            self.assertIsNone(
+                trusted_git._transport_arguments(
+                    workspace,
+                    ["clone", "https://github.com/OWNER/REPO.git", "$DEST"])
+            )
+            for source in (
+                "https://user:token@github.com/OWNER/REPO.git",
+                "https://github.com/OWNER/REPO.git?token=secret",
+                "https://github.com/OWNER/REPO.git#fragment",
+                "https://example.com/OWNER/REPO.git",
+                "git@github.com:",
+                "git@github.com:OWNER/REPO.git?ref=main",
+                "https://[invalid/OWNER/REPO.git",
+            ):
+                with self.subTest(source=source):
+                    self.assertIsNone(
+                        trusted_git._transport_arguments(
+                            workspace, ["clone", source, "new-copy"])
+                    )
+
+    def test_transport_fetch_requires_existing_repository(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            workspace = Path(temporary)
+            repository = workspace / "repo"
+            (repository / ".git").mkdir(parents=True)
+            self.assertEqual(
+                trusted_git._transport_arguments(
+                    workspace, ["fetch", "repo", "origin"]),
+                ["-C", str(repository), "fetch", "--no-tags", "--no-prune-tags", "origin"],
+            )
+            (workspace / ".git").mkdir()
+            self.assertEqual(
+                trusted_git._transport_arguments(
+                    workspace, ["fetch", ".", "origin"]),
+                ["-C", str(workspace), "fetch", "--no-tags", "--no-prune-tags", "origin"],
+            )
+            self.assertIsNone(
+                trusted_git._transport_arguments(
+                    workspace, ["fetch", "repo", "--upload-pack=bad"])
+            )
+
 
 class GitStateTextTest(unittest.TestCase):
     """Untrusted Git values become bounded printable ASCII."""
 
     def test_control_characters_are_rendered(self):
-        rendered = read_git_state.sanitize_text("safe\x1b[31m\n", limit=64)
+        rendered = read_git_state.sanitize_text("safe\x1b[31m\n", limit=CONTROL_TEXT_LIMIT)
         self.assertEqual(rendered, r"safe\x1b[31m\n")
 
     def test_long_values_are_bounded(self):
-        rendered = read_git_state.sanitize_text("x" * 20, limit=8)
+        rendered = read_git_state.sanitize_text("x" * LONG_VALUE_LENGTH, limit=SHORT_TEXT_LIMIT)
         self.assertEqual(rendered, "xxxxx...")
 
     def test_url_credentials_are_redacted(self):
@@ -62,7 +131,7 @@ class GitStateTextTest(unittest.TestCase):
             "<redacted>@example.com:organization/repository.git",
         )
 
-    def test_scp_style_account_before_path_at_sign_is_redacted(self):
+    def test_scp_path_at_sign_redacted(self):
         url = "user@host:path/with@symbol"
         self.assertEqual(
             read_git_state.redact_remote_url(url),
@@ -73,7 +142,7 @@ class GitStateTextTest(unittest.TestCase):
 class GitStateParsingTest(unittest.TestCase):
     """Structured state excludes raw paths and diagnostics."""
 
-    def test_detached_branch_has_no_branch_name(self):
+    def test_detached_no_branch_name(self):
         state = read_git_state.parse_branch(returncode=1, stdout="")
         self.assertEqual(
             state,

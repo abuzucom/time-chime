@@ -31,7 +31,7 @@ class TrustedPythonPinTest(unittest.TestCase):
     def test_other_pin_is_rejected(self) -> None:
         self.assert_pin_result(UNAPPROVED, False)
 
-    def test_approved_pin_does_not_permit_extra_steps(self) -> None:
+    def test_approved_pin_permits_no_extra(self) -> None:
         text = WORKFLOW.read_text(encoding="utf-8").replace(ORIGINAL, APPROVED)
         document = yaml.safe_load(text)
         document["jobs"]["immutable-compliance"]["steps"].append({"run": "echo unexpected"})

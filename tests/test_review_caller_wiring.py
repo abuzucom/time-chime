@@ -65,7 +65,7 @@ def reusable_jobs(path):
 class PersonaPinTest(unittest.TestCase):
     """Every caller pins one agents-personas commit."""
 
-    def test_callers_use_the_pinned_personas_workflows(self):
+    def test_callers_pin_the_personas_workflows(self):
         """Verify that each caller names the pinned wrapper commit."""
         expected = {
             SECURITY_CALLER: ["foucault"],
@@ -85,7 +85,7 @@ class PersonaPinTest(unittest.TestCase):
                     )
                     self.assertEqual(spec["with"]["personas_ref"], PERSONAS_COMMIT)
 
-    def test_no_caller_holds_a_vendored_review_artifact(self):
+    def test_no_caller_holds_vendored_files(self):
         """Verify that the repository holds no review adapter files."""
         self.assertFalse((ROOT / "ci").exists())
         self.assertFalse((ROOT / "scripts" / "check_pr_review_response.py").exists())
@@ -103,7 +103,7 @@ class SecurityCallerTest(unittest.TestCase):
             ["Immutable Compliance"],
         )
 
-    def test_review_job_maps_the_provider_secret(self):
+    def test_review_job_maps_the_key(self):
         """Verify that the review job receives the provider key."""
         spec = reusable_jobs(SECURITY_CALLER)["review"]
         self.assertEqual(
@@ -111,7 +111,7 @@ class SecurityCallerTest(unittest.TestCase):
             "${{ secrets.OLLAMA_API_KEY }}",
         )
 
-    def test_review_job_fails_on_a_blocking_verdict(self):
+    def test_review_job_fails_on_block(self):
         """Verify that a blocking verdict fails the check run."""
         spec = reusable_jobs(SECURITY_CALLER)["review"]
         self.assertTrue(spec["with"]["fail_on_block"])
@@ -121,7 +121,7 @@ class SecurityCallerTest(unittest.TestCase):
         spec = reusable_jobs(SECURITY_CALLER)["review"]
         self.assertFalse(spec["with"]["fork_review"])
 
-    def test_resolver_requires_an_open_pull_request(self):
+    def test_resolver_requires_open_pull(self):
         """Verify that a merged head starts no review."""
         text = SECURITY_CALLER.read_text(encoding="utf-8")
         self.assertIn('pullRequest.state === "open"', text)
@@ -143,12 +143,12 @@ class QualityCallerTest(unittest.TestCase):
         self.assertIn("latestRun('Convention Sync Check', 'pull_request')", text)
         self.assertIn("'Immutable Compliance', 'pull_request_target'", text)
 
-    def test_review_job_excludes_the_test_paths(self):
+    def test_review_job_excludes_tests(self):
         """Verify that the review skips the local test paths."""
         spec = reusable_jobs(QUALITY_CALLER)["review"]
         self.assertEqual(spec["with"]["exclude_paths"], "tests/**")
 
-    def test_review_job_maps_the_provider_secret(self):
+    def test_review_job_maps_the_key(self):
         """Verify that the review job receives the provider key."""
         spec = reusable_jobs(QUALITY_CALLER)["review"]
         self.assertEqual(
@@ -168,13 +168,13 @@ class GenerayCallerTest(unittest.TestCase):
             ["Convention Sync Check", "Immutable Compliance"],
         )
 
-    def test_review_job_reviews_the_whole_diff(self):
+    def test_review_job_reviews_all_files(self):
         """Verify that the review covers every changed file."""
         spec = reusable_jobs(GENERAY_CALLER)["review"]
         self.assertNotIn("paths", spec["with"])
         self.assertNotIn("exclude_paths", spec["with"])
 
-    def test_review_job_maps_the_provider_secret(self):
+    def test_review_job_maps_the_key(self):
         """Verify that the review job receives the provider key."""
         spec = reusable_jobs(GENERAY_CALLER)["review"]
         self.assertEqual(
@@ -197,7 +197,7 @@ class LabelCallerTest(unittest.TestCase):
             ["labeled", "synchronize", "unlabeled"],
         )
 
-    def test_each_persona_waits_for_its_own_label(self):
+    def test_each_persona_waits_for_label(self):
         """Verify that each job names its own scan label."""
         document = load_workflow(LABEL_CALLER)
         for persona, job in (("adorno", "adorno"), ("havel", "havel")):
@@ -211,7 +211,7 @@ class LabelCallerTest(unittest.TestCase):
         spec = reusable_jobs(LABEL_CALLER)["havel"]
         self.assertEqual(spec["with"]["regimes"], "")
 
-    def test_review_jobs_map_the_provider_secret(self):
+    def test_review_jobs_map_the_key(self):
         """Verify that each review job receives the provider key."""
         for name, spec in reusable_jobs(LABEL_CALLER).items():
             with self.subTest(job=name):
@@ -224,7 +224,7 @@ class LabelCallerTest(unittest.TestCase):
 class ReviewWorkflowPolicyTest(unittest.TestCase):
     """The review workflows satisfy the repository workflow rules."""
 
-    def test_review_workflows_pin_every_external_action(self):
+    def test_review_workflows_pin_actions(self):
         """Verify that no review workflow holds an unpinned action."""
         for path in REVIEW_WORKFLOWS:
             with self.subTest(path=path.name):
@@ -242,7 +242,7 @@ class ReviewWorkflowPolicyTest(unittest.TestCase):
                 )
                 self.assertEqual(violations, [])
 
-    def test_no_caller_checks_out_the_pull_request_head(self):
+    def test_no_caller_checks_out_head(self):
         """Verify that no caller runs pull request code."""
         for path in REVIEW_WORKFLOWS:
             with self.subTest(path=path.name):

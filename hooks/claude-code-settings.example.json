@@ -7,25 +7,43 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
+              "--client",
+              "claude"
+            ],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py"
+            ],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_git_identity.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_git_identity.py"
+            ],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/require_consent.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/require_consent.py"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/prepare_session_workspace.py"
+            ],
             "timeout": 30
           }
         ]
@@ -37,7 +55,11 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py", "--client", "claude"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py",
+              "--client",
+              "claude"
+            ],
             "timeout": 30
           }
         ]
@@ -49,7 +71,39 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py", "--client", "claude"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py",
+              "--client",
+              "claude"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_anti_delegation.py",
+              "--client",
+              "claude"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
+              "--client",
+              "claude"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/detect_prose_options.py"
+            ],
             "timeout": 30
           }
         ]
@@ -62,7 +116,21 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py", "--client", "claude"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py",
+              "--client",
+              "claude"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_anti_delegation.py",
+              "--client",
+              "claude"
+            ],
             "timeout": 30
           }
         ]
@@ -75,97 +143,49 @@
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "0"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "0"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "1"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "1"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "2"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "2"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "3"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "3"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "4"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "4"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "5"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "5"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "6"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "6"],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py",
-              "--client",
-              "claude",
-              "--chunk-index",
-              "7"
-            ],
+            "args": ["${CLAUDE_PROJECT_DIR}/hooks/reinject_agents_policy.py", "--client", "claude", "--chunk-index", "7"],
             "timeout": 30
           }
         ]
@@ -178,7 +198,21 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py", "--client", "claude"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_gate_adoption.py",
+              "--client",
+              "claude"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_branch_name.py",
+              "--client",
+              "claude"
+            ],
             "timeout": 30
           }
         ]
@@ -189,7 +223,9 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/block_infrastructure_access.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/block_infrastructure_access.py"
+            ],
             "timeout": 30
           }
         ]
@@ -200,13 +236,17 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/block_destructive_bash.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/block_destructive_bash.py"
+            ],
             "timeout": 30
           },
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/enforce_git_identity.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_git_identity.py"
+            ],
             "timeout": 30
           }
         ]
@@ -217,7 +257,9 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/require_consent.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/require_consent.py"
+            ],
             "timeout": 30
           }
         ]
@@ -228,7 +270,43 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/block_destructive_powershell.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/block_destructive_powershell.py"
+            ],
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_pr_base.py"
+            ],
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/deny_mcp_github_writes.py"
+            ],
+            "timeout": 30
+          }
+        ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/enforce_single_question.py"
+            ],
             "timeout": 30
           }
         ]
@@ -239,7 +317,9 @@
           {
             "type": "command",
             "command": "python",
-            "args": ["${CLAUDE_PROJECT_DIR}/hooks/block_destructive_cmd.py"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/hooks/block_destructive_cmd.py"
+            ],
             "timeout": 30
           }
         ]

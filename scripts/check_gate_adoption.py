@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 """Fail when the gate set arrived incomplete (AGENTS.md Rule 18).
 
-Partial adoption is the common failure. A repository receives `hooks/`
-without the registrations, without the shared modules the gates import, or
-without the checkers the rules cite. Every gate then behaves as designed for
-an absent dependency: an unregistered gate never runs, and a gate whose
-shared module is absent denies and exits 2. The result reads like broken
-tooling and invites removal of the gates.
+An incomplete candidate cannot activate. Missing registrations, shared modules,
+or cited checkers leave the verified gate set unchanged. Every gate then
+behaves as designed for an absent dependency: an unregistered gate stays inactive,
+and a gate with an absent shared module denies and exits 2.
 
 This checker names the absent artifact instead. It verifies three properties:
 required files exist, every sibling module a gate imports exists, and every
 required hook stays registered under its required events and matchers.
 
 The registration table repeats `HOOK_MATCHERS` in
-`tests/test_enforce_branch_name.py` deliberately. That table lives inside a
+`tests/test_enforce_branch_name.py` on purpose. That table lives inside a
 test file, so trimming the table together with the settings entry passes the
-suite, and editing it routes through a Rule 3 consent prompt rather than
+suite, and editing it routes through a Rule 3 consent prompt instead of
 failing a check. A copy outside `tests/` fails CI when a registration
 disappears. The consent prompt covers a write made through a gated tool. This
 checker covers an incomplete copy and a removal that reaches the branch by
@@ -23,42 +21,85 @@ another route.
 """
 import argparse
 import ast
+import functools
+import importlib.util
 import json
 import sys
 from pathlib import Path
 
 SHARED_MANIFEST = "shared-files.json"
+TRANSACTION_HOOK = "enforce_gate_adoption.py"
 CLIENT_HOOKS = (
+    "hooks/_command_execution_gate.py",
     "hooks/block_infrastructure_access.py",
+    "hooks/enforce_anti_delegation.py",
     "hooks/enforce_branch_name.py",
     "hooks/enforce_git_identity.py",
+    "hooks/prepare_session_workspace.py",
+    f"hooks/{TRANSACTION_HOOK}",
+    # The command execution gate denies every repository script without its list.
+    "hooks/workflow-scripts.txt",
 )
 REQUIRED_CHECKERS = (
     "scripts/check_banned_agents.py",
     "scripts/check_branch_name.py",
     "scripts/check_commit_attribution.py",
     "scripts/check_commit_message.py",
+    "scripts/complete_gate_adoption.py",
     "scripts/check_dockerfile_root.py",
     "scripts/check_external_pr_refs.py",
     "scripts/check_git_identity.py",
+    "scripts/check_gate_pr_integrity.py",
     "scripts/check_hook_launchers.py",
+    "scripts/check_local_paths.py",
     "scripts/check_persist_credentials.py",
     "scripts/check_secrets_heuristic.py",
     "scripts/check_weak_hashing.py",
     "scripts/read_git_state.py",
     "scripts/trusted_gh.py",
     "scripts/trusted_git.py",
+    # Data and shared modules the checkers above load at run time.
+    "scripts/branch_name_bans.txt",
+    "scripts/_yaml_lines.py",
+    "scripts/_commit_trailers.py",
+    "scripts/_pr_event.py",
+    "scripts/_skill_sync.py",
+    "scripts/check_forbidden_paths.py",
+    "scripts/delete_zone_path.py",
+    "scripts/check_handoff_content.py",
+    "scripts/check_shared_neutrality.py",
 )
-REQUIRED_POLICY = ("AGENTS.md", SHARED_MANIFEST)
+# The local-path checker and its approved allowlist form one gate (Rule 18).
+# Requiring both makes either one alone an incomplete adoption.
+REQUIRED_POLICY = ("AGENTS.md", SHARED_MANIFEST, ".local-path-allowlist")
+# scripts/_skill_sync.py SKILLS names every required skill. The checker
+# loads that module only from its own tree. A candidate under --root has
+# not passed validation yet. Its copy must exist and stays unexecuted.
+SKILL_MODULE = "scripts/_skill_sync.py"
+CHECKER_ROOT = Path(__file__).resolve().parent.parent
+SKILL_ROOTS = ("skills", ".claude/skills", ".agents/skills")
+SKILL_FILE = "SKILL.md"
 CONFIG_PATHS = (
     ".claude/settings.json",
     "hooks/claude-code-settings.example.json",
 )
+TRANSACTION_CONFIGS = {
+    "claude": (".claude/settings.json", "PreToolUse", "*"),
+    "codex": (".codex/hooks.json", "PreToolUse", "*"),
+    "antigravity": (".agents/hooks.json", "PreToolUse", "*"),
+    "gemini": (".gemini/settings.json", "BeforeTool", ".*"),
+}
 SESSION_START_MATCHER = "startup|resume|clear|compact|fork"
 SUBAGENT_MATCHER = "Explore|Plan"
 EDIT_MATCHER = "Edit|Write|MultiEdit|NotebookEdit"
 FILE_TOOL_MATCHER = "Edit|Write|MultiEdit|NotebookEdit|Read|Glob|Grep"
+# Every MCP server prefixes its tools with mcp__, so one matcher covers each GitHub server.
+MCP_TOOL_MATCHER = "mcp__.*"
 REQUIRED_REGISTRATIONS = {
+    "enforce_anti_delegation.py": {
+        "Stop": {""},
+        "SubagentStop": {SUBAGENT_MATCHER},
+    },
     "enforce_branch_name.py": {
         "SessionStart": {SESSION_START_MATCHER},
         "UserPromptSubmit": {""},
@@ -74,14 +115,20 @@ REQUIRED_REGISTRATIONS = {
         "SessionStart": {SESSION_START_MATCHER},
         "PreToolUse": {EDIT_MATCHER},
     },
+    "prepare_session_workspace.py": {"SessionStart": {SESSION_START_MATCHER}},
     "reinject_agents_policy.py": {
         "SessionStart": {SESSION_START_MATCHER},
         "SubagentStart": {SUBAGENT_MATCHER},
+        "Stop": {""},
     },
     "block_destructive_bash.py": {"PreToolUse": {"Bash"}},
     "block_destructive_powershell.py": {"PreToolUse": {"PowerShell"}},
     "block_destructive_cmd.py": {"PreToolUse": {"Cmd|CMD|CommandPrompt"}},
     "block_infrastructure_access.py": {"PreToolUse": {FILE_TOOL_MATCHER}},
+    "enforce_pr_base.py": {"PreToolUse": {MCP_TOOL_MATCHER}},
+    "deny_mcp_github_writes.py": {"PreToolUse": {MCP_TOOL_MATCHER}},
+    "enforce_single_question.py": {"PreToolUse": {"AskUserQuestion"}},
+    "detect_prose_options.py": {"Stop": {""}},
 }
 
 
@@ -114,6 +161,59 @@ def check_required_files(root: Path) -> list[str]:
         if not (root / relative).is_file():
             findings.append(f"{relative} is absent from the adopted tree")
     return findings
+
+
+@functools.lru_cache(maxsize=1)
+def _load_skill_module():
+    """Load the skill module from the checker's own tree, or return None."""
+    path = CHECKER_ROOT / SKILL_MODULE
+    if path.is_symlink() or not path.is_file():
+        return None
+    spec = importlib.util.spec_from_file_location("_checker_skill_sync", path)
+    module = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(module)
+    except (ImportError, OSError, SyntaxError) as error:
+        print(f"{SKILL_MODULE} cannot be loaded: {error}", file=sys.stderr)
+        return None
+    skills = getattr(module, "SKILLS", None)
+    if not isinstance(skills, tuple) or not all(
+            callable(getattr(module, name, None)) for name in ("skill_problems", "is_regular_file")):
+        return None
+    return module
+
+
+def required_skill_files(root: Path = CHECKER_ROOT) -> tuple:
+    """Return every canonical skill and client copy the tree needs, or () without the module.
+
+    The list comes from the checker's own skill module. The root parameter
+    stays for callers and does not change the result.
+    """
+    module = _load_skill_module()
+    if module is None:
+        return ()
+    return tuple(f"{skill_root}/{name}/{SKILL_FILE}"
+                 for name in module.SKILLS for skill_root in SKILL_ROOTS)
+
+
+def check_skill_files(root: Path, present=None) -> list[str]:
+    """Report a missing skill module or any required skill file that is absent or not regular."""
+    module = _load_skill_module()
+    if module is None or not module.is_regular_file(root, SKILL_MODULE):
+        return [f"{SKILL_MODULE} is absent, not a regular file, or lacks SKILLS, "
+                "skill_problems, and is_regular_file"]
+    if present is None:
+        present = lambda relative: module.is_regular_file(root, relative)
+    return [f"{relative} is absent from the adopted tree or is not a regular file"
+            for relative in required_skill_files(root) if not present(relative)]
+
+
+def check_skill_content(root: Path) -> list[str]:
+    """Report frontmatter and stale-copy findings through the checker's skill module."""
+    module = _load_skill_module()
+    if module is None:
+        return []
+    return module.skill_problems(root, module.SKILLS)
 
 
 def _sibling_imports(source: str) -> set:
@@ -151,7 +251,7 @@ def check_hook_imports(root: Path) -> list[str]:
 
 
 def _invocations(entry: object) -> str:
-    """Return one registered hook invocation as a single string."""
+    """Return one registered hook command as a single string."""
     if not isinstance(entry, dict):
         return ""
     arguments = entry.get("args")
@@ -165,7 +265,7 @@ def _event_groups(document: dict, event: str) -> list:
     """Return the matcher groups registered under one event.
 
     Hand-edited configuration reaches this checker, so a null or
-    mistyped branch reports a finding rather than raising.
+    mistyped branch reports a finding and returns normally.
     """
     hooks = document.get("hooks")
     if not isinstance(hooks, dict):
@@ -185,6 +285,54 @@ def _registered_matchers(document: dict, event: str, hook: str) -> set:
         if any(hook in _invocations(entry) for entry in entries):
             matchers.add(str(group.get("matcher", "")))
     return matchers
+
+
+def _event_groups_recursive(document: object, event: str) -> list[dict]:
+    """Return every hook group named by one event in nested client settings."""
+    groups = []
+    if isinstance(document, dict):
+        for key, value in document.items():
+            if key == event and isinstance(value, list):
+                groups.extend(item for item in value if isinstance(item, dict))
+            groups.extend(_event_groups_recursive(value, event))
+    elif isinstance(document, list):
+        for value in document:
+            groups.extend(_event_groups_recursive(value, event))
+    return groups
+
+
+def _group_commands(group: dict) -> list[str]:
+    """Return command-plus-argument text from one bounded hook group."""
+    commands = []
+    for entry in group.get("hooks", []):
+        if isinstance(entry, dict):
+            commands.append(_invocations(entry))
+    return commands
+
+
+def check_transaction_registrations(root: Path) -> list[str]:
+    """Require the transaction gate under every adopted client pre-tool event."""
+    findings = []
+    for client, (relative, event, matcher) in TRANSACTION_CONFIGS.items():
+        path = root / relative
+        try:
+            document = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as error:
+            findings.append(f"{client} configuration {relative} is unreadable: {error}")
+            continue
+        groups = _event_groups_recursive(document, event)
+        expected = f"{TRANSACTION_HOOK} --client {client}"
+        registered = any(
+            str(group.get("matcher", "")) == matcher
+            and any(expected in command for command in _group_commands(group))
+            for group in groups
+        )
+        if not registered:
+            findings.append(
+                f"{client} does not register {TRANSACTION_HOOK} under "
+                f"{event} with matcher {matcher!r}"
+            )
+    return findings
 
 
 def _check_document(name: str, document: dict) -> list[str]:
@@ -226,18 +374,25 @@ def main(argv: list) -> int:
     """Check gate adoption completeness under one repository root."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--root", default=".", help="repository root path")
+    parser.add_argument(
+        "--fast", action="store_true",
+        help="skip skill content parsing for the per-call hook; CI runs the full check")
     options = parser.parse_args(argv)
     root = Path(options.root)
     findings = check_required_files(root)
     findings += check_hook_imports(root)
     findings += check_registrations(root)
+    findings += check_transaction_registrations(root)
+    findings += check_skill_files(root)
+    if not options.fast:
+        findings += check_skill_content(root)
     if not findings:
         return 0
     for finding in findings:
         print(finding, file=sys.stderr)
     print(
-        "Rule 18 requires completing the adoption. Copy the absent "
-        "artifacts and restore the registrations. Removal repairs nothing.",
+        "Rule 18 forbids partial hook or gate adoption. Keep the verified set "
+        "unchanged and stage the complete candidate.",
         file=sys.stderr,
     )
     return 1
