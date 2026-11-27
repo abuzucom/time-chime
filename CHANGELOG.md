@@ -1,63 +1,73 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+Every notable project change appears below.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Headings parenthesize the release date. The house style bans the spaced hyphen.
 
-## [0.14.0] (2026-11-26)
-
-### Changed
-
-- Replace the vendored `abuzucom/foucault` and `abuzucom/euler` review
-  implementation with the `abuzucom/agents-personas` engine at commit
-  `1649e5c9710fd85d6cca12006e344af27a5404a6` (1.0.0). The check run names
-  change to `foucault / security` and `euler / quality`. A maintainer
-  updates the required status checks before the change merges.
-- Add the generay time review caller. The time review runs on every pull
-  request because this repository is a clock.
-- Add the adorno and havel label caller. A maintainer requests the user
-  interface review or the privacy review with the matching scan label.
-- Withhold the provider key from fork pull requests. The engine publishes a
-  skipped check for a fork pull request and makes no model call.
-
-### Removed
-
-- Remove the vendored review workflows `.github/workflows/security-review.yml`
-  and `.github/workflows/quality-review.yml`.
-- Remove the vendored adapter files under `ci/` and the response checker
-  `scripts/check_pr_review_response.py`.
-- Remove the vendored review artifact tests.
-
-## [0.13.0] (2026-11-26)
+## [0.16.0] (2026-11-27)
 
 ### Added
 
-- Add `.compliance-tree-exemptions.json`. The manifest declares the pull
-  request target callers that the base branch reviews. It pins each caller
-  content by SHA-256, the secret names that the caller may reference, the
-  reusable workflow commits that the caller may call, and the write scopes
-  that the caller jobs may request.
-- Add reviewed pull request target rules to
-  `scripts/check_compliance_tree.py`. A caller named in the base manifest
-  passes a documented rule set. Every other pull request target workflow
-  keeps the closed schema that only the immutable compliance job satisfies.
-- Add `tests/test_compliance_tree_exemptions.py`. The suite covers the
-  manifest parser, the reviewed rule set, the content digest pin, and one
-  trusted base scan of a candidate tree.
+- Adopt the `abuzucom/agents` template at upstream commit
+  `fc821061d0d6064ea2d4227b324470cffe487676` (2.51.0). The change brings
+  the shared gate files, the gate hooks, the agent skills, the client
+  registrations, and the supporting policy documents.
+- Add the gate hooks for anti-delegation, gate adoption, pull request base,
+  MCP GitHub writes, single-question prompts, session workspaces, and prose
+  options.
+- Add the local path gate with an empty `.local-path-allowlist` and
+  `hooks/trusted-owners.txt` naming `abuzucom`.
+
+### Fixed
+
+- Remove the `app-test` and `app-lint` Makefile targets. The shared command
+  gate recognizes only `sync`, `check`, `lint`, `test`, and `identity`. The two
+  removed targets met a denial for an uninspectable program. `make test` and
+  `make lint` cover both suites.
+- Regenerate `docs/template-drift.md` against the adopted 2.51.0 policy. The
+  record described a rule decline and a renumbering that the adopted policy
+  no longer carries.
+- Resolve the merge target in `scripts/check_merge_safety.py` before the
+  comparison. The template compares the target string with the current branch
+  without a resolution step.
+
+### Changed
+
+- Replace the canonical policy file with the upstream `AGENTS.md`. The
+  repository facts move to `docs/orientation.md`. The short orientation that
+  the synchronized copies carry lives in `docs/project-orientation.md`.
+- Route the application commands through the `Makefile`. The shared command
+  gate denies every bun invocation as opaque execution. `make test` and
+  `make lint` cover the policy suite and the application suites.
+- Merge the changelog entries of every release that shares a UTC day under
+  the newest version of that day. The absorbed version numbers stay in the
+  entry text.
+- Replace the client registrations for Claude Code, Codex, Gemini, and
+  Antigravity with the upstream ones.
+- Keep the repository setup-python pin at `6d4fd22b` (6.3.0) in the policy
+  workflows. The checker approves that revision and the template revision.
+- Name the repository own documents in the prose file list. The template
+  list names files that belong to the source repository.
+
+### Removed
+
+- Remove the repository statement coverage test for the replaced hooks, the
+  local `github-draft` skill, and the upstream tests that cover the source
+  repository.
 
 ## [0.12.0] (2026-11-10)
+
+The entry also covers the release 0.11.1.
 
 ### Added
 
 - Adopt the pull request security review from `abuzucom/foucault` and the
   pull request quality review from `abuzucom/euler`. The vendored reusable
-  workflows and the adapter scripts are pinned to foucault 3.7.6 and euler
-  0.7.1.
+  workflows and the adapter scripts carry the foucault 3.7.6 and euler 0.7.1
+  pins.
 - Document the review automation in `docs/review-automation.md`.
-
-## [0.11.1] (2026-11-10)
 
 ### Fixed
 
@@ -67,25 +77,17 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 
 ## [0.11.0] (2026-11-09)
 
+The entry also covers the releases 0.10.0, 0.9.0.
+
 ### Changed
 
 - Use a subscribed settings store for initialization and updates.
+- Update React hooks to satisfy lint checks for render purity and state.
+- Accept the approved setup-python 7.1.0 pin in the immutable checker.
 
 ### Fixed
 
 - Preserve persisted settings during initialization.
-
-## [0.10.0] (2026-11-09)
-
-### Changed
-
-- Update React hooks to satisfy lint checks for render purity and state.
-
-## [0.9.0] (2026-11-09)
-
-### Changed
-
-- Accept the approved setup-python 7.1.0 pin in the immutable checker.
 
 ## [0.8.7] (2026-10-29)
 
@@ -115,27 +117,15 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 ### Added
 
 - Add `tests/test_dependency_security_floors.py` to keep advisory-affected
-  pins at or above their patched versions.
+  pins at or above the patched versions.
 - Add `tests/test_bun_lockfile_workflow_consent.py` to check the bun
   lockfile consent route.
 
 ### Changed
 
 - Route the exact `bun install --lockfile-only` command in
-  `hooks/enforce_branch_name.py` to active-human consent. Every other `bun`
+  `hooks/enforce_branch_name.py` to a consent prompt. Every other `bun`
   command stays denied.
-
-### Security
-
-- Bump `@tanstack/react-start` from 1.168.53 to 1.168.60 for
-  GHSA-qx66-fv34-fjm8 (critical reflected XSS in server-function
-  responses).
-- Bump `@tanstack/react-router` from 1.170.36 to 1.170.41 and
-  `@tanstack/router-plugin` from 1.168.38 to 1.168.42 to match the
-  versions that `@tanstack/react-start` 1.168.60 pins.
-- Bump `vite` from 8.3.0 to 8.3.3 for GHSA-9jrq-w75r-8gcw,
-  GHSA-rq7h-c2jc-7f22, and GHSA-vfpm-58rq-9qcg.
-- Bump `zod` from 4.6.5 to 4.6.6 for GHSA-mrhx-c7xc-m3w5.
 
 ## [0.8.5] (2026-10-26)
 
@@ -150,6 +140,8 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
   later. The Node 20 job fails with an npm `edgesOut` error.
 
 ## [0.8.4] (2026-10-07)
+
+The entry also covers the release 0.8.3.
 
 ### Added
 
@@ -171,19 +163,15 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 ### Fixed
 
 - Align `package.json` version with `CHANGELOG.md`.
-
-## [0.8.3] (2026-10-07)
-
-### Fixed
-
 - Remove unused `base64`, `os`, and `block_destructive_bash` imports from
-  `tests/test_hook_statement_coverage.py` to resolve github-code-quality findings.
+  `tests/test_hook_statement_coverage.py` to resolve the code quality
+  findings.
 
 ## [0.8.2] (2026-10-02)
 
 ### Added
 
-- Add comprehensive hook statement coverage tests in `tests/test_hook_statement_coverage.py`.
+- Add hook statement coverage tests in `tests/test_hook_statement_coverage.py`.
 - Add `python scripts/check_hook_coverage.py` to the static checks job in `.github/workflows/agents-compliance.yml`.
 - Add additional JavaScript unit tests to `.github/workflows/github-coverage.yml`.
 
@@ -195,12 +183,11 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 
 ## [0.8.1] (2026-09-28)
 
-### Fixed
+The entry also covers the releases 0.8.0, 0.7.0.
 
-- Add explicit `contents: read` permissions block to `security-headers.yml`, resolving CodeQL alert #2 (`actions/missing-workflow-permissions`).
-- Escape backslash characters before table pipe characters in `scripts/update-zap-report.mjs`, resolving CodeQL alert #3 (`js/incomplete-sanitization`).
+### Added
 
-## [0.8.0] (2026-09-28)
+- Add TypeScript code coverage reporting to CI via Node.js test runner.
 
 ### Changed
 
@@ -215,61 +202,14 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
 
 ### Fixed
 
+- Add explicit `contents: read` permissions block to `security-headers.yml`, resolving CodeQL alert #2 (`actions/missing-workflow-permissions`).
+- Escape backslash characters before table pipe characters in `scripts/update-zap-report.mjs`, resolving CodeQL alert #3 (`js/incomplete-sanitization`).
 - Pin Nitro `compatibilityDate` to `2026-09-13` in `vite.config.ts`. Nitro defaults to the current build date when unspecified, exceeding the newest date supported by `wrangler@4.132.0` in `security-headers.yml`.
 - Fall back to binary buffer writes on `UnicodeEncodeError` in `scripts/trusted_gh.py` to prevent Windows cp1252 output encoding crashes.
 
-## [0.7.0] (2026-09-28)
-
-### Added
-
-- Add TypeScript code coverage reporting to CI via Node.js test runner.
-
 ## [0.6.3] (2026-09-16)
 
-### Fixed
-
-- `security-headers.yml` upgrades the pinned wrangler from 4.110.0 to
-  4.132.0. Nitro generates `compatibility_date` 2026-09-13, and 4.110.0's
-  workerd supports dates only up to 2026-07-15, so the header-check server
-  could never start. The check had been red on `main` since 2026-07-16.
-- README prose and one legacy CHANGELOG line rewritten in ASCII without
-  em/en dashes or spaced-hyphen substitutes, satisfying the vendored
-  `check_ascii.py` blocking check.
-
-## [0.6.2] (2026-09-16)
-
-### Fixed
-
-- `scripts/check_changelog.py` accepts the legacy spaced-hyphen heading form
-  during range-check version extraction. The 0.6.0 heading migration left
-  base revisions unparseable, so every pull request failed the version
-  advance check. Current-file validation still requires the parenthesized
-  form. Recorded in `docs/template-drift.md`.
-- `security-headers.yml` resolves and caches wrangler outside the server
-  startup window and extends the wait loop to 60 seconds. Cold CI runners
-  exhausted the 20-second loop on bunx downloads; the check had been red on
-  `main` since 2026-07-16.
-
-## [0.6.1] (2026-09-16)
-
-### Fixed
-
-- `src/lib/http/https-guard.ts` replaces the control-character regex with an
-  equivalent code-unit comparison, clearing the latent `no-control-regex`
-  eslint error. Header validation behavior is unchanged.
-- `tests/clickjacking-defences.test.mjs` normalizes route paths to forward
-  slashes and accepts the current `head(options)` signature. The suite now
-  passes on Windows.
-- `.prettierignore` now excludes generated policy copies and vendored
-  `abuzucom/agents` content so `bun run format` cannot desynchronize them.
-- `bun run format` applied across drifted repo-owned files. `bun run lint`
-  now exits clean (warnings remain).
-- Superseded Node checkers (`check-banned-agents.mjs`,
-  `check-branch-name.mjs`, `check-persist-credentials.mjs`,
-  `sync-agent-docs.mjs`) and their tests removed for real. A revert pass in
-  the 0.6.0 branch had restored them before the adoption commit.
-
-## [0.6.0] (2026-09-16)
+The entry also covers the releases 0.6.2, 0.6.1, 0.6.0.
 
 ### Added
 
@@ -289,14 +229,14 @@ Headings parenthesize the release date. The house style bans the spaced hyphen.
   registrations for the gate hooks.
 - `.github/workflows/sync-check.yml`, `agents-compliance.yml`,
   `agents-md-compliance.yml`, and `immutable-conflict-check.yml` vendored
-  from upstream. The last is a `pull_request_target` workflow whose sole job
-  runs an immutable compliance scan with a read-only token.
+  from upstream. The last one runs an immutable compliance scan with a
+  read-only token in a `pull_request_target` workflow.
 - `scripts/trusted-gh.mjs` (`node scripts/trusted-gh.mjs run <gh
 arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
   the repository, verifies the authenticated account, injects validated
   `--repo` and `--head` targets, enforces the shared denylist, and denies
   unsafe `gh api` methods. Gated shell hooks recognize only the Python
-  wrapper; the Node port covers contexts without Python.
+  wrapper. The Node port covers contexts without Python.
   `tests/trusted-gh.test.mjs` supplies 28 behavioral tests.
 - `.gitattributes` for the policy LF rule, `.editorconfig`,
   `docs/gate-threat-model.md`, `docs/template-drift.md`, `DRIFT.md`, GitHub
@@ -312,23 +252,58 @@ arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
 
 ### Changed
 
-- `AGENTS.md` rewritten to upstream 2.0.30, keeping repository-local
-  sections (Commands, Architecture, Do not touch, Gotchas, Read before
-  touching, Version and theme checklist). Upstream rule 12 (non-root
-  containers) stays pruned with the renumbering recorded in rule 12;
-  upstream rules 13 through 20 map to local rules 12 through 19.
-- Rule 15 scoped for this repository: non-destructive `wrangler` operations
-  stay prompt-free; destructive Cloudflare state changes require consent.
+- `AGENTS.md` rewritten to upstream 2.0.30, keeping the sections that
+  belong to this repository (Commands, Architecture, Do not touch, Gotchas,
+  Read before touching, Version and theme checklist). Upstream rule 12 (non-root
+  containers) stays pruned with the renumbering recorded in rule 12.
+  Upstream rules 13 through 20 map to local rules 12 through 19.
+- Rule 15 scoped for this repository. Non-destructive `wrangler` operations
+  stay prompt-free. Destructive Cloudflare state changes require consent.
   Detail lives in `docs/agent-policy/security.md`.
 - `scripts/check-persist-credentials.mjs`, `check-branch-name.mjs`,
   `check-banned-agents.mjs`, `sync-agent-docs.mjs`,
-  `hooks/enforce-branch-name.mjs`, and their tests removed. Vendored Python
-  equivalents replace them. Local `agent-docs-sync.yml` removed; the
-  vendored `sync-check.yml` covers copy verification.
+  `hooks/enforce-branch-name.mjs`, and the matching tests removed. Vendored
+  Python equivalents replace the removed files. The local
+  `agent-docs-sync.yml` came off too.
+  The vendored `sync-check.yml` covers copy verification.
 - `package.json` scripts re-pointed to the Python checkers. CHANGELOG
   headings switched to the parenthesized date form for every historical
   entry.
 - README documents the Python 3 prerequisite for policy tooling.
+
+### Fixed
+
+- `security-headers.yml` upgrades the pinned wrangler from 4.110.0 to
+  4.132.0. Nitro generates `compatibility_date` 2026-09-13, and 4.110.0's
+  workerd supports dates only up to 2026-07-15. The header-check server
+  could never start. The check failed on `main` from 2026-07-16.
+- README prose and one legacy CHANGELOG line rewritten in ASCII without
+  em/en dashes or spaced-hyphen substitutes, satisfying the vendored
+  `check_ascii.py` blocking check.
+- `scripts/check_changelog.py` accepts the legacy spaced-hyphen heading form
+  during range-check version extraction. The 0.6.0 heading migration left
+  base revisions unparseable. Every pull request failed the version advance
+  check. Current-file validation still requires the parenthesized form.
+  Recorded in `docs/template-drift.md`.
+- `security-headers.yml` resolves and caches wrangler outside the server
+  startup window and extends the wait loop to 60 seconds. Cold CI runners
+  exhausted the 20-second loop on bunx downloads. The check failed on `main`
+  from 2026-07-16.
+- `src/lib/http/https-guard.ts` replaces the control-character regex with an
+  equivalent code-unit comparison, clearing the latent `no-control-regex`
+  eslint error. The header validation behavior stays unchanged.
+- `tests/clickjacking-defences.test.mjs` normalizes route paths to forward
+  slashes and accepts the current `head(options)` signature. The suite now
+  passes on Windows.
+- `.prettierignore` now excludes generated policy copies and vendored
+  `abuzucom/agents` content. The `bun run format` command can no longer
+  desynchronize the copies.
+- `bun run format` applied across drifted repo-owned files. `bun run lint`
+  now exits clean (warnings remain).
+- Superseded Node checkers (`check-banned-agents.mjs`,
+  `check-branch-name.mjs`, `check-persist-credentials.mjs`,
+  `sync-agent-docs.mjs`) and the matching tests removed for real. A revert
+  pass in the 0.6.0 branch had restored the files before the adoption commit.
 
 ## [0.5.0] (2026-08-20)
 
@@ -336,28 +311,28 @@ arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
 
 - `scripts/check-persist-credentials.mjs` (`bun run check:persist-credentials`),
   a Node port of `abuzucom/agents` `check_persist_credentials.py`, enforcing new
-  rule 11: an `actions/checkout` step must set `persist-credentials: false`
+  rule 11. An `actions/checkout` step must set `persist-credentials: false`
   unless the job needs the credential afterward.
 - `scripts/check-branch-name.mjs` (`bun run check:branch-name`), enforcing the
   `<type>/<kebab-description>` branch convention and the new `claude/` ban.
 - `scripts/check-banned-agents.mjs` (`bun run check:banned-agents`), matching
   commit author, committer, and `Co-authored-by` trailers, plus the pull request
   author login, against the Banned agents denylist. This replaces an unbacked
-  claim: `AGENTS.md` previously said the section was enforced in CI when no such
-  check existed.
+  claim. `AGENTS.md` previously said that CI enforced the section when no
+  such check existed.
 - `hooks/enforce-branch-name.mjs` and `.claude/settings.json`, wiring the branch
   check into Claude Code. `SessionStart` injects a stop-and-rename instruction;
   `PreToolUse` exits 2 on `git commit` or `git push` from a non-conforming
   branch. The split exists because Claude Code ignores a non-zero `SessionStart`
   exit. `git branch -m` is never blocked.
 - `.github/workflows/agents-compliance.yml`, running all three checkers and
-  their unit tests on every pull request. Upstream's reusable workflow is not
-  referenced because upstream has cut no release tag, and rule 9 forbids
+  the matching unit tests on every pull request. The upstream reusable
+  workflow is not referenced. Upstream has cut no release tag, and rule 9 forbids
   `@main`.
 - 42 unit tests across `tests/check-persist-credentials.test.mjs`,
   `tests/check-banned-agents.test.mjs`, and `tests/enforce-branch-name.test.mjs`,
   the last including a group asserting `.claude/settings.json` still registers
-  the hook for both events. No new dependency; all use `node --test`.
+  the hook for both events. No new dependency arrives. All use `node --test`.
 
 ### Changed
 
@@ -365,14 +340,14 @@ arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
   1.11.0. Added critical rule 10 (verify state before assuming workflow intent),
   rule 11 (no persisted git credentials in CI), and rule 12 (back enforcement
   claims with real checks). Extended rule 9 to cover pinning reusable workflows
-  referenced with `uses:`. Upstream's rule 12, non-root containers, is pruned:
-  this repo ships no Dockerfile, compose file, or Kubernetes manifest, so
-  upstream rule 13 is local rule 12.
-- Branch naming conventions now ban the `claude/` prefix, state that a
-  harness-assigned or dispatcher-assigned name is not an exception and gets
-  renamed before the first commit, and exempt Dependabot.
+  referenced with `uses:`. The upstream rule 12, non-root containers, stays
+  pruned. This repository ships no Dockerfile, compose file, or Kubernetes
+  manifest. Upstream rule 13 becomes local rule 12.
+- Branch naming conventions now ban the `claude/` prefix. A name that the
+  harness or the dispatcher assigns is no exception. A rename follows before
+  the first commit. Dependabot stays exempt.
 - Set `persist-credentials: false` on six `actions/checkout` steps.
-  `zap-baseline.yml` and `action-pin-autofix.yml` both push, so they carry the
+  `zap-baseline.yml` and `action-pin-autofix.yml` both push. Both carry the
   rule 11 exception comment instead.
 - `eslint.config.js` now lints `hooks/**/*.mjs` under the same rules already
   applied to `scripts/` and `tests/` Node ESM files.
@@ -381,35 +356,61 @@ arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
 
 ### Changed
 
-- Synced `AGENTS.md` (and its fanned-out copies) with the `abuzucom/agents` 1.1.0 upstream conventions, adapted to this repo's TypeScript/ESLint idioms: added a "No suppressing checks" workflow rule (no `eslint-disable`/`@ts-ignore`/`@ts-expect-error` or CI weakening), added a "History safety" rule against rewriting pushed history without consent, merged the run-on-sentence prohibition into the em/en-dash style rule, renamed "No extended ASCII" to "No non-ASCII characters" with tightened wording, and expanded the incomplete-work-marker rule beyond TODO/FIXME to XXX, HACK, stubs, and bare placeholders.
+- Synced `AGENTS.md` (and its fanned-out copies) with the `abuzucom/agents` 1.1.0
+  upstream conventions, adapted to the TypeScript and ESLint idioms of this
+  repository. Added a "No suppressing checks" workflow rule (no
+  `eslint-disable`/`@ts-ignore`/`@ts-expect-error` or CI weakening). Added a
+  "History safety" rule against rewriting pushed history without consent.
+  Merged the run-on-sentence prohibition into the em and en dash style rule.
+  Renamed "No extended ASCII" to "No non-ASCII characters" with tightened
+  wording. Expanded the incomplete-work-marker rule beyond TODO and FIXME to
+  XXX, HACK, stubs, and bare placeholders.
 - Extended the `no-warning-comments` ESLint rule terms to `xxx` and `hack` (alongside `todo`/`fixme`) to back the expanded incomplete-work-marker convention. No new dependency.
 
 ## [0.4.1] (2026-07-13)
 
-### Changed
-
-- `security-headers.yml` now always prints the local `wrangler dev` server's own log (including any unhandled SSR exception stack trace) as a collapsed CI group, so an intermittent 500 on the header-check probes surfaces the actual error instead of just "HTTP 500". Diagnostic only; does not change app behavior or the check's pass/fail outcome.
-
-## [0.4.0] (2026-07-13)
+The entry also covers the release 0.4.0.
 
 ### Added
 
-- `scripts/check-action-pins.mjs` (`bun run check:action-pins`) to detect GitHub Actions referenced by a mutable tag instead of a pinned commit SHA, with a `--fix` mode that resolves and rewrites them.
-- `.github/workflows/action-pin-autofix.yml`, a scheduled/push-triggered workflow that runs the fixer and opens a draft PR when it finds unpinned actions. Never runs on `pull_request`/`pull_request_target`, so it never executes with a write-scoped token against fork-controlled workflow content.
+- `scripts/check-action-pins.mjs` (`bun run check:action-pins`) to detect GitHub Actions referenced by a mutable tag instead of a pinned commit SHA, with a `--fix` mode that resolves and rewrites the references.
+- `.github/workflows/action-pin-autofix.yml`, a scheduled/push-triggered
+  workflow that runs the fixer and opens a draft PR when it finds unpinned
+  actions. The workflow stays off `pull_request` and `pull_request_target`.
+  No write-scoped token executes against fork-controlled workflow content.
 
 ### Changed
 
+- `security-headers.yml` now always prints the local `wrangler dev` server's own
+  log (including any unhandled SSR exception stack trace) as a collapsed CI
+  group. An intermittent 500 on the header-check probes then surfaces the actual
+  error instead of just "HTTP 500". The change stays diagnostic. It changes
+  neither the app behavior nor the check outcome.
 - Pinned every remaining mutable-tag `uses:` reference across `.github/workflows/*.yml` (13 lines, 6 workflows) to a commit SHA with a version comment, matching the convention already used for `zaproxy/action-baseline` and `oven-sh/setup-bun`. Includes adopting `actions/checkout` v7.0.0 and `actions/github-script` v9.0.0 (superseding PRs #2 and #3).
 
 ## [0.3.3] (2026-07-12)
 
+The entry also covers the releases 0.3.2, 0.3.1, 0.3.0, 0.2.6, 0.2.5, 0.2.4, 0.2.3, 0.2.2, 0.2.1.
+
 ### Changed
 
 - Removed WorldTimeAPI and timeapi.world from the selectable time-provider set while keeping the rest of time sync intact.
-- Defaulted saved provider state to the remaining providers when obsolete IDs are filtered out.
+- Defaulted saved provider state to the remaining providers when the code
+  filters out obsolete IDs.
 - Updated the provider tests and user-facing copy to reflect the narrower network-time set.
-
-## [0.3.2] (2026-07-12)
+- Reframed time synchronization around selectable HTTPS JSON reference services.
+- Removed Stratum-1, NTS, and provider-provenance claims from the application UI.
+- Added educational guidance about authoritative Stratum-1 timekeeping and NTS.
+- Added a theme-aware GitHub repository badge to the footer.
+- Used a build-safe inline GitHub mark compatible with the pinned icon dependency.
+- Renamed the home-page Settings link to FAQ and aligned its version with `package.json`.
+- Styled the Support the developers link consistently with the FAQ link.
+- Added explicit agent guidance for SemVer and theme-aware UI changes.
+- Pinned all 76 `^`-range `package.json` dependencies/devDependencies to
+  the currently-resolved exact versions from `bun.lock` (AGENTS.md rule
+  9: "pin versions"). Verified `bun install` produces no lockfile changes
+  beyond the version-string echo in the workspace declaration. No
+  package's resolved version shifted.
 
 ### Fixed
 
@@ -417,48 +418,9 @@ arguments>`), a Node port of `scripts/trusted_gh.py`: resolves `gh` outside
 - Restore immediate retry behavior after a failed initial or manual sync.
 - Allow fixed HTTPS providers to follow redirects and accept valid JSON responses without a content-type gate.
 - Keep drift status neutral when no network reference is available.
-
-## [0.3.1] (2026-07-12)
-
-### Fixed
-
 - Hardened provider selection against stale persisted IDs and update races.
 - Synced immediately against the newly selected provider list.
-
-## [0.3.0] (2026-07-12)
-
-### Changed
-
-- Reframed time synchronization around selectable HTTPS JSON reference services.
-- Removed Stratum-1, NTS, and provider-provenance claims from the application UI.
-- Added educational guidance about authoritative Stratum-1 timekeeping and NTS.
-
-## [0.2.6] (2026-07-12)
-
-### Changed
-
-- Added a theme-aware GitHub repository badge to the footer.
-- Used a build-safe inline GitHub mark compatible with the pinned icon dependency.
-- Renamed the home-page Settings link to FAQ and aligned its version with `package.json`.
-- Styled the Support the developers link consistently with the FAQ link.
-- Added explicit agent guidance for SemVer and theme-aware UI changes.
-
-## [0.2.5] (2026-07-12)
-
-### Changed
-
-- Pinned all 76 `^`-range `package.json` dependencies/devDependencies to
-  their currently-resolved exact versions from `bun.lock` (AGENTS.md rule
-  9: "pin versions"). Verified `bun install` produces no lockfile changes
-  beyond the version-string echo in the workspace declaration. No
-  package's resolved version shifted.
-
-## [0.2.4] (2026-07-12)
-
-### Fixed
-
 Retrospective `AGENTS.md` conformance pass, part 3 of 3:
-
 - `src/lib/http/pre-hydration.ts`: justified the two empty `catch {}`
   blocks in the pre-hydration script with a one-line comment, and
   recomputed `PRE_HYDRATION_SCRIPT_SHA256` to match.
@@ -467,27 +429,15 @@ Retrospective `AGENTS.md` conformance pass, part 3 of 3:
 - Renamed the poorly-named `c` variable to `controller` throughout
   `src/lib/native/consent.test.ts`.
 - `.gitignore`: added an explicit `.env*` / `!.env.example` pattern,
-  matching `.claudeignore`'s existing convention (defense in depth; no
-  `.env` file is tracked).
-
-## [0.2.3] (2026-07-12)
-
-### Fixed
-
+  matching the existing `.claudeignore` convention. The change adds defense in
+  depth. No `.env` file enters version control.
 Retrospective `AGENTS.md` conformance pass, part 2 of 3:
-
 - Extracted the fuzz-redirect verification logic duplicated across
   `tests/https-guard-fuzz.test.mjs`, `scripts/replay-fuzz-failure.mjs`, and
   `scripts/report-fuzz-failure.mjs` into a shared
   `scripts/lib/verify-https-redirect.mjs` module.
-
-## [0.2.2] (2026-07-12)
-
-### Fixed
-
 Retrospective `AGENTS.md` conformance pass, part 1 of 3 (audited by three
 parallel codebase reviews; full findings in the originating PR's description):
-
 - `eslint.config.js`: fixed the composition-over-inheritance lint rule
   incorrectly flagging classes with no `extends` clause at all, and
   extended AGENTS.md-mapped lint coverage to `scripts/*.mjs` and
@@ -496,11 +446,6 @@ parallel codebase reviews; full findings in the originating PR's description):
   `src/lib/time.functions.ts`, `src/routes/api/public/csp-report.tsx`,
   and `scripts/update-zap-report.mjs` (the last one surfaced by the new
   `.mjs` lint coverage above).
-
-## [0.2.1] (2026-07-12)
-
-### Fixed
-
 - `67b6d73` Fixed the long-broken "Validate response headers" CI check
   (it ran `wrangler pages dev` against an app that actually deploys as a
   Cloudflare Worker, not Pages) and, while verifying that fix, found and
@@ -508,57 +453,16 @@ parallel codebase reviews; full findings in the originating PR's description):
   output landing in the wrong directory (404ing in production), and
   several security headers (`Cross-Origin-Opener-Policy`,
   `Cross-Origin-Resource-Policy`, `X-DNS-Prefetch-Control`,
-  `Cache-Control`, `Vary`) silently missing from every SSR/server-function
+  `Cache-Control`, `Vary`) missing from every SSR and server-function
   response.
 - `b40fcc0` Removed all remaining Lovable scaffold traces (`.lovable/`,
   doc mentions, code comments) with no functional behavior change.
 
 ## [0.2.0] (2026-07-11)
 
+The entry also covers the release 0.1.0.
+
 ### Added
 
 - Version marker in the Settings drawer, reading `package.json`'s `version`
   via a Vite build-time define (`__APP_VERSION__`).
-
-## [0.1.0] (2026-07-11)
-
-Baseline release: retroactively covers every commit on `main` up to and
-including this entry, newest first.
-
-- `4e3348d` Merge pull request #26 from abuzucom/claude/agents-upstream-sync-u5v0w8
-- `fef4eee` Sync AGENTS.md with updated abuzucom/agents upstream
-- `d67a777` antigravity fix
-- `232680a` Merge pull request #25 from abuzucom/claude/integrate-agents-repo-tnb4b8
-- `393e8cf` Regenerate bun.lock and reconcile Dependabot major bumps
-- `feec227` Integrate abuzucom/agents AI-coding-agent conventions
-- `409df40` Merge pull request #24 from abuzucom/claude/fs-extra-symlink-fix-l1xq14
-- `80eee75` Pin transitive fs-extra to 11.3.6 to fix symlink self-copy bug
-- `e275819` Merge pull request #1 from abuzucom/dependabot/github_actions/google/osv-scanner-action-2.3.8
-- `f24c915` Merge pull request #9 from abuzucom/dependabot/npm_and_yarn/react-day-picker-10.0.1
-- `51cc437` Merge pull request #7 from abuzucom/dependabot/npm_and_yarn/typescript-6.0.3
-- `bf4f8fb` chore(deps)(deps): bump react-day-picker from 9.14.0 to 10.0.1
-- `07abeaf` Merge pull request #14 from abuzucom/dependabot/npm_and_yarn/globals-17.7.0
-- `617dc50` Merge pull request #12 from abuzucom/dependabot/npm_and_yarn/recharts-3.9.2
-- `7d8c225` Merge pull request #15 from abuzucom/dependabot/npm_and_yarn/lucide-react-1.23.0
-- `6629b8a` Merge pull request #22 from abuzucom/dependabot/github_actions/actions/setup-node-6
-- `5226dc4` chore(actions): bump actions/setup-node from 4 to 6
-- `b61219a` Merge pull request #19 from abuzucom/fix/aikido-security-sast-60935109-2tsc
-- `574f27e` chore(deps-dev)(deps-dev): bump typescript from 5.9.3 to 6.0.3
-- `df717ec` Merge pull request #21 from abuzucom/fix/aikido-security-update-packages-60937176-c1pw
-- `9c3a817` fix(security): update zod from 3.25.76 to 4.4.3
-- `08a170b` Merge pull request #20 from abuzucom/fix/aikido-security-update-packages-60936236-rcfa
-- `8f59c8f` fix(security): update enhanced-resolve from 5.20.1 to 5.22.1
-- `429e384` fix(security): autofix Potential file inclusion attack via reading file
-- `bcdc7ea` Merge pull request #4 from abuzucom/dependabot/github_actions/github/codeql-action-4
-- `092c07d` Merge pull request #18 from abuzucom/fix/aikido-security-sast-60933446-omcj
-- `dc6ca85` fix(security): autofix Overly Broad Permissions in GitHub Actions Workflows is risky
-- `dd4d485` Merge pull request #17 from abuzucom/fix/aikido-security-sast-60930671-t85y
-- `41622c9` Merge pull request #16 from abuzucom/fix/aikido-security-sast-60930417-ms38
-- `306a13a` fix(security): autofix 3rd party Github Actions should be pinned
-- `35b5b06` fix(security): autofix Template Injection in GitHub Workflows Action
-- `17a4d9b` chore(deps)(deps): bump lucide-react from 0.575.0 to 1.23.0
-- `1226aa4` chore(deps-dev)(deps-dev): bump globals from 15.15.0 to 17.7.0
-- `938af4d` chore(deps)(deps): bump recharts from 2.15.4 to 3.9.2
-- `63decd6` chore(actions): bump github/codeql-action from 3 to 4
-- `84f97f4` chore(actions): bump google/osv-scanner-action from 2.0.2 to 2.3.8
-- `fadb67d` Init

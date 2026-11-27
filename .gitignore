@@ -60,3 +60,8 @@ tests/__fuzz-failures__/
 coverage/
 coverage.lcov
 coverage.xml
+
+# Per-session scratch and worktree folders, handoffs included.
+# scripts/check_forbidden_paths.py blocks any commit that stages a path below them.
+.scratch/
+.worktrees/

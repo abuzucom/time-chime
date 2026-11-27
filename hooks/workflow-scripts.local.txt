@@ -1,0 +1,6 @@
+# Repository scripts that only this repository ships.
+#
+# The line format matches hooks/workflow-scripts.txt. This repository runs
+# the shared policy tooling and the application scripts under bun and Node,
+# so no repository script needs an entry here. An entry may not repeat a
+# shared entry.

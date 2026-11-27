@@ -28,7 +28,7 @@ Delete this comment before committing a completed copy.
 - Run subprocesses with argument arrays. Disable shell interpretation.
 - Obtain explicit approval before destructive changes.
 - Never weaken a test to force a pass. Never skip a test to force a pass.
-  Never delete a test to force a pass. Stop after suspecting a test defect. Ask
+  Do not delete a test to force a pass. Stop after suspecting a test defect. Ask
   a maintainer before changing the test.
 - Keep public APIs backward compatible.
 - Never commit secrets, credentials, or private user data.

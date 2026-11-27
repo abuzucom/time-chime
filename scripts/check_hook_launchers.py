@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify configured hook launchers and one fail-closed gate invocation."""
+"""Verify configured hook launchers and one fail-closed gate run."""
 import json
 import shlex
 import shutil
@@ -7,11 +7,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-GATE_NAMES = (
-    ("block_destructive_bash.py", "Bash"),
-    ("block_destructive_powershell.py", "PowerShell"),
-    ("block_destructive_cmd.py", "Cmd"),
+GATE_PROBES = (
+    ("block_destructive_bash.py", "Bash", 2, ()),
+    ("block_destructive_powershell.py", "PowerShell", 2, ()),
+    ("block_destructive_cmd.py", "Cmd", 2, ()),
+    ("enforce_gate_adoption.py", "Bash", 0, ("--client", "claude")),
 )
+DIAGNOSTIC_LIMIT = 160
 
 
 def _deny_payload(tool_name: str) -> str:
@@ -57,13 +59,19 @@ def _config_paths(root: Path) -> list[Path]:
     return [path for path in candidates if path.is_file()]
 
 
-def _gate_paths(root: Path) -> list[tuple[Path, str]]:
+def _gate_paths(root: Path) -> list[tuple[Path, str, int, tuple[str, ...]]]:
     """Return installed gate scripts and their matching client names."""
     return [
-        (root / "hooks" / filename, tool_name)
-        for filename, tool_name in GATE_NAMES
+        (root / "hooks" / filename, tool_name, expected_returncode, arguments)
+        for filename, tool_name, expected_returncode, arguments in GATE_PROBES
         if (root / "hooks" / filename).is_file()
     ]
+
+
+def _diagnostic(value: str) -> str:
+    """Return bounded printable launcher diagnostic text."""
+    normalized = value.strip().replace("\r", " ").replace("\n", " ")
+    return normalized.encode("ascii", "backslashreplace").decode("ascii")[:DIAGNOSTIC_LIMIT]
 
 
 def main() -> int:
@@ -86,16 +94,17 @@ def main() -> int:
         print("no installed destructive gate scripts", file=sys.stderr)
         return 1
     for launcher in launchers:
-        for gate, tool_name in gates:
+        for gate, tool_name, expected_returncode, arguments in gates:
             result = subprocess.run(
-                [launcher, str(gate)], input=_deny_payload(tool_name), text=True,
+                [launcher, str(gate), *arguments], input=_deny_payload(tool_name), text=True,
                 encoding="utf-8", errors="replace",
                 capture_output=True, cwd=root, check=False,
             )
-            if result.returncode != 2:
+            if result.returncode != expected_returncode:
+                detail = _diagnostic(result.stderr) or "no launcher diagnostic"
                 print(
-                    f"configured launcher {launcher} did not preserve "
-                    f"fail-closed exit code 2 for {gate.name}",
+                    f"configured launcher {launcher} returned {result.returncode} "
+                    f"instead of {expected_returncode} for {gate.name}: {detail}",
                     file=sys.stderr,
                 )
                 return 1
